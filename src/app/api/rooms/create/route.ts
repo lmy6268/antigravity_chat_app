@@ -15,6 +15,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if rooms.json exists, create if not
+    if (!fs.existsSync(ROOMS_FILE)) {
+      const dir = path.dirname(ROOMS_FILE);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(ROOMS_FILE, '{}', 'utf8');
+    }
+
     // Read existing rooms
     const roomsData = fs.readFileSync(ROOMS_FILE, 'utf8');
     const rooms = JSON.parse(roomsData);

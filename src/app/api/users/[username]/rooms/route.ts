@@ -26,6 +26,14 @@ export async function GET(
     }
 
     // Get room details for each active room
+    if (!fs.existsSync(ROOMS_FILE)) {
+      const dir = path.dirname(ROOMS_FILE);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(ROOMS_FILE, '{}', 'utf8');
+    }
+
     const roomsData = fs.readFileSync(ROOMS_FILE, 'utf8');
     const allRooms = JSON.parse(roomsData);
     

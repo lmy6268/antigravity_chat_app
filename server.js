@@ -7,9 +7,9 @@ const fs = require('fs');
 const path = require('path');
 
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
-const port = 3000;
-const app = next({ dev });
+const hostname = process.env.RAILWAY_STATIC_URL ? '0.0.0.0' : 'localhost';
+const port = parseInt(process.env.PORT || '3000', 10);
+const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
 const MESSAGES_FILE = path.join(__dirname, 'data', 'messages.json');
@@ -40,7 +40,10 @@ app.prepare().then(() => {
   const io = new Server(server, {
     cors: {
       origin: '*',
-    }
+      methods: ['GET', 'POST']
+    },
+    transports: ['websocket', 'polling'],
+    allowEIO3: true
   });
 
   io.on('connection', (socket) => {

@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
   const [newRoomPassword, setNewRoomPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Load from server on mount
   useEffect(() => {
@@ -175,14 +176,47 @@ export default function Dashboard() {
                 required
                 style={{ padding: '10px', borderRadius: '6px', border: '1px solid #3e3e3e', backgroundColor: '#1e1e1e', color: 'white' }}
               />
-              <input
-                type="password"
-                placeholder="Room Password"
-                value={newRoomPassword}
-                onChange={(e) => setNewRoomPassword(e.target.value)}
-                required
-                style={{ padding: '10px', borderRadius: '6px', border: '1px solid #3e3e3e', backgroundColor: '#1e1e1e', color: 'white' }}
-              />
+              <div style={{ position: 'relative', width: '100%' }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Room Password"
+                  value={newRoomPassword}
+                  onChange={(e) => setNewRoomPassword(e.target.value)}
+                  required
+                  style={{ 
+                    padding: '10px', 
+                    paddingRight: '40px',
+                    borderRadius: '6px', 
+                    border: '1px solid #3e3e3e', 
+                    backgroundColor: '#1e1e1e', 
+                    color: 'white',
+                    width: '100%',
+                    boxSizing: 'border-box'
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: '#aaa',
+                    cursor: 'pointer',
+                    fontSize: '18px',
+                    padding: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                 <button type="button" onClick={() => setShowCreateModal(false)} style={{
                   flex: 1, padding: '10px', borderRadius: '6px', border: 'none', backgroundColor: '#6c757d', color: 'white', cursor: 'pointer'

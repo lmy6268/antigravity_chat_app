@@ -24,6 +24,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [roomInfo, setRoomInfo] = useState<any>(null); // Room metadata from server
   
   // Crypto & WS
@@ -287,16 +288,46 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
           <h2 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>Join {roomName}</h2>
           <p style={{ textAlign: 'center', color: '#aaa' }}>Enter password to decrypt messages.</p>
           
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Room Password"
-            style={{
-              padding: '12px', borderRadius: '6px', border: '1px solid #3e3e3e',
-              backgroundColor: '#1e1e1e', color: 'white', fontSize: '16px'
-            }}
-          />
+          <div style={{ position: 'relative', width: '100%' }}>
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Room Password"
+              style={{
+                padding: '12px',
+                paddingRight: '40px', // Space for the eye icon
+                borderRadius: '6px',
+                border: '1px solid #3e3e3e',
+                backgroundColor: '#1e1e1e',
+                color: 'white',
+                fontSize: '16px',
+                width: '100%',
+                boxSizing: 'border-box'
+              }}
+            />
+            <button
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: '#aaa',
+                cursor: 'pointer',
+                fontSize: '18px',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? "🙈" : "👁️"}
+            </button>
+          </div>
           
           <button onClick={() => handleJoin(password, nickname)} style={{
             padding: '14px', borderRadius: '6px', border: 'none',

@@ -1,44 +1,9 @@
 [
   {
-    "id": "6b6895de-8f09-4419-a4a8-fbf0ddf335be",
-    "username": "TestUser1",
-    "password": "password123",
-    "createdAt": "2025-11-19T08:28:31.096Z",
-    "activeRooms": []
-  },
-  {
-    "id": "f0538a1d-4bf7-402e-a683-8f37687ba0d9",
-    "username": "UserA",
-    "password": "testpass",
-    "createdAt": "2025-11-19T08:31:05.813Z",
-    "activeRooms": []
-  },
-  {
-    "id": "d668c46f-0100-4370-b62a-709bad6428b6",
-    "username": "UserB",
-    "password": "userb123",
-    "createdAt": "2025-11-19T08:33:48.815Z",
-    "activeRooms": []
-  },
-  {
-    "id": "9b607a5c-90b6-473c-945d-d5c2878ce436",
-    "username": "usertest1",
-    "password": "usertest1",
-    "createdAt": "2025-11-19T08:35:28.117Z",
-    "activeRooms": []
-  },
-  {
-    "id": "e26fd6bb-d507-4ca8-8bab-aa888d1cb708",
-    "username": "MetaTest",
-    "password": "test123",
-    "createdAt": "2025-11-19T08:42:28.165Z",
-    "activeRooms": []
-  },
-  {
-    "id": "691b266d-8529-49d2-bada-42ec03dca933",
-    "username": "FinalTest",
-    "password": "test123",
-    "createdAt": "2025-11-19T08:54:36.842Z",
+    "id": "a5d5fce9-76e5-4603-8ed3-0e0fa56e8a9a",
+    "username": "HashTestUser4",
+    "password": "$2b$10$hpQVK143B6aydtw0K1IeH.UcsoIQUk9IeGeg5tZ42vQos2xpG/XzW",
+    "createdAt": "2025-11-19T09:41:48.096Z",
     "activeRooms": []
   }
 ]

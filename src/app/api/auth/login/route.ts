@@ -13,6 +13,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
     }
 
+    // Check if users.json exists, create if not
+    if (!fs.existsSync(USERS_FILE)) {
+      const dir = path.dirname(USERS_FILE);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(USERS_FILE, '[]', 'utf8');
+    }
+
     const fileData = fs.readFileSync(USERS_FILE, 'utf8');
     const users = JSON.parse(fileData);
 

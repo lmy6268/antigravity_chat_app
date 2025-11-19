@@ -85,7 +85,8 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
 
     // Dynamically import socket.io-client
     import('socket.io-client').then(({ io }) => {
-      const socket = io('http://localhost:3000');
+      // Use current origin for Socket.io connection (works in both dev and production)
+      const socket = io(window.location.origin);
       wsRef.current = socket as any;
 
       socket.on('connect', () => {

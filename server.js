@@ -90,6 +90,15 @@ app.prepare().then(() => {
 
       // Load and send history
       try {
+        // Check if messages.json exists, create if not
+        if (!fs.existsSync(MESSAGES_FILE)) {
+          const dir = path.dirname(MESSAGES_FILE);
+          if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+          }
+          fs.writeFileSync(MESSAGES_FILE, '{}', 'utf8');
+        }
+
         const messagesData = fs.readFileSync(MESSAGES_FILE, 'utf8');
         const allMessages = JSON.parse(messagesData);
         const roomMessages = allMessages[roomId] || [];
@@ -108,6 +117,15 @@ app.prepare().then(() => {
       console.log(`Received message for room: ${roomId}`);
 
       try {
+        // Check if messages.json exists, create if not
+        if (!fs.existsSync(MESSAGES_FILE)) {
+          const dir = path.dirname(MESSAGES_FILE);
+          if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+          }
+          fs.writeFileSync(MESSAGES_FILE, '{}', 'utf8');
+        }
+
         // Persist message
         const messagesData = fs.readFileSync(MESSAGES_FILE, 'utf8');
         const allMessages = JSON.parse(messagesData);
@@ -120,8 +138,8 @@ app.prepare().then(() => {
         fs.writeFileSync(MESSAGES_FILE, JSON.stringify(allMessages, null, 2));
         console.log(`Message saved. Total messages in room: ${allMessages[roomId].length}`);
 
-        // Broadcast to all clients in the room
-        io.to(roomId).emit('message', payload);
+        // Broadcast to all clients in the room EXCEPT the sender
+        socket.broadcast.to(roomId).emit('message', payload);
         console.log(`Broadcast message to room ${roomId}`);
       } catch (e) {
         console.error('Error processing message:', e);

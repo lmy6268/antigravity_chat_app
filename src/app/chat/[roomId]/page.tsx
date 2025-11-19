@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, use } from 'react';
+import { useEffect, useState, useRef, use, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 interface Message {
@@ -52,20 +52,6 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     setNickname(user.username);
   }, [roomId, roomName, router]);
 
-  // Auto-join for creator OR existing participant when roomInfo is loaded
-  useEffect(() => {
-    if (roomInfo && nickname && !isJoined) {
-      const isCreator = roomInfo.creator === nickname;
-      const isParticipant = roomInfo.participants && roomInfo.participants.includes(nickname);
-
-      if (isCreator || isParticipant) {
-        // Auto-join using the password from roomInfo
-        setPassword(roomInfo.password);
-        handleJoin(roomInfo.password, nickname);
-      }
-    }
-  }, [roomInfo, nickname, isJoined]);
-
   // Fetch room info from server
   useEffect(() => {
     const fetchRoomInfo = async () => {
@@ -89,21 +75,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     }
   }, [messages]);
 
-  const handleJoin = async (pwd: string, nick: string) => {
-    if (!pwd || !nick) return;
-
-    try {
-      const key = await deriveKey(pwd);
-      setCryptoKey(key);
-      setIsJoined(true);
-      connectSocket(nick);
-    } catch (error) {
-      console.error('Error deriving key:', error);
-      alert('Failed to setup encryption.');
-    }
-  };
-
-  const connectSocket = (nick: string) => {
+  const connectSocket = useCallback((nick: string) => {
     // Clean up existing connection first
     if (wsRef.current) {
       (wsRef.current as any).off('message');
@@ -140,7 +112,35 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
         console.log('Socket disconnected');
       });
     });
-  };
+  }, [roomId, roomName, router]);
+
+  const handleJoin = useCallback(async (pwd: string, nick: string) => {
+    if (!pwd || !nick) return;
+
+    try {
+      const key = await deriveKey(pwd);
+      setCryptoKey(key);
+      setIsJoined(true);
+      connectSocket(nick);
+    } catch (error) {
+      console.error('Error deriving key:', error);
+      alert('Failed to setup encryption.');
+    }
+  }, [connectSocket]);
+
+  // Auto-join for creator OR existing participant when roomInfo is loaded
+  useEffect(() => {
+    if (roomInfo && nickname && !isJoined) {
+      const isCreator = roomInfo.creator === nickname;
+      const isParticipant = roomInfo.participants && roomInfo.participants.includes(nickname);
+
+      if (isCreator || isParticipant) {
+        // Auto-join using the password from roomInfo
+        setPassword(roomInfo.password);
+        handleJoin(roomInfo.password, nickname);
+      }
+    }
+  }, [roomInfo, nickname, isJoined, handleJoin]);
 
   const handleIncomingMessage = async (payload: any) => {
     if (!cryptoKeyRef.current) return;
@@ -173,14 +173,14 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
 
     try {
       const encryptedData = await encryptMessage(messagePayload, cryptoKey);
-      
-      // Socket.io emit - server will broadcast to all clients including sender
+
+      // Socket.io emit - server will broadcast to OTHER clients only
       (wsRef.current as any).emit('message', {
         roomId,
         payload: encryptedData
       });
       
-      // Clear input (message will appear when server broadcasts it back)
+      // Clear input
       setInputMessage('');
     } catch (e) {
       console.error('Encryption failed:', e);

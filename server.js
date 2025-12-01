@@ -1,4 +1,4 @@
-// Load environment variables from .env.local
+// .env.local 파일에서 환경 변수 로드
 require('dotenv').config({ path: '.env.local' });
 
 const { createServer } = require('http');
@@ -15,7 +15,7 @@ const port = parseInt(process.env.PORT || '3000', 10);
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-// Check for SSL certificates
+// SSL 인증서 확인
 let useHttps = false;
 let httpsOptions = {};
 
@@ -30,12 +30,12 @@ if (dev) {
         cert: fs.readFileSync(certPath),
       };
       useHttps = true;
-      console.log('✅ SSL certificates found, starting HTTPS server');
+      console.log('✅ SSL 인증서 발견, HTTPS 서버 시작');
     } else {
-      console.log('ℹ️  No SSL certificates found, starting HTTP server');
+      console.log('ℹ️  SSL 인증서 없음, HTTP 서버 시작');
     }
   } catch (err) {
-    console.log('⚠️  Error loading SSL certificates, falling back to HTTP:', err.message);
+    console.log('⚠️  SSL 인증서 로딩 오류, HTTP로 전환:', err.message);
   }
 }
 
@@ -78,7 +78,7 @@ app.prepare().then(() => {
     }
   });
 
-  // Socket.io Server
+  // Socket.io 서버
   const io = new Server(server, {
     cors: {
       origin: '*',
@@ -99,7 +99,7 @@ app.prepare().then(() => {
       console.log(`Client ${socket.id} (${username}) joined room: ${roomId}`);
 
       try {
-        // Add user to room_participants table
+        // room_participants 테이블에 사용자 추가
         const { error: participantError } = await supabase
           .from('room_participants')
           .upsert(
@@ -113,7 +113,7 @@ app.prepare().then(() => {
           console.log(`Added ${username} to room ${roomId} participants`);
         }
 
-        // Load and send message history
+        // 메시지 히스토리 로드 및 전송
         const { data: messages, error: messagesError } = await supabase
           .from('messages')
           .select('*')
@@ -138,7 +138,7 @@ app.prepare().then(() => {
       console.log(`Received message for room: ${roomId}`);
 
       try {
-        // Insert message into Supabase
+        // Supabase에 메시지 저장
         const { error } = await supabase
           .from('messages')
           .insert({
@@ -152,7 +152,7 @@ app.prepare().then(() => {
         } else {
           console.log(`Message saved to database for room: ${roomId}`);
           
-          // Broadcast to all clients in the room EXCEPT the sender
+          // 발신자를 제외한 방의 모든 클라이언트에게 브로드캠스트
           socket.broadcast.to(roomId).emit('message', payload);
           console.log(`Broadcast message to room ${roomId}`);
         }
@@ -164,7 +164,7 @@ app.prepare().then(() => {
     socket.on('disconnect', async () => {
       console.log('Client disconnected:', socket.id);
       
-      // Remove user from room participants
+      // 방 참가자 목록에서 사용자 제거
       if (socket.roomId && socket.username) {
         try {
           const { error } = await supabase

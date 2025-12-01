@@ -13,11 +13,11 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // Unwrap params
+  // params 언래핑
   const { roomId } = use(params);
   const roomName = searchParams.get('name') || 'Chat Room';
 
-  // State
+  // 상태 관리
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
   const [isJoined, setIsJoined] = useState(false);
@@ -25,25 +25,24 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   const [inputMessage, setInputMessage] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [roomInfo, setRoomInfo] = useState<any>(null); // Room metadata from server
+  const [roomInfo, setRoomInfo] = useState<any>(null); // 서버로부터 받은 방 메타데이터
   
-  // Crypto & WS
+  // 암호화 및 웹소켓
   const [cryptoKey, setCryptoKey] = useState<CryptoKey | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const cryptoKeyRef = useRef<CryptoKey | null>(null);
 
-  // Sync ref
+  // ref 동기화
   useEffect(() => {
     cryptoKeyRef.current = cryptoKey;
   }, [cryptoKey]);
 
-  // Load nickname & check for cached password
-  // Load nickname
+  // 닉네임 로드
   useEffect(() => {
     const storedUser = localStorage.getItem('chat_user');
     if (!storedUser) {
-      // Redirect to login with return URL
+      // 로그인으로 리다이렉트 (리턴 URL 포함)
       const returnUrl = encodeURIComponent(`/chat/${roomId}?name=${encodeURIComponent(roomName)}`);
       router.push(`/login?redirect=${returnUrl}`);
       return;
@@ -52,7 +51,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     setNickname(user.username);
   }, [roomId, roomName, router]);
 
-  // Fetch room info from server
+  // 서버에서 방 정보 가져오기
   useEffect(() => {
     const fetchRoomInfo = async () => {
       try {
@@ -68,7 +67,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     fetchRoomInfo();
   }, [roomId]);
 
-  // Auto-scroll
+  // 자동 스크롤
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -76,16 +75,16 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   }, [messages]);
 
   const connectSocket = useCallback((nick: string) => {
-    // Clean up existing connection first
+    // 기존 연결이 있으면 먼저 정리
     if (wsRef.current) {
       (wsRef.current as any).off('message');
       (wsRef.current as any).disconnect();
       wsRef.current = null;
     }
 
-    // Dynamically import socket.io-client
+    // socket.io-client 동적 import
     import('socket.io-client').then(({ io }) => {
-      // Use current origin for Socket.io connection (works in both dev and production)
+      // 현재 origin을 사용하여 Socket.io 연결 (dev 및 production 모두 지원)
       const socket = io(window.location.origin, {
         transports: ['websocket', 'polling'],
         reconnection: true,
@@ -96,7 +95,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
 
       socket.on('connect', () => {
         console.log('Connected to Socket.io');
-        // Join room with username
+        // 사용자명으로 방에 참가
         socket.emit('join', { roomId, username: nick });
         addSystemMessage(`Welcome to ${roomName}, ${nick}!`);
       });
@@ -134,14 +133,14 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     }
   }, [connectSocket]);
 
-  // Auto-join for creator OR existing participant when roomInfo is loaded
+  // roomInfo가 로드되면 방장 또는 기존 참가자 자동 참가
   useEffect(() => {
     if (roomInfo && nickname && !isJoined) {
       const isCreator = roomInfo.creator === nickname;
       const isParticipant = roomInfo.participants && roomInfo.participants.includes(nickname);
 
       if (isCreator || isParticipant) {
-        // Auto-join using the password from roomInfo
+        // roomInfo의 비밀번호를 사용하여 자동 참가
         setPassword(roomInfo.password);
         handleJoin(roomInfo.password, nickname);
       }
@@ -152,7 +151,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     if (!cryptoKeyRef.current) return;
 
     try {
-      // Socket.io sends the payload object directly (not stringified)
+      // Socket.io는 payload 객체를 직접 전송 (stringify하지 않음)
       if (payload.iv && payload.data) {
         const decryptedString = await decryptMessage(payload.iv, payload.data, cryptoKeyRef.current);
         const messageData = JSON.parse(decryptedString); // { text, senderNickname }
@@ -180,20 +179,20 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     try {
       const encryptedData = await encryptMessage(messagePayload, cryptoKey);
 
-      // Add message to own UI immediately
+      // 본인의 UI에 메시지 즉시 추가
       setMessages((prev) => [...prev, { 
         sender: nickname, 
         text: inputMessage,
         isSystem: false
       }]);
 
-      // Socket.io emit - server will broadcast to OTHER clients only
+      // Socket.io emit - 서버가 다른 클라이언트들에게만 브로드캠스트
       (wsRef.current as any).emit('message', {
         roomId,
         payload: encryptedData
       });
       
-      // Clear input
+      // 입력 필드 초기화
       setInputMessage('');
     } catch (e) {
       console.error('Encryption failed:', e);
@@ -215,10 +214,10 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     if (roomInfo && roomInfo.creator === nickname) {
       if (confirm('You are the creator. Leaving will DELETE this room for everyone. Are you sure?')) {
         try {
-          // Delete room via API
+          // API를 통해 방 삭제
           await fetch(`/api/rooms/${roomId}`, { method: 'DELETE' });
           
-          // Notify others via socket
+          // 소켓으로 다른 사람들에게 알림
           if (wsRef.current) {
             (wsRef.current as any).emit('roomDeleted', roomId);
             (wsRef.current as any).disconnect();
@@ -231,7 +230,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
         }
       }
     } else {
-      // Normal leave
+      // 일반 나가기
       if (wsRef.current) {
         (wsRef.current as any).disconnect();
         wsRef.current = null;
@@ -240,9 +239,9 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     }
   };
 
-  // --- Web Crypto API Helpers ---
+  // --- Web Crypto API 헬퍼 함수들 ---
   async function deriveKey(password: string) {
-    // Check if we're in a browser environment with crypto.subtle
+    // crypto.subtle이 있는 브라우저 환경인지 확인
     if (typeof window === 'undefined') {
       throw new Error('Not running in browser environment');
     }
@@ -252,7 +251,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     }
     
     if (!window.crypto.subtle) {
-      // Check if we're on HTTP instead of HTTPS
+      // HTTP 대신 HTTPS를 사용하고 있는지 확인
       const protocol = window.location.protocol;
       if (protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
         throw new Error('Web Crypto API requires HTTPS or localhost');

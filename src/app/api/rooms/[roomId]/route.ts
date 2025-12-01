@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '../../../../../lib/supabase';
+import { TABLES, HTTP_STATUS } from '../../../../../lib/constants';
 
 export async function GET(
   request: Request,
@@ -10,7 +11,7 @@ export async function GET(
 
     //Read room from database
     const { data: room, error } = await supabase
-      .from('rooms')
+      .from(TABLES.ROOMS)
       .select('*')
       .eq('id', roomId)
       .single();
@@ -18,7 +19,7 @@ export async function GET(
     if (error || !room) {
       return NextResponse.json(
         { error: 'Room not found' },
-        { status: 404 }
+        { status: HTTP_STATUS.NOT_FOUND }
       );
     }
 
@@ -30,12 +31,12 @@ export async function GET(
         password: room.password,
         createdAt: room.created_at
       }
-    }, { status: 200 });
+    }, { status: HTTP_STATUS.OK });
   } catch (error) {
     console.error('Error fetching room:', error);
     return NextResponse.json(
       { error: 'Failed to fetch room' },
-      { status: 500 }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }
@@ -50,21 +51,21 @@ export async function DELETE(
     // Delete room from database
     // CASCADE will automatically delete related messages and participants
     const { error } = await supabase
-      .from('rooms')
+      .from(TABLES.ROOMS)
       .delete()
       .eq('id', roomId);
 
     if (error) {
       console.error('Error deleting room:', error);
-      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Room not found' }, { status: HTTP_STATUS.NOT_FOUND });
     }
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    return NextResponse.json({ success: true }, { status: HTTP_STATUS.OK });
   } catch (error) {
     console.error('Error deleting room:', error);
     return NextResponse.json(
       { error: 'Failed to delete room' },
-      { status: 500 }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

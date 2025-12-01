@@ -1,7 +1,4 @@
-/**
- * Web Crypto API를 사용한 암호화 유틸리티 함수들
- * AES-GCM + PBKDF2 기반 종단간 암호화
- */
+import { CRYPTO } from './constants';
 
 /**
  * 비밀번호로부터 암호화 키 유도
@@ -31,15 +28,15 @@ export async function deriveKey(password: string): Promise<CryptoKey> {
   const keyMaterial = await window.crypto.subtle.importKey(
     "raw",
     enc.encode(password),
-    { name: "PBKDF2" },
+    { name: CRYPTO.KDF },
     false,
     ["deriveKey"]
   );
-  const salt = enc.encode("websocket-demo-salt"); 
+  const salt = enc.encode(CRYPTO.SALT); 
   return window.crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+    { name: CRYPTO.KDF, salt: salt, iterations: CRYPTO.ITERATIONS, hash: CRYPTO.HASH },
     keyMaterial,
-    { name: "AES-GCM", length: 256 },
+    { name: CRYPTO.ALGORITHM, length: CRYPTO.KEY_LENGTH },
     false,
     ["encrypt", "decrypt"]
   );
@@ -60,9 +57,9 @@ export async function encryptMessage(
   }
   
   const enc = new TextEncoder();
-  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const iv = window.crypto.getRandomValues(new Uint8Array(CRYPTO.IV_LENGTH));
   const encrypted = await window.crypto.subtle.encrypt(
-    { name: "AES-GCM", iv: iv },
+    { name: CRYPTO.ALGORITHM, iv: iv },
     key,
     enc.encode(text)
   );
@@ -91,7 +88,7 @@ export async function decryptMessage(
   const iv = new Uint8Array(ivArr);
   const data = new Uint8Array(dataArr);
   const decrypted = await window.crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: iv },
+    { name: CRYPTO.ALGORITHM, iv: iv },
     key,
     data
   );

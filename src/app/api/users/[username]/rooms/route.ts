@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '../../../../../../lib/supabase';
+import { TABLES, MESSAGES, HTTP_STATUS } from '../../../../../../lib/constants';
 
 export async function GET(
   request: Request,
@@ -8,17 +9,16 @@ export async function GET(
   try {
     const { username } = await params;
 
-    // Check if user exists
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('username')
-      .eq('username', username)
-      .single();
+    // Get rooms created by the user
+    const { data: rooms, error } = await supabase
+      .from(TABLES.ROOMS)
+      .select('id, name, creator_username')
+      .eq('creator_username', username);
     
-    if (userError || !user) {
+    if (error || !rooms || rooms.length === 0) {
       return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
+        { error: 'No rooms found for this user or failed to fetch' },
+        { status: HTTP_STATUS.NOT_FOUND }
       );
     }
 
@@ -32,7 +32,7 @@ export async function GET(
       console.error('Error fetching user rooms:', participantsError);
       return NextResponse.json(
         { error: 'Failed to fetch rooms' },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -43,12 +43,12 @@ export async function GET(
       creator: p.rooms.creator_username
     }));
 
-    return NextResponse.json({ rooms: userRooms }, { status: 200 });
+    return NextResponse.json({ rooms }, { status: HTTP_STATUS.OK });
   } catch (error) {
     console.error('Error fetching user rooms:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch rooms' },
-      { status: 500 }
+      { error: 'Failed to fetch user rooms' },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

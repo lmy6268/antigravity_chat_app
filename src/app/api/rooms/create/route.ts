@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '../../../../../lib/supabase';
+import { TABLES, HTTP_STATUS } from '../../../../../lib/constants';
 
 export async function POST(request: Request) {
   try {
@@ -8,13 +9,13 @@ export async function POST(request: Request) {
     if (!id || !name || !password || !creator) {
       return NextResponse.json(
         { error: 'Missing required fields' },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
     // Insert new room into database
     const { data: room, error } = await supabase
-      .from('rooms')
+      .from(TABLES.ROOMS)
       .insert({
         id,
         name,
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
       console.error('Error creating room:', error);
       return NextResponse.json(
         { error: 'Failed to create room' },
-        { status: 500 }
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
@@ -40,12 +41,12 @@ export async function POST(request: Request) {
         password: room.password,
         createdAt: room.created_at
       }
-    }, { status: 201 });
+    }, { status: HTTP_STATUS.CREATED });
   } catch (error) {
     console.error('Error creating room:', error);
     return NextResponse.json(
       { error: 'Failed to create room' },
-      { status: 500 }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

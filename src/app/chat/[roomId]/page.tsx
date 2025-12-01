@@ -1,12 +1,17 @@
 'use client';
 
-import { useEffect, useState, useRef, use, useCallback } from 'react';
+import { useEffect, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { deriveKey, encryptMessage, decryptMessage } from '../../../../lib/crypto';
+import { SOCKET_EVENTS } from '../../../../lib/constants';
 
 interface Message {
   sender: string;
   text: string;
   isSystem?: boolean;
+  isEncrypted?: boolean;
+  iv?: number[];
+  content?: string; // For decrypted content
 }
 
 export default function ChatRoom({ params }: { params: Promise<{ roomId: string }> }) {
@@ -26,6 +31,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   const [showSettings, setShowSettings] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [roomInfo, setRoomInfo] = useState<any>(null); // 서버로부터 받은 방 메타데이터
+  const [isConnected, setIsConnected] = useState(false);
   
   // 암호화 및 웹소켓
   const [cryptoKey, setCryptoKey] = useState<CryptoKey | null>(null);
@@ -74,10 +80,12 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     }
   }, [messages]);
 
-  const connectSocket = useCallback((nick: string) => {
+  const connectSocket = (nick: string) => {
     // 기존 연결이 있으면 먼저 정리
     if (wsRef.current) {
-      (wsRef.current as any).off('message');
+      (wsRef.current as any).off(SOCKET_EVENTS.MESSAGE);
+      (wsRef.current as any).off(SOCKET_EVENTS.ROOM_DELETED);
+      (wsRef.current as any).off(SOCKET_EVENTS.DISCONNECT);
       (wsRef.current as any).disconnect();
       wsRef.current = null;
     }
@@ -93,18 +101,34 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
       });
       wsRef.current = socket as any;
 
-      socket.on('connect', () => {
+      socket.on(SOCKET_EVENTS.CONNECTION, () => {
         console.log('Connected to Socket.io');
+        setIsConnected(true);
         // 사용자명으로 방에 참가
-        socket.emit('join', { roomId, username: nick });
+        socket.emit(SOCKET_EVENTS.JOIN_ROOM, { roomId, username: nick });
         addSystemMessage(`Welcome to ${roomName}, ${nick}!`);
       });
 
-      socket.on('message', (payload) => {
-        handleIncomingMessage(payload);
+      socket.on(SOCKET_EVENTS.MESSAGE, async (payload) => {
+        if (!cryptoKeyRef.current) return;
+
+        try {
+          if (payload.iv && payload.data) {
+            const decryptedString = await decryptMessage(payload.iv, payload.data, cryptoKeyRef.current);
+            const messageData = JSON.parse(decryptedString); // { text, senderNickname }
+            
+            setMessages((prev) => [...prev, { 
+              sender: messageData.senderNickname, 
+              text: messageData.text,
+              isSystem: false
+            }]);
+          }
+        } catch (e) {
+          console.warn('Failed to decrypt:', e);
+        }
       });
 
-      socket.on('roomDeleted', () => {
+      socket.on(SOCKET_EVENTS.ROOM_DELETED, () => {
         alert('The room has been deleted by the creator.');
         if (wsRef.current) {
           (wsRef.current as any).disconnect();
@@ -113,13 +137,14 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
         router.push('/');
       });
 
-      socket.on('disconnect', () => {
+      socket.on(SOCKET_EVENTS.DISCONNECT, () => {
         console.log('Socket disconnected');
+        setIsConnected(false);
       });
     });
-  }, [roomId, roomName, router]);
+  };
 
-  const handleJoin = useCallback(async (pwd: string, nick: string) => {
+  const handleJoin = async (pwd: string, nick: string) => {
     if (!pwd || !nick) return;
 
     try {
@@ -131,7 +156,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
       console.error('Error deriving key:', error);
       alert('Failed to setup encryption.');
     }
-  }, [connectSocket]);
+  };
 
   // roomInfo가 로드되면 방장 또는 기존 참가자 자동 참가
   useEffect(() => {
@@ -145,27 +170,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
         handleJoin(roomInfo.password, nickname);
       }
     }
-  }, [roomInfo, nickname, isJoined, handleJoin]);
-
-  const handleIncomingMessage = async (payload: any) => {
-    if (!cryptoKeyRef.current) return;
-
-    try {
-      // Socket.io는 payload 객체를 직접 전송 (stringify하지 않음)
-      if (payload.iv && payload.data) {
-        const decryptedString = await decryptMessage(payload.iv, payload.data, cryptoKeyRef.current);
-        const messageData = JSON.parse(decryptedString); // { text, senderNickname }
-        
-        setMessages((prev) => [...prev, { 
-          sender: messageData.senderNickname, 
-          text: messageData.text,
-          isSystem: false
-        }]);
-      }
-    } catch (e) {
-      console.warn('Failed to decrypt:', e);
-    }
-  };
+  }, [roomInfo, nickname, isJoined]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,7 +182,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     });
 
     try {
-      const encryptedData = await encryptMessage(messagePayload, cryptoKey);
+      const encrypted = await encryptMessage(messagePayload, cryptoKey);
 
       // 본인의 UI에 메시지 즉시 추가
       setMessages((prev) => [...prev, { 
@@ -187,9 +192,9 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
       }]);
 
       // Socket.io emit - 서버가 다른 클라이언트들에게만 브로드캠스트
-      (wsRef.current as any).emit('message', {
+      (wsRef.current as any).emit(SOCKET_EVENTS.MESSAGE, {
         roomId,
-        payload: encryptedData
+        payload: encrypted
       });
       
       // 입력 필드 초기화
@@ -219,7 +224,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
           
           // 소켓으로 다른 사람들에게 알림
           if (wsRef.current) {
-            (wsRef.current as any).emit('roomDeleted', roomId);
+            (wsRef.current as any).emit(SOCKET_EVENTS.ROOM_DELETED, roomId);
             (wsRef.current as any).disconnect();
             wsRef.current = null;
           }
@@ -240,76 +245,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   };
 
   // --- Web Crypto API 헬퍼 함수들 ---
-  async function deriveKey(password: string) {
-    // crypto.subtle이 있는 브라우저 환경인지 확인
-    if (typeof window === 'undefined') {
-      throw new Error('Not running in browser environment');
-    }
-    
-    if (!window.crypto) {
-      throw new Error('window.crypto is not available');
-    }
-    
-    if (!window.crypto.subtle) {
-      // HTTP 대신 HTTPS를 사용하고 있는지 확인
-      const protocol = window.location.protocol;
-      if (protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        throw new Error('Web Crypto API requires HTTPS or localhost');
-      }
-      throw new Error('crypto.subtle is not available in this browser');
-    }
-    
-    const enc = new TextEncoder();
-    const keyMaterial = await window.crypto.subtle.importKey(
-      "raw",
-      enc.encode(password),
-      { name: "PBKDF2" },
-      false,
-      ["deriveKey"]
-    );
-    const salt = enc.encode("websocket-demo-salt"); 
-    return window.crypto.subtle.deriveKey(
-      { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
-      keyMaterial,
-      { name: "AES-GCM", length: 256 },
-      false,
-      ["encrypt", "decrypt"]
-    );
-  }
-
-  async function encryptMessage(text: string, key: CryptoKey) {
-    if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
-      throw new Error('Web Crypto API not available');
-    }
-    
-    const enc = new TextEncoder();
-    const iv = window.crypto.getRandomValues(new Uint8Array(12));
-    const encrypted = await window.crypto.subtle.encrypt(
-      { name: "AES-GCM", iv: iv },
-      key,
-      enc.encode(text)
-    );
-    return {
-      iv: Array.from(iv),
-      data: Array.from(new Uint8Array(encrypted))
-    };
-  }
-
-  async function decryptMessage(ivArr: number[], dataArr: number[], key: CryptoKey) {
-    if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
-      throw new Error('Web Crypto API not available');
-    }
-    
-    const iv = new Uint8Array(ivArr);
-    const data = new Uint8Array(dataArr);
-    const decrypted = await window.crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: iv },
-      key,
-      data
-    );
-    const dec = new TextDecoder();
-    return dec.decode(decrypted);
-  }
+  // deriveKey, encryptMessage, decryptMessage 함수는 lib/crypto.ts로 이동했으므로 여기서는 제거합니다.
 
   // --- Render ---
 

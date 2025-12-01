@@ -8,6 +8,7 @@ const { parse } = require('url');
 const next = require('next');
 const { Server } = require('socket.io');
 const { supabase } = require('./lib/supabase');
+const { TABLES, SOCKET_EVENTS } = require('./lib/constants');
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = '0.0.0.0';
@@ -75,31 +76,32 @@ app.prepare().then(() => {
   io.on('connection', (socket) => {
     console.log('New Socket.io connection:', socket.id);
 
-    socket.on('join', async (data) => {
-      const { roomId, username } = data;
+    // 방 참가 처리
+    socket.on(SOCKET_EVENTS.JOIN_ROOM, async ({ roomId, username }) => {
       socket.join(roomId);
       socket.roomId = roomId;
       socket.username = username;
-      console.log(`Client ${socket.id} (${username}) joined room: ${roomId}`);
+      console.log(`User ${username} joined room ${roomId}`);
+
+      // 참가자 정보를 DB에 저장 (선택 사항, 현재 접속자 추적용)
+      try {
+        const { error } = await supabase
+          .from(TABLES.ROOM_PARTICIPANTS)
+          .insert({
+            room_id: roomId,
+            username: username,
+            socket_id: socket.id
+          });
+        
+        if (error) console.error('Error saving participant:', error);
+      } catch (e) {
+        console.error('Error in join-room:', e);
+      }
 
       try {
-        // room_participants 테이블에 사용자 추가
-        const { error: participantError } = await supabase
-          .from('room_participants')
-          .upsert(
-            { room_id: roomId, username: username },
-            { onConflict: 'room_id,username' }
-          );
-
-        if (participantError) {
-          console.error('Error adding participant:', participantError);
-        } else {
-          console.log(`Added ${username} to room ${roomId} participants`);
-        }
-
         // 메시지 히스토리 로드 및 전송
         const { data: messages, error: messagesError } = await supabase
-          .from('messages')
+          .from(TABLES.MESSAGES)
           .select('*')
           .eq('room_id', roomId)
           .order('created_at', { ascending: true });
@@ -117,42 +119,52 @@ app.prepare().then(() => {
       }
     });
 
-    socket.on('message', async (data) => {
-      const { roomId, payload } = data;
-      console.log(`Received message for room: ${roomId}`);
-
+    // 새 메시지 저장 및 브로드캐스트
+    socket.on(SOCKET_EVENTS.MESSAGE, async (messageData) => {
       try {
         // Supabase에 메시지 저장
-        const { error } = await supabase
-          .from('messages')
-          .insert({
-            room_id: roomId,
-            iv: payload.iv,
-            data: payload.data
-          });
+        const { data, error } = await supabase
+          .from(TABLES.MESSAGES)
+          .insert([
+            {
+              room_id: messageData.roomId,
+              user_id: messageData.userId,
+              content: messageData.content,
+              is_encrypted: messageData.isEncrypted,
+              iv: messageData.iv
+            }
+          ])
+          .select()
+          .single();
 
-        if (error) {
-          console.error('Error saving message:', error);
-        } else {
-          console.log(`Message saved to database for room: ${roomId}`);
-          
-          // 발신자를 제외한 방의 모든 클라이언트에게 브로드캠스트
-          socket.broadcast.to(roomId).emit('message', payload);
-          console.log(`Broadcast message to room ${roomId}`);
-        }
-      } catch (e) {
-        console.error('Error processing message:', e);
+        if (error) throw error;
+
+        // 방의 다른 사용자들에게 메시지 브로드캐스트
+        // 송신자를 제외하고 전송 (송신자는 이미 UI에 추가함)
+        socket.to(messageData.roomId).emit(SOCKET_EVENTS.MESSAGE, {
+          id: data.id,
+          userId: messageData.userId,
+          username: messageData.username,
+          content: messageData.content,
+          timestamp: new Date().toISOString(),
+          isEncrypted: messageData.isEncrypted,
+          iv: messageData.iv
+        });
+      } catch (err) {
+        console.error('Error saving message:', err);
+        socket.emit(SOCKET_EVENTS.ERROR, { message: 'Failed to save message' });
       }
     });
 
-    socket.on('disconnect', async () => {
+    // 연결 해제 처리
+    socket.on(SOCKET_EVENTS.DISCONNECT, async () => {
       console.log('Client disconnected:', socket.id);
       
       // 방 참가자 목록에서 사용자 제거
       if (socket.roomId && socket.username) {
         try {
           const { error } = await supabase
-            .from('room_participants')
+            .from(TABLES.ROOM_PARTICIPANTS)
             .delete()
             .eq('room_id', socket.roomId)
             .eq('username', socket.username);

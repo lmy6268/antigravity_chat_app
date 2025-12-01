@@ -1,30 +1,31 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabase } from '../../../../../lib/supabase';
+import { TABLES, HTTP_STATUS } from '../../../../../lib/constants';
 
 export async function POST(request: Request) {
   try {
     const { username, password } = await request.json();
 
     if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
+      return NextResponse.json({ error: 'Username and password are required' }, { status: HTTP_STATUS.BAD_REQUEST });
     }
 
     // Find user by username
     const { data: user, error } = await supabase
-      .from('users')
+      .from(TABLES.USERS)
       .select('id, username, password')
       .eq('username', username)
       .single();
 
     if (error || !user) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: HTTP_STATUS.UNAUTHORIZED });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: HTTP_STATUS.UNAUTHORIZED });
     }
 
     // Return user info. In a real app, return a JWT or session cookie.
@@ -37,6 +38,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
   }
 }

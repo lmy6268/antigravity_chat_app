@@ -1,35 +1,81 @@
-/**
- * 암호화 유틸리티 함수 테스트
- * 
- * 참고: Web Crypto API는 jsdom에서 사용할 수 없으므로
- * 실제 브라우저 환경이나 적절한 polyfill이 필요합니다.
- * 이 테스트는 기본 구조만 제공합니다.
- */
+import { deriveKey, encryptMessage, decryptMessage } from '../../lib/crypto';
 
 describe('Crypto Utils', () => {
-  describe('기본 API 가용성', () => {
-    it('window.crypto가 정의되어 있어야 함', () => {
-      // jsdom 환경에서는 모킹이 필요
-      expect(global.crypto).toBeDefined();
+  // Mock setup is handled in jest.setup.js
+  const mockSubtle = window.crypto.subtle;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('deriveKey', () => {
+    it('should call importKey and deriveKey with correct parameters', async () => {
+      // Mock return values
+      (mockSubtle.importKey as jest.Mock).mockResolvedValue('mockKeyMaterial');
+      (mockSubtle.deriveKey as jest.Mock).mockResolvedValue('mockDerivedKey');
+
+      const password = 'testPassword';
+      const key = await deriveKey(password);
+
+      expect(mockSubtle.importKey).toHaveBeenCalledWith(
+        'raw',
+        expect.anything(), // Uint8Array or Buffer
+        { name: 'PBKDF2' },
+        false,
+        ['deriveKey']
+      );
+
+      expect(mockSubtle.deriveKey).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'PBKDF2', iterations: 100000 }),
+        'mockKeyMaterial',
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+      );
+
+      expect(key).toBe('mockDerivedKey');
     });
   });
 
-  describe('암호화 함수 구조 테스트', () => {
-    it('deriveKey 함수는 promise를 반환해야 함', () => {
-      // 실제 구현은 브라우저 환경이 필요
-      // 함수 타입 확인만 수행
-      const { deriveKey } = require('../lib/crypto');
-      expect(typeof deriveKey).toBe('function');
-    });
+  describe('encryptMessage', () => {
+    it('should encrypt message using AES-GCM', async () => {
+      (mockSubtle.encrypt as jest.Mock).mockResolvedValue(new ArrayBuffer(10));
+      
+      const text = 'Hello';
+      const key = 'mockKey' as any;
+      
+      const result = await encryptMessage(text, key);
 
-    it('encryptMessage 함수는 정의되어 있어야 함', () => {
-      const { encryptMessage } = require('../lib/crypto');
-      expect(typeof encryptMessage).toBe('function');
-    });
+      expect(mockSubtle.encrypt).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'AES-GCM', iv: expect.anything() }),
+        key,
+        expect.anything()
+      );
 
-    it('decryptMessage 함수는 정의되어 있어야 함', () => {
-      const { decryptMessage } = require('../lib/crypto');
-      expect(typeof decryptMessage).toBe('function');
+      expect(result).toHaveProperty('iv');
+      expect(result).toHaveProperty('data');
+      expect(result.iv).toHaveLength(12); // IV size
+    });
+  });
+
+  describe('decryptMessage', () => {
+    it('should decrypt message using AES-GCM', async () => {
+      const mockDecryptedBuffer = new TextEncoder().encode('Decrypted Text').buffer;
+      (mockSubtle.decrypt as jest.Mock).mockResolvedValue(mockDecryptedBuffer);
+
+      const iv = Array.from(new Uint8Array(12));
+      const data = Array.from(new Uint8Array(10));
+      const key = 'mockKey' as any;
+
+      const result = await decryptMessage(iv, data, key);
+
+      expect(mockSubtle.decrypt).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'AES-GCM', iv: expect.any(Uint8Array) }),
+        key,
+        expect.any(Uint8Array)
+      );
+
+      expect(result).toBe('Decrypted Text');
     });
   });
 });

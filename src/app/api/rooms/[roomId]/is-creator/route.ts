@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '../../../../../../lib/supabase';
+import { TABLES, MESSAGES, HTTP_STATUS } from '../../../../../../lib/constants';
 
 export async function GET(
   request: Request,
@@ -12,14 +13,14 @@ export async function GET(
 
     if (!username) {
       return NextResponse.json(
-        { error: 'Username required' },
-        { status: 400 }
+        { error: 'Username is required' },
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
-    // Query room from database
+    // Check if user is the creator of the room
     const { data: room, error } = await supabase
-      .from('rooms')
+      .from(TABLES.ROOMS)
       .select('creator_username')
       .eq('id', roomId)
       .single();
@@ -27,18 +28,18 @@ export async function GET(
     if (error || !room) {
       return NextResponse.json(
         { error: 'Room not found' },
-        { status: 404 }
+        { status: HTTP_STATUS.NOT_FOUND }
       );
     }
 
     const isCreator = room.creator_username === username;
 
-    return NextResponse.json({ isCreator }, { status: 200 });
+    return NextResponse.json({ isCreator }, { status: HTTP_STATUS.OK });
   } catch (error) {
     console.error('Error checking creator:', error);
     return NextResponse.json(
-      { error: 'Failed to check creator' },
-      { status: 500 }
+      { error: 'Failed to check creator status' },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

@@ -180,6 +180,13 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     try {
       const encryptedData = await encryptMessage(messagePayload, cryptoKey);
 
+      // Add message to own UI immediately
+      setMessages((prev) => [...prev, { 
+        sender: nickname, 
+        text: inputMessage,
+        isSystem: false
+      }]);
+
       // Socket.io emit - server will broadcast to OTHER clients only
       (wsRef.current as any).emit('message', {
         roomId,
@@ -235,6 +242,24 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
 
   // --- Web Crypto API Helpers ---
   async function deriveKey(password: string) {
+    // Check if we're in a browser environment with crypto.subtle
+    if (typeof window === 'undefined') {
+      throw new Error('Not running in browser environment');
+    }
+    
+    if (!window.crypto) {
+      throw new Error('window.crypto is not available');
+    }
+    
+    if (!window.crypto.subtle) {
+      // Check if we're on HTTP instead of HTTPS
+      const protocol = window.location.protocol;
+      if (protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        throw new Error('Web Crypto API requires HTTPS or localhost');
+      }
+      throw new Error('crypto.subtle is not available in this browser');
+    }
+    
     const enc = new TextEncoder();
     const keyMaterial = await window.crypto.subtle.importKey(
       "raw",
@@ -254,6 +279,10 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   }
 
   async function encryptMessage(text: string, key: CryptoKey) {
+    if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
+      throw new Error('Web Crypto API not available');
+    }
+    
     const enc = new TextEncoder();
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
     const encrypted = await window.crypto.subtle.encrypt(
@@ -268,6 +297,10 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   }
 
   async function decryptMessage(ivArr: number[], dataArr: number[], key: CryptoKey) {
+    if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
+      throw new Error('Web Crypto API not available');
+    }
+    
     const iv = new Uint8Array(ivArr);
     const data = new Uint8Array(dataArr);
     const decrypted = await window.crypto.subtle.decrypt(

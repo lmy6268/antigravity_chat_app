@@ -1,5 +1,9 @@
+// Load environment variables from .env.local
+require('dotenv').config({ path: '.env.local' });
 
 const { createServer } = require('http');
+const { createServer: createHttpsServer } = require('https');
+const fs = require('fs');
 const { parse } = require('url');
 const next = require('next');
 const { Server } = require('socket.io');
@@ -11,8 +15,51 @@ const port = parseInt(process.env.PORT || '3000', 10);
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
+// Check for SSL certificates
+let useHttps = false;
+let httpsOptions = {};
+
+if (dev) {
+  try {
+    const keyPath = './localhost+3-key.pem';
+    const certPath = './localhost+3.pem';
+    
+    if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+      httpsOptions = {
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath),
+      };
+      useHttps = true;
+      console.log('✅ SSL certificates found, starting HTTPS server');
+    } else {
+      console.log('ℹ️  No SSL certificates found, starting HTTP server');
+    }
+  } catch (err) {
+    console.log('⚠️  Error loading SSL certificates, falling back to HTTP:', err.message);
+  }
+}
+
 app.prepare().then(() => {
-  const server = createServer(async (req, res) => {
+  const server = useHttps 
+    ? createHttpsServer(httpsOptions, async (req, res) => {
+    try {
+      const parsedUrl = parse(req.url, true);
+      const { pathname, query } = parsedUrl;
+
+      if (pathname === '/a') {
+        await app.render(req, res, '/a', query);
+      } else if (pathname === '/b') {
+        await app.render(req, res, '/b', query);
+      } else {
+        await handle(req, res, parsedUrl);
+      }
+    } catch (err) {
+      console.error('Error occurred handling', req.url, err);
+      res.statusCode = 500;
+      res.end('internal server error');
+    }
+  })
+  : createServer(async (req, res) => {
     try {
       const parsedUrl = parse(req.url, true);
       const { pathname, query } = parsedUrl;
@@ -140,7 +187,10 @@ app.prepare().then(() => {
 
   server.listen(port, '0.0.0.0', (err) => {
     if (err) throw err;
-    console.log(`> Ready on http://0.0.0.0:${port}`);
+    const protocol = useHttps ? 'https' : 'http';
+    console.log(`> Ready on ${protocol}://0.0.0.0:${port}`);
+    console.log(`> Access from your Mac: ${protocol}://localhost:${port}`);
+    console.log(`> Access from iPhone: ${protocol}://192.168.0.3:${port}`);
     console.log(`> Socket.io server running`);
   });
 });

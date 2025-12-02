@@ -29,6 +29,7 @@ export async function GET(
         name: room.name,
         creator: room.creator_username,
         password: room.password,
+        participants: room.participants || [],
         createdAt: room.created_at
       }
     }, { status: HTTP_STATUS.OK });

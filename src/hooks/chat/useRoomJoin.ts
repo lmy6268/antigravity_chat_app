@@ -54,25 +54,55 @@ export function useRoomJoin(roomId: string, roomName: string) {
     fetchRoomInfo();
   }, [roomId]);
 
-  // Join room
-  const joinRoom = async (e?: React.FormEvent) => {
+  // Modified joinRoom to accept password argument
+  const joinRoom = async (e?: React.FormEvent, manualPassword?: string) => {
     if (e) e.preventDefault();
-    if (!password || !roomInfo) return;
+    
+    const pwdToUse = manualPassword || password;
+    if (!pwdToUse || !roomInfo) return;
 
     try {
       // Decrypt room key
       const decryptedKey = await decryptRoomKeyWithPassword(
         roomInfo.encrypted_key_data,
         roomInfo.encrypted_key_iv,
-        password
+        pwdToUse
       );
       
       setCryptoKey(decryptedKey);
       setIsJoined(true);
+
+      // Save password to localStorage on success
+      const savedPasswords = JSON.parse(localStorage.getItem('chat_room_passwords') || '{}');
+      savedPasswords[roomId] = pwdToUse;
+      localStorage.setItem('chat_room_passwords', JSON.stringify(savedPasswords));
+
     } catch (error) {
-      alert(t('alerts.invalidPassword'));
+      // Only show alert if it was a manual attempt
+      if (e) alert(t('alerts.invalidPassword'));
     }
   };
+
+  // Trigger auto-join
+  useEffect(() => {
+    if (roomInfo && nickname && !isJoined) {
+      const savedPasswords = JSON.parse(localStorage.getItem('chat_room_passwords') || '{}');
+      const savedPassword = savedPasswords[roomId];
+      
+      const isCreator = roomInfo.creator === nickname;
+      const isParticipant = roomInfo.participants && roomInfo.participants.includes(nickname);
+
+      if (savedPassword) {
+        // If we have a saved password, pre-fill it for display
+        setPassword(savedPassword);
+
+        // If user is creator or participant, try to auto-join
+        if (isCreator || isParticipant) {
+          joinRoom(undefined, savedPassword);
+        }
+      }
+    }
+  }, [roomInfo, nickname, isJoined, roomId, joinRoom]); // Added joinRoom to deps, ensure it's stable if needed (e.g., with useCallback)
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 

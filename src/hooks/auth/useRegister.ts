@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { generateKeyPair, exportKey } from '@/lib/crypto';
 import { savePrivateKey } from '@/lib/key-storage';
 
+import { useTranslation } from '@/i18n/LanguageContext';
+
 /**
  * useRegister Hook (ViewModel)
  * 
@@ -16,6 +18,7 @@ import { savePrivateKey } from '@/lib/key-storage';
  */
 export function useRegister() {
   const router = useRouter();
+  const { t } = useTranslation();
   
   // State
   const [username, setUsername] = useState('');
@@ -36,6 +39,20 @@ export function useRegister() {
   const register = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setError('');
+
+    // Validation
+    const usernameRegex = /^(?=.*[a-zA-Z])[a-zA-Z0-9]{6,}$/;
+    if (!usernameRegex.test(username)) {
+      setError(t('auth.validation.username'));
+      return;
+    }
+
+    const passwordRegex = /^[a-zA-Z0-9@!#$]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setError(t('auth.validation.password'));
+      return;
+    }
+
     setIsLoading(true);
 
     try {

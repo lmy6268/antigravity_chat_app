@@ -1,51 +1,47 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import bcrypt from 'bcryptjs';
-
-const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
+import { supabase } from '@/lib/supabase';
+import { TABLES, HTTP_STATUS } from '@/lib/constants';
 
 export async function POST(request: Request) {
   try {
-    const { username, password } = await request.json();
+    const { username, password, publicKey } = await request.json();
 
-    if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
+    if (!username || !password || !publicKey) {
+      return NextResponse.json({ error: 'Username, password, and public key are required' }, { status: HTTP_STATUS.BAD_REQUEST });
     }
 
-    // Check if users.json exists, create if not
-    if (!fs.existsSync(USERS_FILE)) {
-      const dir = path.dirname(USERS_FILE);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-      fs.writeFileSync(USERS_FILE, '[]', 'utf8');
-    }
+    // Check if user already exists
+    const { data: existingUsers } = await supabase
+      .from(TABLES.USERS)
+      .select('username')
+      .eq('username', username)
+      .single();
 
-    const fileData = fs.readFileSync(USERS_FILE, 'utf8');
-    const users = JSON.parse(fileData);
-
-    if (users.find((u: any) => u.username === username)) {
-      return NextResponse.json({ error: 'User already exists' }, { status: 409 });
+    if (existingUsers) {
+      return NextResponse.json({ error: 'User already exists' }, { status: HTTP_STATUS.CONFLICT });
     }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = {
-      id: crypto.randomUUID(),
-      username,
-      password: hashedPassword,
-      createdAt: new Date().toISOString(),
-      activeRooms: [] // Track user's active chat rooms
-    };
+    // Insert new user
+    const { error } = await supabase
+      .from(TABLES.USERS)
+      .insert({
+        username,
+        password: hashedPassword,
+        public_key: publicKey
+      });
 
-    users.push(newUser);
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    if (error) {
+      console.error('Error creating user:', error);
+      return NextResponse.json({ error: 'Failed to create user' }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
+    }
 
     return NextResponse.json({ message: 'User registered successfully' });
   } catch (error) {
     console.error('Registration error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
   }
 }

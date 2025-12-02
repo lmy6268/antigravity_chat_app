@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
-const ROOMS_FILE = path.join(process.cwd(), 'data', 'rooms.json');
+import { supabase } from '@/lib/supabase';
+import { TABLES, MESSAGES, HTTP_STATUS } from '@/lib/constants';
 
 export async function GET(
   request: Request,
@@ -12,49 +9,46 @@ export async function GET(
   try {
     const { username } = await params;
 
-    // Read users to get activeRooms
-    const usersData = fs.readFileSync(USERS_FILE, 'utf8');
-    const users = JSON.parse(usersData);
+    // Get rooms created by the user
+    const { data: rooms, error } = await supabase
+      .from(TABLES.ROOMS)
+      .select('id, name, creator_username')
+      .eq('creator_username', username);
     
-    const user = users.find((u: any) => u.username === username);
-    
-    if (!user) {
+    if (error || !rooms || rooms.length === 0) {
       return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
+        { error: 'No rooms found for this user or failed to fetch' },
+        { status: HTTP_STATUS.NOT_FOUND }
       );
     }
 
-    // Get room details for each active room
-    if (!fs.existsSync(ROOMS_FILE)) {
-      const dir = path.dirname(ROOMS_FILE);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-      fs.writeFileSync(ROOMS_FILE, '{}', 'utf8');
+    // Get rooms where user is a participant
+    const { data: participants, error: participantsError } = await supabase
+      .from('room_participants')
+      .select('room_id, rooms(id, name, creator_username)')
+      .eq('username', username);
+
+    if (participantsError) {
+      console.error('Error fetching user rooms:', participantsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch rooms' },
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      );
     }
 
-    const roomsData = fs.readFileSync(ROOMS_FILE, 'utf8');
-    const allRooms = JSON.parse(roomsData);
-    
-    const userRooms = (user.activeRooms || []).map((roomId: string) => {
-      const room = allRooms[roomId];
-      if (room) {
-        return {
-          id: room.id,
-          name: room.name,
-          creator: room.creator
-        };
-      }
-      return null;
-    }).filter(Boolean);
+    // Map to the expected format
+    const userRooms = (participants || []).map((p: any) => ({
+      id: p.rooms.id,
+      name: p.rooms.name,
+      creator: p.rooms.creator_username
+    }));
 
-    return NextResponse.json({ rooms: userRooms }, { status: 200 });
+    return NextResponse.json({ rooms }, { status: HTTP_STATUS.OK });
   } catch (error) {
     console.error('Error fetching user rooms:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch rooms' },
-      { status: 500 }
+      { error: 'Failed to fetch user rooms' },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

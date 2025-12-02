@@ -10,6 +10,12 @@ export const en = {
     delete: 'Delete',
     edit: 'Edit',
   },
+  validation: {
+    username: 'Username must be at least 6 characters long and contain at least one letter (alphanumeric only).',
+    password: 'Password must be at least 8 characters long and contain only letters, numbers, and @ ! # $',
+    usernameHelp: 'Min 6 chars, must contain letters (alphanumeric)',
+    passwordHelp: 'Min 8 chars, allowed: letters, numbers, @ ! # $',
+  },
   auth: {
     login: 'Login',
     register: 'Register',
@@ -51,7 +57,7 @@ export const en = {
     createRoom: {
       title: 'Create New Room',
       namePlaceholder: 'Room Name',
-      passwordPlaceholder: 'Room Password',
+      passwordPlaceholder: 'Enter password',
       submit: 'Create',
     },
     qr: {

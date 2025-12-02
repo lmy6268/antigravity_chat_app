@@ -31,28 +31,41 @@ export default function RegisterForm() {
       )}
 
       <form onSubmit={register} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        <input
-          type="text"
-          placeholder={t('auth.username')}
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          disabled={isLoading}
-          style={{
-            padding: '12px', borderRadius: '6px', border: '1px solid #3e3e3e',
-            backgroundColor: '#1e1e1e', color: 'white', fontSize: '16px'
-          }}
-        />
-        <input
-          type="password"
-          placeholder={t('auth.password')}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={isLoading}
-          style={{
-            padding: '12px', borderRadius: '6px', border: '1px solid #3e3e3e',
-            backgroundColor: '#1e1e1e', color: 'white', fontSize: '16px'
-          }}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          <input
+            type="text"
+            placeholder={t('auth.username')}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            disabled={isLoading}
+            style={{
+              padding: '12px', borderRadius: '6px', border: '1px solid #3e3e3e',
+              backgroundColor: '#1e1e1e', color: 'white', fontSize: '16px',
+              width: '100%', boxSizing: 'border-box'
+            }}
+          />
+          <span style={{ fontSize: '12px', color: '#888', paddingLeft: '2px' }}>
+            {t('validation.usernameHelp')}
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          <input
+            type="password"
+            placeholder={t('auth.password')}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
+            style={{
+              padding: '12px', borderRadius: '6px', border: '1px solid #3e3e3e',
+              backgroundColor: '#1e1e1e', color: 'white', fontSize: '16px',
+              width: '100%', boxSizing: 'border-box'
+            }}
+          />
+          <span style={{ fontSize: '12px', color: '#888', paddingLeft: '2px' }}>
+            {t('validation.passwordHelp')}
+          </span>
+        </div>
         <button
           type="submit"
           disabled={isLoading}

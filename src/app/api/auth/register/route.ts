@@ -11,6 +11,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Username, password, and public key are required' }, { status: HTTP_STATUS.BAD_REQUEST });
     }
 
+    // Validation
+    const usernameRegex = /^(?=.*[a-zA-Z])[a-zA-Z0-9]{6,}$/;
+    if (!usernameRegex.test(username)) {
+      return NextResponse.json({ 
+        error: 'Username must be at least 6 characters long and contain at least one letter (alphanumeric only).' 
+      }, { status: HTTP_STATUS.BAD_REQUEST });
+    }
+
+    const passwordRegex = /^[a-zA-Z0-9@!#$]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return NextResponse.json({ 
+        error: 'Password must be at least 8 characters long and contain only letters, numbers, and @ ! # $' 
+      }, { status: HTTP_STATUS.BAD_REQUEST });
+    }
+
     // Check if user already exists
     const { data: existingUsers } = await supabase
       .from(TABLES.USERS)

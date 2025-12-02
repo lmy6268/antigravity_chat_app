@@ -1,18 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useRegister } from '@/hooks/useRegister';
+import { useLogin } from '@/hooks/auth/useLogin';
 
 /**
- * RegisterForm Component (Pure View)
+ * LoginForm Component (Pure View)
  * 
  * Responsibilities:
  * - Render UI only
  * - No business logic
  * 
- * All logic is handled by useRegister hook (ViewModel)
+ * All logic is handled by useLogin hook (ViewModel)
  */
-export default function RegisterForm() {
+export default function LoginForm() {
   const {
     username,
     password,
@@ -22,18 +22,18 @@ export default function RegisterForm() {
     setUsername,
     setPassword,
     togglePasswordVisibility,
-    register,
-  } = useRegister();
+    login,
+  } = useLogin();
 
   return (
-    <form onSubmit={register} style={{
-      backgroundColor: '#252526', padding: '40px', borderRadius: '12px',
+    <form onSubmit={login} style={{
+      backgroundColor: '#252526ae', padding: '40px', borderRadius: '12px',
       display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', maxWidth: '400px'
     }}>
-      <h1 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>Register</h1>
-      
+      <h1 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>Login</h1>
+
       {error && <div style={{ color: '#d9534f', textAlign: 'center' }}>{error}</div>}
-      
+
       <input
         type="text"
         placeholder="Username"
@@ -43,7 +43,7 @@ export default function RegisterForm() {
         disabled={isLoading}
         style={{ padding: '12px', borderRadius: '6px', border: '1px solid #3e3e3e', backgroundColor: '#1e1e1e', color: 'white' }}
       />
-      
+
       <div style={{ position: 'relative', width: '100%' }}>
         <input
           type={showPassword ? "text" : "password"}
@@ -52,12 +52,12 @@ export default function RegisterForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
           disabled={isLoading}
-          style={{ 
-            padding: '12px', 
+          style={{
+            padding: '12px',
             paddingRight: '40px',
-            borderRadius: '6px', 
-            border: '1px solid #3e3e3e', 
-            backgroundColor: '#1e1e1e', 
+            borderRadius: '6px',
+            border: '1px solid #3e3e3e',
+            backgroundColor: '#1e1e1e',
             color: 'white',
             width: '100%',
             boxSizing: 'border-box'
@@ -87,27 +87,27 @@ export default function RegisterForm() {
           {showPassword ? "🙈" : "👁️"}
         </button>
       </div>
-      
-      <button 
-        type="submit" 
+
+      <button
+        type="submit"
         disabled={isLoading}
         style={{
-          padding: '14px', 
-          borderRadius: '6px', 
+          padding: '14px',
+          borderRadius: '6px',
           border: 'none',
-          backgroundColor: isLoading ? '#555' : '#28a745', 
-          color: 'white', 
-          fontSize: '16px', 
-          fontWeight: 'bold', 
+          backgroundColor: isLoading ? '#555' : '#007acc',
+          color: 'white',
+          fontSize: '16px',
+          fontWeight: 'bold',
           cursor: isLoading ? 'not-allowed' : 'pointer',
           opacity: isLoading ? 0.6 : 1
         }}
       >
-        {isLoading ? 'Registering...' : 'Register'}
+        {isLoading ? 'Logging in...' : 'Login'}
       </button>
-      
+
       <div style={{ textAlign: 'center', fontSize: '14px', color: '#aaa' }}>
-        Already have an account? <Link href="/login" style={{ color: '#007acc' }}>Login</Link>
+        Don't have an account? <Link href="/register" style={{ color: '#007acc' }}>Register</Link>
       </div>
     </form>
   );

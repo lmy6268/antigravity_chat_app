@@ -1,18 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useLogin } from '@/hooks/useLogin';
+import { useRegister } from '@/hooks/auth/useRegister';
 
 /**
- * LoginForm Component (Pure View)
+ * RegisterForm Component (Pure View)
  * 
  * Responsibilities:
  * - Render UI only
  * - No business logic
  * 
- * All logic is handled by useLogin hook (ViewModel)
+ * All logic is handled by useRegister hook (ViewModel)
  */
-export default function LoginForm() {
+export default function RegisterForm() {
   const {
     username,
     password,
@@ -22,15 +22,15 @@ export default function LoginForm() {
     setUsername,
     setPassword,
     togglePasswordVisibility,
-    login,
-  } = useLogin();
+    register,
+  } = useRegister();
 
   return (
-    <form onSubmit={login} style={{
-      backgroundColor: '#252526ae', padding: '40px', borderRadius: '12px',
+    <form onSubmit={register} style={{
+      backgroundColor: '#252526', padding: '40px', borderRadius: '12px',
       display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', maxWidth: '400px'
     }}>
-      <h1 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>Login</h1>
+      <h1 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>Register</h1>
 
       {error && <div style={{ color: '#d9534f', textAlign: 'center' }}>{error}</div>}
 
@@ -95,7 +95,7 @@ export default function LoginForm() {
           padding: '14px',
           borderRadius: '6px',
           border: 'none',
-          backgroundColor: isLoading ? '#555' : '#007acc',
+          backgroundColor: isLoading ? '#555' : '#28a745',
           color: 'white',
           fontSize: '16px',
           fontWeight: 'bold',
@@ -103,11 +103,11 @@ export default function LoginForm() {
           opacity: isLoading ? 0.6 : 1
         }}
       >
-        {isLoading ? 'Logging in...' : 'Login'}
+        {isLoading ? 'Registering...' : 'Register'}
       </button>
 
       <div style={{ textAlign: 'center', fontSize: '14px', color: '#aaa' }}>
-        Don't have an account? <Link href="/register" style={{ color: '#007acc' }}>Register</Link>
+        Already have an account? <Link href="/login" style={{ color: '#007acc' }}>Login</Link>
       </div>
     </form>
   );

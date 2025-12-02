@@ -1,52 +1,73 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const ROOMS_FILE = path.join(process.cwd(), 'data', 'rooms.json');
+import { supabase } from '@/lib/supabase';
+import { TABLES, HTTP_STATUS } from '@/lib/constants';
 
 export async function POST(request: Request) {
   try {
-    const { id, name, password, creator } = await request.json();
+    const { id, name, password, creator, salt, encryptedKey } = await request.json();
 
-    if (!id || !name || !password || !creator) {
+    if (!id || !name || !password || !creator || !salt || !encryptedKey) {
       return NextResponse.json(
         { error: 'Missing required fields' },
-        { status: 400 }
+        { status: HTTP_STATUS.BAD_REQUEST }
       );
     }
 
-    // Check if rooms.json exists, create if not
-    if (!fs.existsSync(ROOMS_FILE)) {
-      const dir = path.dirname(ROOMS_FILE);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-      fs.writeFileSync(ROOMS_FILE, '{}', 'utf8');
+    // 1. Insert new room with Open Chat data
+    const { data: room, error: roomError } = await supabase
+      .from(TABLES.ROOMS)
+      .insert({
+        id,
+        name,
+        creator_username: creator,
+        password,
+        salt,
+        encrypted_key: encryptedKey
+      })
+      .select()
+      .single();
+
+    if (roomError) {
+      console.error('Error creating room:', roomError);
+      return NextResponse.json(
+        { error: 'Failed to create room' },
+        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      );
     }
 
-    // Read existing rooms
-    const roomsData = fs.readFileSync(ROOMS_FILE, 'utf8');
-    const rooms = JSON.parse(roomsData);
+    // 2. Add creator to participants with encrypted key
+    // First get user ID
+    const { data: user } = await supabase
+      .from(TABLES.USERS)
+      .select('id')
+      .eq('username', creator)
+      .single();
 
-    // Create new room
-    rooms[id] = {
-      id,
-      name,
-      creator,
-      password, // Store plaintext for display
-      createdAt: new Date().toISOString(),
-      participants: [] // Will be populated by socket connections
-    };
+    if (user) {
+      await supabase
+        .from(TABLES.ROOM_PARTICIPANTS)
+        .insert({
+          room_id: id,
+          user_id: user.id,
+          username: creator
+          // encrypted_key is now on the room table for Open Chat
+        });
+    }
 
-    // Save to file
-    fs.writeFileSync(ROOMS_FILE, JSON.stringify(rooms, null, 2));
-
-    return NextResponse.json({ room: rooms[id] }, { status: 201 });
+    return NextResponse.json({ 
+      room: {
+        id: room.id,
+        name: room.name,
+        creator: room.creator_username,
+        password: room.password,
+        createdAt: room.created_at
+      }
+    }, { status: HTTP_STATUS.CREATED });
   } catch (error) {
     console.error('Error creating room:', error);
     return NextResponse.json(
       { error: 'Failed to create room' },
-      { status: 500 }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

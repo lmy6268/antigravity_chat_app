@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const ROOMS_FILE = path.join(process.cwd(), 'data', 'rooms.json');
+import { supabase } from '@/lib/supabase';
+import { TABLES, HTTP_STATUS } from '@/lib/constants';
 
 export async function GET(
   request: Request,
@@ -11,25 +9,34 @@ export async function GET(
   try {
     const { roomId } = await params;
 
-    // Read rooms
-    const roomsData = fs.readFileSync(ROOMS_FILE, 'utf8');
-    const rooms = JSON.parse(roomsData);
+    //Read room from database
+    const { data: room, error } = await supabase
+      .from(TABLES.ROOMS)
+      .select('*')
+      .eq('id', roomId)
+      .single();
 
-    const room = rooms[roomId];
-
-    if (!room) {
+    if (error || !room) {
       return NextResponse.json(
         { error: 'Room not found' },
-        { status: 404 }
+        { status: HTTP_STATUS.NOT_FOUND }
       );
     }
 
-    return NextResponse.json({ room }, { status: 200 });
+    return NextResponse.json({ 
+      room: {
+        id: room.id,
+        name: room.name,
+        creator: room.creator_username,
+        password: room.password,
+        createdAt: room.created_at
+      }
+    }, { status: HTTP_STATUS.OK });
   } catch (error) {
     console.error('Error fetching room:', error);
     return NextResponse.json(
       { error: 'Failed to fetch room' },
-      { status: 500 }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }
@@ -40,50 +47,25 @@ export async function DELETE(
 ) {
   try {
     const { roomId } = await params;
-    const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
-    const MESSAGES_FILE = path.join(process.cwd(), 'data', 'messages.json');
 
-    // 1. Remove from rooms.json
-    const roomsData = fs.readFileSync(ROOMS_FILE, 'utf8');
-    const rooms = JSON.parse(roomsData);
-    
-    if (!rooms[roomId]) {
-      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
-    }
-    
-    delete rooms[roomId];
-    fs.writeFileSync(ROOMS_FILE, JSON.stringify(rooms, null, 2));
+    // Delete room from database
+    // CASCADE will automatically delete related messages and participants
+    const { error } = await supabase
+      .from(TABLES.ROOMS)
+      .delete()
+      .eq('id', roomId);
 
-    // 2. Remove from users.json (activeRooms)
-    if (fs.existsSync(USERS_FILE)) {
-      const usersData = fs.readFileSync(USERS_FILE, 'utf8');
-      const users = JSON.parse(usersData);
-      
-      const updatedUsers = users.map((user: any) => ({
-        ...user,
-        activeRooms: (user.activeRooms || []).filter((id: string) => id !== roomId)
-      }));
-      
-      fs.writeFileSync(USERS_FILE, JSON.stringify(updatedUsers, null, 2));
+    if (error) {
+      console.error('Error deleting room:', error);
+      return NextResponse.json({ error: 'Room not found' }, { status: HTTP_STATUS.NOT_FOUND });
     }
 
-    // 3. Remove from messages.json
-    if (fs.existsSync(MESSAGES_FILE)) {
-      const messagesData = fs.readFileSync(MESSAGES_FILE, 'utf8');
-      const allMessages = JSON.parse(messagesData);
-      
-      if (allMessages[roomId]) {
-        delete allMessages[roomId];
-        fs.writeFileSync(MESSAGES_FILE, JSON.stringify(allMessages, null, 2));
-      }
-    }
-
-    return NextResponse.json({ success: true }, { status: 200 });
+    return NextResponse.json({ success: true }, { status: HTTP_STATUS.OK });
   } catch (error) {
     console.error('Error deleting room:', error);
     return NextResponse.json(
       { error: 'Failed to delete room' },
-      { status: 500 }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
     );
   }
 }

@@ -21,108 +21,98 @@
          (암호화된 데이터만 처리)
 ```
 
-## 🎯 이 프로젝트의 암호화 구조
+## 🎯 이 프로젝트의 암호화 구조 (Open Chat Mode)
 
 ### 사용된 암호화 알고리즘
 
-1. **PBKDF2** (Password-Based Key Derivation Function 2)
-   - 비밀번호에서 암호화 키를 생성
-   - 무차별 대입 공격 방어 (느린 해싱)
+1. **AES-GCM (256-bit)**
+   - **방 키 (Room Key)**: 실제 메시지를 암호화하는 대칭키. 방마다 무작위로 생성됩니다.
+   - **키 암호화**: 방 키 자체를 암호화하여 서버에 저장할 때도 사용됩니다.
 
-2. **AES-GCM** (Advanced Encryption Standard - Galois/Counter Mode)
-   - 대칭키 암호화 알고리즘
-   - 빠르고 안전함
-   - 인증(Authentication) 기능 포함
+2. **PBKDF2 (SHA-256)**
+   - **키 암호화 키 (KEK)** 유도: 사용자가 입력한 **비밀번호**와 **무작위 솔트(Salt)**를 결합하여 KEK를 만듭니다.
+   - 이 KEK는 **방 키를 복호화**하는 데에만 사용됩니다.
 
-### 암호화 흐름
+### 암호화 흐름 (Architecture)
 
 ```
-1. 사용자 입력: "안녕하세요"
-2. 방 비밀번호: "myPassword123"
-   
-3. PBKDF2로 키 유도:
-   - 입력: "myPassword123"
-   - Salt: "websocket-demo-salt" (고정)
-   - Iterations: 100,000회
-   - 출력: 256-bit 암호화 키
-   
-4. AES-GCM 암호화:
-   - 평문: "안녕하세요"
-   - 키: (3에서 생성된 키)
-   - IV: (랜덤 12바이트)
-   - 출력: { iv: [...], data: [...] }
-   
-5. 서버로 전송: { iv, data }
-6. 서버는 DB에 저장 (암호화된 상태)
-7. 서버가 다른 사용자들에게 브로드캐스트
-8. 수신자가 같은 비밀번호로 키 유도
-9. 복호화: "안녕하세요"
+[방 생성 시]
+1. 방장: 무작위 '방 키' 생성 (AES-GCM)
+2. 방장: 무작위 '솔트' 생성
+3. 방장: (비밀번호 + 솔트) -> PBKDF2 -> 'KEK' 생성
+4. 방장: 'KEK'로 '방 키' 암호화 -> '암호화된 방 키'
+5. 서버: '솔트'와 '암호화된 방 키' 저장 (비밀번호는 저장 안 함!)
+
+[메시지 전송 시]
+1. 사용자: '방 키'로 메시지 암호화
+2. 서버: 암호화된 메시지 전달
+
+[방 입장 시]
+1. 입장객: 비밀번호 입력
+2. 서버: '솔트', '암호화된 방 키' 제공
+3. 입장객: (입력 비번 + 솔트) -> PBKDF2 -> 'KEK' 생성
+4. 입장객: 'KEK'로 '암호화된 방 키' 복호화 -> '방 키' 획득
+5. 입장객: '방 키'로 메시지 복호화
 ```
 
 ## 💻 코드 구현
 
-### 1. 키 유도 (PBKDF2)
+### 1. 키 유도 및 방 키 복호화
 
 ```typescript
-async function deriveKey(password: string): Promise<CryptoKey> {
+// 1. 비밀번호와 솔트로 KEK(Key Encryption Key) 유도
+async function deriveKeyFromPassword(password: string, saltBase64: string): Promise<CryptoKey> {
   const enc = new TextEncoder();
-  
-  // 1단계: 비밀번호를 키 재료로 변환
-  const keyMaterial = await window.crypto.subtle.importKey(
+  const passwordKey = await window.crypto.subtle.importKey(
     "raw",
     enc.encode(password),
-    { name: "PBKDF2" },
+    "PBKDF2",
     false,
     ["deriveKey"]
   );
-  
-  // 2단계: 고정 salt (실제 프로덕션에서는 사용자별 salt 권장)
-  const salt = enc.encode("websocket-demo-salt");
-  
-  // 3단계: PBKDF2로 AES 키 유도
-  return await window.crypto.subtle.deriveKey(
+
+  const salt = base64ToArrayBuffer(saltBase64); // 서버에서 받은 솔트
+
+  return window.crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
       salt: salt,
-      iterations: 100000,  // 100,000회 반복
+      iterations: 100000,
       hash: "SHA-256"
     },
-    keyMaterial,
-    { name: "AES-GCM", length: 256 },  // 256비트 AES 키
-    false,
+    passwordKey,
+    { name: "AES-GCM", length: 256 }, // KEK 생성
+    true,
     ["encrypt", "decrypt"]
   );
 }
+
+// 2. KEK로 방 키 복호화
+async function decryptRoomKey(encryptedKey: string, password: string, salt: string) {
+  const kek = await deriveKeyFromPassword(password, salt);
+  // ... AES-GCM 복호화 로직 ...
+  return roomKey;
+}
 ```
 
-**왜 PBKDF2를 사용하나요?**
-- 사용자 비밀번호는 짧고 예측 가능할 수 있음
-- PBKDF2는 많은 반복(100,000회)을 통해 무차별 대입 공격을 어렵게 만듦
-- Salt를 사용하여 레인보우 테이블 공격 방어
-
 ### 2. 메시지 암호화 (AES-GCM)
+
+메시지 암호화는 복호화된 **방 키(Room Key)**를 사용합니다.
 
 ```typescript
 async function encryptMessage(
   text: string, 
-  key: CryptoKey
+  roomKey: CryptoKey // 복호화된 방 키
 ): Promise<{ iv: number[], data: number[] }> {
   const enc = new TextEncoder();
-  
-  // 1. 랜덤 IV (Initialization Vector) 생성
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
   
-  // 2. AES-GCM으로 암호화
   const encrypted = await window.crypto.subtle.encrypt(
-    {
-      name: "AES-GCM",
-      iv: iv  // 매번 다른 IV 사용 (중요!)
-    },
-    key,
+    { name: "AES-GCM", iv: iv },
+    roomKey,
     enc.encode(text)
   );
   
-  // 3. 결과를 전송 가능한 형태로 변환
   return {
     iv: Array.from(iv),
     data: Array.from(new Uint8Array(encrypted))
@@ -180,18 +170,15 @@ async function decryptMessage(
    - 별도 라이브러리 불필요
    - 하드웨어 가속 지원 (빠름)
 
-### ⚠️ 현재 구현의 한계
+### ⚠️ 현재 구현의 고려사항
 
-1. **고정 Salt**
-   ```typescript
-   const salt = enc.encode("websocket-demo-salt");
-   ```
-   - 모든 사용자가 같은 salt 사용
-   - **개선**: 방마다 다른 salt 사용 권장
+1. **비밀번호 의존성**
+   - 보안 강도는 전적으로 **방 비밀번호의 복잡성**에 달려 있습니다.
+   - 비밀번호가 "1234"처럼 쉬우면, 아무리 암호화가 강력해도 뚫릴 수 있습니다.
 
-2. **비밀번호 공유 방식**
-   - 방 비밀번호를 알면 누구나 복호화 가능
-   - **개선**: 공개키 암호화(RSA)로 키 교환 고려
+2. **메타데이터 노출**
+   - 누가 언제 메시지를 보냈는지는 서버가 알 수 있습니다.
+
 
 3. **메타데이터 노출**
    - 누가 언제 메시지를 보냈는지는 서버가 알 수 있음

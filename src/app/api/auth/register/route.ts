@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { supabase } from '../../../../../lib/supabase';
-import { TABLES, MESSAGES, HTTP_STATUS } from '../../../../../lib/constants';
+import { supabase } from '@/lib/supabase';
+import { TABLES, HTTP_STATUS } from '@/lib/constants';
 
 export async function POST(request: Request) {
   try {
-    const { username, password } = await request.json();
+    const { username, password, publicKey } = await request.json();
 
-    if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password are required' }, { status: HTTP_STATUS.BAD_REQUEST });
+    if (!username || !password || !publicKey) {
+      return NextResponse.json({ error: 'Username, password, and public key are required' }, { status: HTTP_STATUS.BAD_REQUEST });
     }
 
     // Check if user already exists
@@ -30,7 +30,8 @@ export async function POST(request: Request) {
       .from(TABLES.USERS)
       .insert({
         username,
-        password: hashedPassword
+        password: hashedPassword,
+        public_key: publicKey
       });
 
     if (error) {

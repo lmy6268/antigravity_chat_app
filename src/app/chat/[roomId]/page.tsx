@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useRef, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { deriveKey, encryptMessage, decryptMessage } from '../../../../lib/crypto';
-import { SOCKET_EVENTS } from '../../../../lib/constants';
+import { encryptMessage, decryptMessage, decryptRoomKeyWithPassword } from '@/lib/crypto';
+import { SOCKET_EVENTS } from '@/lib/constants';
 
 interface Message {
   sender: string;
@@ -148,13 +148,26 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     if (!pwd || !nick) return;
 
     try {
-      const key = await deriveKey(pwd);
+      // 1. Fetch Room Salt & Encrypted Key
+      const res = await fetch(`/api/rooms/${roomId}/join`);
+      if (!res.ok) throw new Error('Failed to fetch room encryption info');
+      
+      const data = await res.json();
+      const { salt, encryptedKey } = data.room;
+
+      if (!salt || !encryptedKey) {
+        throw new Error('Invalid room encryption data');
+      }
+
+      // 2. Decrypt Room Key
+      const key = await decryptRoomKeyWithPassword(encryptedKey, pwd, salt);
+      
       setCryptoKey(key);
       setIsJoined(true);
       connectSocket(nick);
     } catch (error) {
-      console.error('Error deriving key:', error);
-      alert('Failed to setup encryption.');
+      console.error('Error joining room:', error);
+      alert('Failed to join room. Wrong password?');
     }
   };
 
@@ -191,10 +204,15 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
         isSystem: false
       }]);
 
-      // Socket.io emit - 서버가 다른 클라이언트들에게만 브로드캠스트
+      // Socket.io emit - 서버가 다른 클라이언트들에게만 브로드캐스트하고 DB에 저장
       (wsRef.current as any).emit(SOCKET_EVENTS.MESSAGE, {
         roomId,
-        payload: encrypted
+        userId: nickname, // user_id for database
+        content: messagePayload, // encrypted message content
+        isEncrypted: true,
+        iv: encrypted.iv,
+        data: encrypted.data, // for real-time broadcast
+        payload: encrypted // backward compatibility
       });
       
       // 입력 필드 초기화
@@ -215,34 +233,6 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     alert('Invite link copied to clipboard!');
   };
 
-  const handleLeaveRoom = async () => {
-    if (roomInfo && roomInfo.creator === nickname) {
-      if (confirm('You are the creator. Leaving will DELETE this room for everyone. Are you sure?')) {
-        try {
-          // API를 통해 방 삭제
-          await fetch(`/api/rooms/${roomId}`, { method: 'DELETE' });
-          
-          // 소켓으로 다른 사람들에게 알림
-          if (wsRef.current) {
-            (wsRef.current as any).emit(SOCKET_EVENTS.ROOM_DELETED, roomId);
-            (wsRef.current as any).disconnect();
-            wsRef.current = null;
-          }
-          router.push('/');
-        } catch (e) {
-          console.error('Failed to delete room:', e);
-          alert('Failed to delete room.');
-        }
-      }
-    } else {
-      // 일반 나가기
-      if (wsRef.current) {
-        (wsRef.current as any).disconnect();
-        wsRef.current = null;
-      }
-      router.push('/');
-    }
-  };
 
   // --- Web Crypto API 헬퍼 함수들 ---
   // deriveKey, encryptMessage, decryptMessage 함수는 lib/crypto.ts로 이동했으므로 여기서는 제거합니다.
@@ -253,14 +243,14 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     return (
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', backgroundColor: '#1e1e1e', color: '#f0f0f0'
+        minHeight: '100vh', backgroundColor: '#1e1e1e', color: '#f0f0f0', padding: '15px'
       }}>
         <div style={{
-          backgroundColor: '#252526', padding: '40px', borderRadius: '12px',
+          backgroundColor: '#252526', padding: 'clamp(20px, 5vw, 40px)', borderRadius: '12px',
           display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', maxWidth: '400px'
         }}>
-          <h2 style={{ margin: '0 0 10px 0', textAlign: 'center' }}>Join {roomName}</h2>
-          <p style={{ textAlign: 'center', color: '#aaa' }}>Enter password to decrypt messages.</p>
+          <h2 style={{ margin: '0 0 10px 0', textAlign: 'center', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)' }}>Join {roomName}</h2>
+          <p style={{ textAlign: 'center', color: '#aaa', fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}>Enter password to decrypt messages.</p>
           
           <div style={{ position: 'relative', width: '100%' }}>
             <input
@@ -270,12 +260,12 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
               placeholder="Room Password"
               style={{
                 padding: '12px',
-                paddingRight: '40px', // Space for the eye icon
+                paddingRight: '40px',
                 borderRadius: '6px',
                 border: '1px solid #3e3e3e',
                 backgroundColor: '#1e1e1e',
                 color: 'white',
-                fontSize: '16px',
+                fontSize: 'clamp(0.875rem, 3vw, 1rem)',
                 width: '100%',
                 boxSizing: 'border-box'
               }}
@@ -305,14 +295,14 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
           
           <button onClick={() => handleJoin(password, nickname)} style={{
             padding: '14px', borderRadius: '6px', border: 'none',
-            backgroundColor: '#007acc', color: 'white', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer'
+            backgroundColor: '#007acc', color: 'white', fontSize: 'clamp(0.875rem, 3vw, 1rem)', fontWeight: 'bold', cursor: 'pointer'
           }}>
             Join Room
           </button>
           
           <button onClick={() => router.push('/')} style={{
             padding: '10px', borderRadius: '6px', border: 'none',
-            backgroundColor: 'transparent', color: '#aaa', cursor: 'pointer'
+            backgroundColor: 'transparent', color: '#aaa', cursor: 'pointer', fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)'
           }}>
             Back to Dashboard
           </button>
@@ -328,17 +318,17 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     }}>
       {/* Header */}
       <div style={{
-        padding: '15px 20px', backgroundColor: '#252526', borderBottom: '1px solid #3e3e3e',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+        padding: '15px', backgroundColor: '#252526', borderBottom: '1px solid #3e3e3e',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button onClick={() => router.push('/')} style={{
-            background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: '20px'
+            background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', fontSize: 'clamp(1.125rem, 4vw, 1.25rem)'
           }}>←</button>
-          <h2 style={{ margin: 0 }}>{roomName}</h2>
+          <h2 style={{ margin: 0, fontSize: 'clamp(1rem, 4vw, 1.25rem)', wordBreak: 'break-word' }}>{roomName}</h2>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <span style={{ color: '#aaa', fontSize: '14px' }}>{nickname}</span>
+          <span style={{ color: '#aaa', fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)' }}>{nickname}</span>
           <button onClick={async () => {
             setShowSettings(!showSettings);
             // Refresh room info when opening settings
@@ -354,7 +344,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
               }
             }
           }} style={{
-            background: 'none', border: 'none', color: '#f0f0f0', cursor: 'pointer', fontSize: '20px'
+            background: 'none', border: 'none', color: '#f0f0f0', cursor: 'pointer', fontSize: 'clamp(1.125rem, 4vw, 1.25rem)'
           }}>⚙️</button>
         </div>
       </div>
@@ -468,7 +458,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
 
       {/* Input Area */}
       <form onSubmit={sendMessage} style={{
-        padding: '20px', backgroundColor: '#252526', display: 'flex', gap: '10px'
+        padding: 'clamp(15px, 3vw, 20px)', backgroundColor: '#252526', display: 'flex', gap: '10px', flexWrap: 'wrap'
       }}>
         <input
           type="text"
@@ -476,13 +466,13 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           style={{
-            flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #3e3e3e',
-            backgroundColor: '#1e1e1e', color: 'white', fontSize: '16px'
+            flex: '1 1 200px', padding: '12px', borderRadius: '6px', border: '1px solid #3e3e3e',
+            backgroundColor: '#1e1e1e', color: 'white', fontSize: 'clamp(0.875rem, 3vw, 1rem)', minWidth: '0'
           }}
         />
         <button type="submit" style={{
           padding: '12px 24px', borderRadius: '6px', border: 'none',
-          backgroundColor: '#007acc', color: 'white', fontWeight: 'bold', cursor: 'pointer'
+          backgroundColor: '#007acc', color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: 'clamp(0.875rem, 3vw, 1rem)'
         }}>
           Send
         </button>

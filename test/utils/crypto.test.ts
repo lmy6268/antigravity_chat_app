@@ -1,4 +1,4 @@
-import { deriveKey, encryptMessage, decryptMessage } from '../../lib/crypto';
+import { deriveKey, encryptMessage, decryptMessage } from '../../src/lib/crypto';
 
 describe('Crypto Utils', () => {
   // Mock setup is handled in jest.setup.js

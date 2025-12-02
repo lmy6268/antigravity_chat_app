@@ -1,10 +1,10 @@
 import { POST as createRoom } from '../../src/app/api/rooms/create/route';
 import { GET as getRoom, DELETE as deleteRoom } from '../../src/app/api/rooms/[roomId]/route';
-import { supabase } from '../../lib/supabase';
-import { HTTP_STATUS } from '../../lib/constants';
+import { supabase } from '../../src/lib/supabase';
+import { HTTP_STATUS } from '../../src/lib/constants';
 
 // Mock dependencies
-jest.mock('../../lib/supabase', () => ({
+jest.mock('../../src/lib/supabase', () => ({
   supabase: {
     from: jest.fn(),
   },

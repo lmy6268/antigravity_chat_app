@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '../../../../../../lib/supabase';
-import { TABLES, MESSAGES, HTTP_STATUS } from '../../../../../../lib/constants';
+import { supabase } from '@/lib/supabase';
+import { TABLES, MESSAGES, HTTP_STATUS } from '@/lib/constants';
 
 export async function GET(
   request: Request,

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { supabase } from '../../../../../lib/supabase';
-import { TABLES, HTTP_STATUS } from '../../../../../lib/constants';
+import { supabase } from '@/lib/supabase';
+import { TABLES, HTTP_STATUS } from '@/lib/constants';
 
 export async function POST(request: Request) {
   try {
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     // Find user by username
     const { data: user, error } = await supabase
       .from(TABLES.USERS)
-      .select('id, username, password')
+      .select('id, username, password, public_key')
       .eq('username', username)
       .single();
 
@@ -33,7 +33,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ 
       user: { 
         id: user.id, 
-        username: user.username 
+        username: user.username,
+        publicKey: user.public_key
       } 
     });
   } catch (error) {

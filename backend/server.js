@@ -7,8 +7,25 @@ const fs = require('fs');
 const { parse } = require('url');
 const next = require('next');
 const { Server } = require('socket.io');
-const { supabase } = require('./lib/supabase');
-const { TABLES, SOCKET_EVENTS } = require('./lib/constants');
+const { supabase } = require('../src/lib/supabase');
+
+// Constants defined directly to avoid importing TypeScript file in Node.js
+const TABLES = {
+  USERS: 'users',
+  ROOMS: 'rooms',
+  MESSAGES: 'messages',
+  ROOM_PARTICIPANTS: 'room_participants'
+};
+
+const SOCKET_EVENTS = {
+  CONNECTION: 'connection',
+  DISCONNECT: 'disconnect',
+  JOIN_ROOM: 'join-room',
+  LEAVE_ROOM: 'leave-room',
+  MESSAGE: 'message',
+  ROOM_DELETED: 'room-deleted',
+  ERROR: 'error'
+};
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = '0.0.0.0';

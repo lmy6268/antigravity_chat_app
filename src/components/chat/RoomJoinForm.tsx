@@ -1,4 +1,4 @@
-import { useTranslation } from '@/i18n/LanguageContext';
+import { useTranslation, withParams } from '@/i18n/LanguageContext';
 
 interface RoomJoinFormProps {
     roomName: string;
@@ -8,6 +8,7 @@ interface RoomJoinFormProps {
     togglePasswordVisibility: () => void;
     onJoin: (e: React.FormEvent) => void;
     onBack: () => void;
+    error?: string;
 }
 
 export function RoomJoinForm({
@@ -17,7 +18,8 @@ export function RoomJoinForm({
     showPassword,
     togglePasswordVisibility,
     onJoin,
-    onBack
+    onBack,
+    error
 }: RoomJoinFormProps) {
     const { t } = useTranslation();
 
@@ -47,22 +49,35 @@ export function RoomJoinForm({
                     textAlign: 'center',
                     fontSize: 'clamp(1.25rem, 4vw, 1.5rem)'
                 }}>
-                    {t('chat.joinTitle', { roomName })}
+                    {withParams(t.chat.joinTitle, { roomName })}
                 </h2>
                 <p style={{
                     textAlign: 'center',
                     color: '#aaa',
                     fontSize: 'clamp(0.875rem, 3vw, 1rem)'
                 }}>
-                    {t('chat.passwordPrompt')}
+                    {t.chat.passwordPrompt}
                 </p>
+
+                {error && (
+                    <div style={{
+                        backgroundColor: 'rgba(217, 83, 79, 0.1)',
+                        color: '#d9534f',
+                        padding: '10px',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        textAlign: 'center'
+                    }}>
+                        {error}
+                    </div>
+                )}
 
                 <div style={{ position: 'relative', width: '100%' }}>
                     <input
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder={t('dashboard.createRoom.passwordPlaceholder')}
+                        placeholder={t.dashboard.createRoom.passwordPlaceholder}
                         style={{
                             padding: '12px',
                             paddingRight: '40px',
@@ -111,7 +126,7 @@ export function RoomJoinForm({
                         cursor: 'pointer'
                     }}
                 >
-                    {t('chat.joinButton')}
+                    {t.chat.joinButton}
                 </button>
 
                 <button
@@ -126,7 +141,7 @@ export function RoomJoinForm({
                         fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)'
                     }}
                 >
-                    {t('chat.backButton')}
+                    {t.chat.backButton}
                 </button>
             </div>
         </div>

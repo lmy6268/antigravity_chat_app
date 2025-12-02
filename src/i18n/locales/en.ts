@@ -17,6 +17,12 @@ export const en = {
     username: 'Username',
     password: 'Password',
     welcome: 'Welcome',
+    validation: {
+      username: 'Username must be at least 6 characters long and contain at least one letter (alphanumeric only).',
+      password: 'Password must be at least 8 characters long and contain only letters, numbers, and @ ! # $',
+      usernameHelp: 'Min 6 chars, must contain letters (alphanumeric)',
+      passwordHelp: 'Min 8 chars, allowed: letters, numbers, @ ! # $',
+    },
   },
   dashboard: {
     title: 'Chat Dashboard',
@@ -51,11 +57,16 @@ export const en = {
     createRoom: {
       title: 'Create New Room',
       namePlaceholder: 'Room Name',
-      passwordPlaceholder: 'Room Password',
+      passwordPlaceholder: 'Enter password',
       submit: 'Create',
     },
     qr: {
       joinTitle: 'Join {roomName}',
+    },
+    alerts: {
+      invalidPassword: 'Invalid room password',
+      roomDeleted: 'The room has been deleted by the creator.',
+      linkCopied: 'Invite link copied to clipboard!',
     }
   },
   chat: {

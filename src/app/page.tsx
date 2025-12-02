@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { QRCodeCanvas } from 'qrcode.react';
-import { useTranslation } from '@/i18n/LanguageContext';
+import { useTranslation, withParams } from '@/i18n/LanguageContext';
 import { useRoomList } from '@/hooks/dashboard/useRoomList';
 import { useRoomCreate } from '@/hooks/dashboard/useRoomCreate';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
@@ -27,7 +27,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'rooms' | 'friends'>('rooms');
 
   // Hooks
-  const { myRooms, fetchRooms, joinRoom, setMyRooms } = useRoomList(nickname);
+  const { myRooms, joinRoom, setMyRooms } = useRoomList(nickname);
   const { createRoom, isCreating } = useRoomCreate(nickname, (newRoom) => {
     setMyRooms(prev => [...prev, newRoom]);
     setShowCreateModal(false);
@@ -85,9 +85,9 @@ export default function Dashboard() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || t('common.error'));
+      if (!res.ok) throw new Error(data.error || t.common.error);
 
-      alert(t('dashboard.friends.requestSent'));
+      alert(t.dashboard.friends.requestSent);
       setFriendUsername('');
       fetchFriends(nickname);
     } catch (error: any) {
@@ -111,7 +111,7 @@ export default function Dashboard() {
       fetchFriends(nickname);
     } catch (error) {
       console.error('Error updating friend:', error);
-      alert(t('common.error'));
+      alert(t.common.error);
     }
   };
 
@@ -139,7 +139,7 @@ export default function Dashboard() {
               borderBottom: activeTab === 'rooms' ? '2px solid #007acc' : 'none', cursor: 'pointer', fontSize: '16px'
             }}
           >
-            {t('dashboard.tabs.rooms')}
+            {t.dashboard.tabs.rooms}
           </button>
           <button
             onClick={() => setActiveTab('friends')}
@@ -148,7 +148,7 @@ export default function Dashboard() {
               borderBottom: activeTab === 'friends' ? '2px solid #007acc' : 'none', cursor: 'pointer', fontSize: '16px'
             }}
           >
-            {t('dashboard.tabs.friends')}
+            {t.dashboard.tabs.friends}
           </button>
         </div>
 
@@ -161,11 +161,11 @@ export default function Dashboard() {
         ) : (
           <>
             <div style={{ marginBottom: '30px' }}>
-              <h3>{t('dashboard.friends.addTitle')}</h3>
+              <h3>{t.dashboard.friends.addTitle}</h3>
               <form onSubmit={handleSendFriendRequest} style={{ display: 'flex', gap: '10px' }}>
                 <input
                   type="text"
-                  placeholder={t('dashboard.friends.enterUsername')}
+                  placeholder={t.dashboard.friends.enterUsername}
                   value={friendUsername}
                   onChange={(e) => setFriendUsername(e.target.value)}
                   style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #3e3e3e', backgroundColor: '#1e1e1e', color: 'white' }}
@@ -174,14 +174,14 @@ export default function Dashboard() {
                   padding: '10px 20px', borderRadius: '6px', border: 'none',
                   backgroundColor: '#007acc', color: 'white', cursor: 'pointer'
                 }}>
-                  {t('dashboard.friends.sendRequest')}
+                  {t.dashboard.friends.sendRequest}
                 </button>
               </form>
             </div>
 
             <div style={{ display: 'grid', gap: '20px', gridTemplateColumns: '1fr 1fr' }}>
               <div>
-                <h3>{t('dashboard.friends.listTitle')}</h3>
+                <h3>{t.dashboard.friends.listTitle}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {friends.filter(f => f.status === 'accepted').map(friend => (
                     <div key={friend.id} style={{
@@ -192,20 +192,20 @@ export default function Dashboard() {
                       <button onClick={() => handleFriendAction(friend.id, 'delete')} style={{
                         padding: '5px 10px', borderRadius: '4px', border: 'none', backgroundColor: '#d9534f', color: 'white', cursor: 'pointer', fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)'
                       }}>
-                        {t('dashboard.friends.remove')}
+                        {t.dashboard.friends.remove}
                       </button>
                     </div>
                   ))}
                   {friends.filter(f => f.status === 'accepted').length === 0 && (
                     <div style={{ color: '#aaa', fontStyle: 'italic', fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}>
-                      {t('dashboard.friends.noFriends')}
+                      {t.dashboard.friends.noFriends}
                     </div>
                   )}
                 </div>
               </div>
 
               <div>
-                <h3>{t('dashboard.friends.requestsTitle')}</h3>
+                <h3>{t.dashboard.friends.requestsTitle}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {friends.filter(f => f.status === 'pending').map(friend => (
                     <div key={friend.id} style={{
@@ -215,7 +215,7 @@ export default function Dashboard() {
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>{friend.username}</span>
                         <span style={{ fontSize: '12px', color: '#aaa' }}>
-                          {friend.isSender ? t('dashboard.friends.sent') : t('dashboard.friends.received')}
+                          {friend.isSender ? t.dashboard.friends.sent : t.dashboard.friends.received}
                         </span>
                       </div>
                       {!friend.isSender && (
@@ -223,12 +223,12 @@ export default function Dashboard() {
                           <button onClick={() => handleFriendAction(friend.id, 'accept')} style={{
                             flex: 1, padding: '5px', borderRadius: '4px', border: 'none', backgroundColor: '#28a745', color: 'white', cursor: 'pointer', fontSize: '12px'
                           }}>
-                            {t('dashboard.friends.accept')}
+                            {t.dashboard.friends.accept}
                           </button>
                           <button onClick={() => handleFriendAction(friend.id, 'reject')} style={{
                             flex: 1, padding: '5px', borderRadius: '4px', border: 'none', backgroundColor: '#d9534f', color: 'white', cursor: 'pointer', fontSize: '12px'
                           }}>
-                            {t('dashboard.friends.reject')}
+                            {t.dashboard.friends.reject}
                           </button>
                         </div>
                       )}
@@ -236,14 +236,14 @@ export default function Dashboard() {
                         <button onClick={() => handleFriendAction(friend.id, 'delete')} style={{
                           width: '100%', padding: '5px', borderRadius: '4px', border: 'none', backgroundColor: '#6c757d', color: 'white', cursor: 'pointer', fontSize: '12px'
                         }}>
-                          {t('dashboard.friends.cancel')}
+                          {t.dashboard.friends.cancel}
                         </button>
                       )}
                     </div>
                   ))}
                   {friends.filter(f => f.status === 'pending').length === 0 && (
                     <div style={{ color: '#aaa', fontStyle: 'italic' }}>
-                      {t('dashboard.friends.noRequests')}
+                      {t.dashboard.friends.noRequests}
                     </div>
                   )}
                 </div>
@@ -271,7 +271,7 @@ export default function Dashboard() {
               backgroundColor: '#252526', padding: '30px', borderRadius: '12px',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', maxWidth: '90%'
             }} onClick={e => e.stopPropagation()}>
-              <h3 style={{ margin: 0, color: '#f0f0f0' }}>{t('dashboard.qr.joinTitle', { roomName: qrRoomName })}</h3>
+              <h3 style={{ margin: 0, color: '#f0f0f0' }}>{withParams(t.dashboard.qr.joinTitle, { roomName: qrRoomName })}</h3>
               <div style={{ padding: '20px', backgroundColor: 'white', borderRadius: '8px' }}>
                 <QRCodeCanvas value={qrRoomUrl} size={200} />
               </div>
@@ -282,7 +282,7 @@ export default function Dashboard() {
                 padding: '10px 20px', borderRadius: '6px', border: 'none',
                 backgroundColor: '#333', color: '#f0f0f0', cursor: 'pointer'
               }}>
-                {t('common.close')}
+                {t.common.close}
               </button>
             </div>
           </div>

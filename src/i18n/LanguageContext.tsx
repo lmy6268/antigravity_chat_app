@@ -7,36 +7,43 @@ import { ko } from './locales/ko';
 type Locale = 'en' | 'ko';
 type Dictionary = typeof en;
 
-// Nested key access helper type
-type Path<T> = T extends object ? { [K in keyof T]: K extends string ? `${K}` | `${K}.${Path<T[K]>}` : never }[keyof T] : never;
-
 const dictionaries: Record<Locale, Dictionary> = {
     en,
     ko,
 };
 
+// Deep readonly type for translations
+type DeepReadonly<T> = T extends object
+    ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+    : T;
+
+// Helper to replace parameters in translation strings
+export function withParams(template: string, params: Record<string, string>): string {
+    return template.replace(/{(\w+)}/g, (_, key) => params[key] || `{${key}}`);
+}
+
 interface LanguageContextType {
     locale: Locale;
     setLocale: (locale: Locale) => void;
-    t: (key: string, params?: Record<string, string>) => string;
+    t: DeepReadonly<Dictionary>;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-    const [locale, setLocale] = useState<Locale>('en');
+    const [locale, setLocale] = useState<Locale>('ko');
 
     useEffect(() => {
-        // Detect browser language
-        const browserLang = navigator.language.split('-')[0];
-        if (browserLang === 'ko') {
-            setLocale('ko');
-        }
-
-        // Check local storage
+        // Check local storage first
         const storedLocale = localStorage.getItem('app_locale') as Locale;
         if (storedLocale && (storedLocale === 'en' || storedLocale === 'ko')) {
             setLocale(storedLocale);
+        } else {
+            // If no preference, check browser language
+            const browserLang = navigator.language.split('-')[0];
+            if (browserLang === 'en') {
+                setLocale('en');
+            }
         }
     }, []);
 
@@ -45,29 +52,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('app_locale', newLocale);
     };
 
-    const t = (key: string, params?: Record<string, string>): string => {
-        const keys = key.split('.');
-        let value: any = dictionaries[locale];
-
-        for (const k of keys) {
-            if (value && typeof value === 'object' && k in value) {
-                value = value[k as keyof typeof value];
-            } else {
-                return key; // Fallback to key if not found
-            }
-        }
-
-        if (typeof value !== 'string') {
-            return key;
-        }
-
-        // Replace params like {name}
-        if (params) {
-            return value.replace(/{(\w+)}/g, (_, k) => params[k] || `{${k}}`);
-        }
-
-        return value;
-    };
+    const t = dictionaries[locale] as DeepReadonly<Dictionary>;
 
     return (
         <LanguageContext.Provider value={{ locale, setLocale: changeLocale, t }}>

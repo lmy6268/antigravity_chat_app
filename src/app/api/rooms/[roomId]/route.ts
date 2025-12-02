@@ -9,10 +9,13 @@ export async function GET(
   try {
     const { roomId } = await params;
 
-    //Read room from database
+    //Read room from database with participants
     const { data: room, error } = await supabase
       .from(TABLES.ROOMS)
-      .select('*')
+      .select(`
+        *,
+        participants:room_participants(username)
+      `)
       .eq('id', roomId)
       .single();
 
@@ -23,12 +26,16 @@ export async function GET(
       );
     }
 
+    // Transform participants data
+    const participants = (room.participants as any[])?.map(p => p.username) || [];
+
     return NextResponse.json({ 
       room: {
         id: room.id,
         name: room.name,
         creator: room.creator_username,
         password: room.password,
+        participants: participants,
         createdAt: room.created_at
       }
     }, { status: HTTP_STATUS.OK });

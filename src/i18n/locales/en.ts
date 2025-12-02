@@ -56,6 +56,11 @@ export const en = {
     },
     qr: {
       joinTitle: 'Join {roomName}',
+    },
+    alerts: {
+      invalidPassword: 'Invalid room password',
+      roomDeleted: 'The room has been deleted by the creator.',
+      linkCopied: 'Invite link copied to clipboard!',
     }
   },
   chat: {

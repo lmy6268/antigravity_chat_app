@@ -27,7 +27,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'rooms' | 'friends'>('rooms');
 
   // Hooks
-  const { myRooms, fetchRooms, joinRoom, setMyRooms } = useRoomList(nickname);
+  const { myRooms, joinRoom, setMyRooms } = useRoomList(nickname);
   const { createRoom, isCreating } = useRoomCreate(nickname, (newRoom) => {
     setMyRooms(prev => [...prev, newRoom]);
     setShowCreateModal(false);

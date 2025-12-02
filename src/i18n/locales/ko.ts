@@ -17,6 +17,12 @@ export const ko = {
     username: '사용자명',
     password: '비밀번호',
     welcome: '환영합니다',
+    validation: {
+      username: '아이디는 영문 포함 6자리 이상이어야 합니다 (영문/숫자 혼합 가능).',
+      password: '비밀번호는 8자리 이상이어야 하며, 영문, 숫자, @ ! # $ 기호만 사용할 수 있습니다.',
+      usernameHelp: '영문 포함 6자리 이상 (영문/숫자)',
+      passwordHelp: '8자리 이상 (영문, 숫자, @ ! # $)',
+    },
   },
   dashboard: {
     title: '채팅 대시보드',
@@ -51,11 +57,16 @@ export const ko = {
     createRoom: {
       title: '새 채팅방 만들기',
       namePlaceholder: '방 이름',
-      passwordPlaceholder: '방 비밀번호',
+      passwordPlaceholder: '비밀번호 입력',
       submit: '생성',
     },
     qr: {
       joinTitle: '{roomName} 참여하기',
+    },
+    alerts: {
+      invalidPassword: '비밀번호가 올바르지 않습니다',
+      roomDeleted: '방장이 방을 삭제했습니다.',
+      linkCopied: '초대 링크가 클립보드에 복사되었습니다!',
     }
   },
   chat: {

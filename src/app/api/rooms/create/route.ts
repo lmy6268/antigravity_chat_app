@@ -13,12 +13,28 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Insert new room with Open Chat data
+    // 1. Get user ID for the creator
+    const { data: user, error: userError } = await supabase
+      .from(TABLES.USERS)
+      .select('id')
+      .eq('username', creator)
+      .single();
+
+    if (userError || !user) {
+      console.error('Error finding user:', userError);
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: HTTP_STATUS.NOT_FOUND }
+      );
+    }
+
+    // 2. Insert new room with creator_id and creator_username
     const { data: room, error: roomError } = await supabase
       .from(TABLES.ROOMS)
       .insert({
         id,
         name,
+        creator_id: user.id,
         creator_username: creator,
         password,
         salt,
@@ -29,29 +45,26 @@ export async function POST(request: Request) {
 
     if (roomError) {
       console.error('Error creating room:', roomError);
+      console.error('Room data attempted:', { id, name, creator, password, salt, encryptedKey });
       return NextResponse.json(
-        { error: 'Failed to create room' },
+        { error: 'Failed to create room', details: roomError },
         { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
       );
     }
 
-    // 2. Add creator to participants with encrypted key
-    // First get user ID
-    const { data: user } = await supabase
-      .from(TABLES.USERS)
-      .select('id')
-      .eq('username', creator)
-      .single();
+    // 3. Add creator to participants with user_id
+    const { error: participantError } = await supabase
+      .from(TABLES.ROOM_PARTICIPANTS)
+      .insert({
+        room_id: id,
+        user_id: user.id,
+        username: creator
+        // encrypted_key is now on the room table for Open Chat
+      });
 
-    if (user) {
-      await supabase
-        .from(TABLES.ROOM_PARTICIPANTS)
-        .insert({
-          room_id: id,
-          user_id: user.id,
-          username: creator
-          // encrypted_key is now on the room table for Open Chat
-        });
+    if (participantError) {
+      console.error('Error adding creator to participants:', participantError);
+      // Non-fatal, room is created, just log the error
     }
 
     return NextResponse.json({ 

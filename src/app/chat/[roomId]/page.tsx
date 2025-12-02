@@ -11,6 +11,8 @@ import { ChatSettings } from '@/components/chat/ChatSettings';
 import { ChatMessageList } from '@/components/chat/ChatMessageList';
 import { ChatInput } from '@/components/chat/ChatInput';
 
+import { useTranslation } from '@/i18n/LanguageContext';
+
 /**
  * ChatRoom Component (Orchestrator)
  * 
@@ -21,6 +23,7 @@ import { ChatInput } from '@/components/chat/ChatInput';
  */
 export default function ChatRoom({ params }: { params: Promise<{ roomId: string }> }) {
   const searchParams = useSearchParams();
+  const { t } = useTranslation();
 
   const { roomId } = use(params);
   const roomName = searchParams.get('name') || 'Chat Room';
@@ -37,6 +40,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     cryptoKey,
     joinRoom,
     leaveRoom,
+    error
   } = useRoomJoin(roomId, roomName);
 
   const {
@@ -83,7 +87,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   // Handle room deletion
   useEffect(() => {
     onRoomDeleted(() => {
-      alert('The room has been deleted by the creator.');
+      alert(t.dashboard.alerts.roomDeleted);
       disconnectSocket();
       leaveRoom();
     });
@@ -103,7 +107,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   const copyInviteLink = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url);
-    alert('Invite link copied to clipboard!');
+    alert(t.dashboard.alerts.linkCopied);
   };
 
   // Render join form if not joined
@@ -117,6 +121,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
         togglePasswordVisibility={togglePasswordVisibility}
         onJoin={joinRoom}
         onBack={leaveRoom}
+        error={error}
       />
     );
   }

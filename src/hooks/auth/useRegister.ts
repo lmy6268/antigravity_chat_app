@@ -43,13 +43,13 @@ export function useRegister() {
     // Validation
     const usernameRegex = /^(?=.*[a-zA-Z])[a-zA-Z0-9]{6,}$/;
     if (!usernameRegex.test(username)) {
-      setError(t('auth.validation.username'));
+      setError(t.auth.validation.username);
       return;
     }
 
     const passwordRegex = /^[a-zA-Z0-9@!#$]{8,}$/;
     if (!passwordRegex.test(password)) {
-      setError(t('auth.validation.password'));
+      setError(t.auth.validation.password);
       return;
     }
 

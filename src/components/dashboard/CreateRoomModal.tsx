@@ -27,10 +27,10 @@ export function CreateRoomModal({ onClose, onSubmit, isCreating }: CreateRoomMod
                 backgroundColor: '#252526', padding: '30px', borderRadius: '12px',
                 width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '15px'
             }}>
-                <h2 style={{ margin: '0 0 10px 0' }}>{t('dashboard.createRoom.title')}</h2>
+                <h2 style={{ margin: '0 0 10px 0' }}>{t.dashboard.createRoom.title}</h2>
                 <input
                     type="text"
-                    placeholder={t('dashboard.createRoom.namePlaceholder')}
+                    placeholder={t.dashboard.createRoom.namePlaceholder}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
@@ -39,7 +39,7 @@ export function CreateRoomModal({ onClose, onSubmit, isCreating }: CreateRoomMod
                 <div style={{ position: 'relative', width: '100%' }}>
                     <input
                         type={showPassword ? "text" : "password"}
-                        placeholder={t('dashboard.createRoom.passwordPlaceholder')}
+                        placeholder={t.dashboard.createRoom.passwordPlaceholder}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -80,13 +80,13 @@ export function CreateRoomModal({ onClose, onSubmit, isCreating }: CreateRoomMod
                     <button type="button" onClick={onClose} style={{
                         flex: 1, padding: '10px', borderRadius: '6px', border: 'none', backgroundColor: '#6c757d', color: 'white', cursor: 'pointer'
                     }}>
-                        {t('common.cancel')}
+                        {t.common.cancel}
                     </button>
                     <button type="submit" disabled={isCreating} style={{
                         flex: 1, padding: '10px', borderRadius: '6px', border: 'none', backgroundColor: '#007acc', color: 'white', cursor: 'pointer',
                         opacity: isCreating ? 0.7 : 1
                     }}>
-                        {isCreating ? t('common.loading') : t('dashboard.createRoom.submit')}
+                        {isCreating ? t.common.loading : t.dashboard.createRoom.submit}
                     </button>
                 </div>
             </form>

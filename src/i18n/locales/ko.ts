@@ -56,6 +56,11 @@ export const ko = {
     },
     qr: {
       joinTitle: '{roomName} 참여하기',
+    },
+    alerts: {
+      invalidPassword: '비밀번호가 올바르지 않습니다',
+      roomDeleted: '방장이 방을 삭제했습니다.',
+      linkCopied: '초대 링크가 클립보드에 복사되었습니다!',
     }
   },
   chat: {

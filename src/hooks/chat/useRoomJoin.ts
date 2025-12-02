@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { decryptRoomKeyWithPassword } from '@/lib/crypto';
 
+import { useTranslation } from '@/i18n/LanguageContext';
+
 /**
  * useRoomJoin Hook (ViewModel)
  * 
@@ -15,6 +17,7 @@ import { decryptRoomKeyWithPassword } from '@/lib/crypto';
  */
 export function useRoomJoin(roomId: string, roomName: string) {
   const router = useRouter();
+  const { t } = useTranslation();
   
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
@@ -67,7 +70,7 @@ export function useRoomJoin(roomId: string, roomName: string) {
       setCryptoKey(decryptedKey);
       setIsJoined(true);
     } catch (error) {
-      alert('Invalid room password');
+      alert(t('alerts.invalidPassword'));
     }
   };
 

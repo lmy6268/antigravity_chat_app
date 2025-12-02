@@ -1,3 +1,5 @@
+import { useTranslation } from '@/i18n/LanguageContext';
+
 interface ChatInputProps {
     inputMessage: string;
     setInputMessage: (value: string) => void;
@@ -6,6 +8,8 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ inputMessage, setInputMessage, sendMessage, isConnected }: ChatInputProps) {
+    const { t } = useTranslation();
+
     return (
         <form onSubmit={sendMessage} style={{
             padding: 'clamp(15px, 3vw, 20px)',
@@ -16,7 +20,7 @@ export function ChatInput({ inputMessage, setInputMessage, sendMessage, isConnec
         }}>
             <input
                 type="text"
-                placeholder="Type a message..."
+                placeholder={t('chat.placeholder')}
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 disabled={!isConnected}
@@ -47,7 +51,7 @@ export function ChatInput({ inputMessage, setInputMessage, sendMessage, isConnec
                     opacity: isConnected ? 1 : 0.6
                 }}
             >
-                Send
+                {t('chat.send')}
             </button>
         </form>
     );

@@ -1,3 +1,5 @@
+import { useTranslation } from '@/i18n/LanguageContext';
+
 interface RoomInfo {
     creator: string;
     password: string;
@@ -11,6 +13,8 @@ interface ChatSettingsProps {
 }
 
 export function ChatSettings({ roomInfo, onCopyLink, onLeave }: ChatSettingsProps) {
+    const { t } = useTranslation();
+
     return (
         <div style={{
             position: 'absolute',
@@ -31,17 +35,17 @@ export function ChatSettings({ roomInfo, onCopyLink, onLeave }: ChatSettingsProp
                 borderBottom: '1px solid #555',
                 paddingBottom: '10px'
             }}>
-                Room Settings
+                {t('chat.settings')}
             </h3>
 
             {roomInfo && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px' }}>
                     <div>
-                        <strong style={{ color: '#aaa' }}>Creator:</strong>
+                        <strong style={{ color: '#aaa' }}>{t('chat.creator')}:</strong>
                         <div style={{ marginTop: '4px' }}>{roomInfo.creator}</div>
                     </div>
                     <div>
-                        <strong style={{ color: '#aaa' }}>Password:</strong>
+                        <strong style={{ color: '#aaa' }}>{t('auth.password')}:</strong>
                         <div style={{
                             marginTop: '4px',
                             fontFamily: 'monospace',
@@ -53,7 +57,7 @@ export function ChatSettings({ roomInfo, onCopyLink, onLeave }: ChatSettingsProp
                         </div>
                     </div>
                     <div>
-                        <strong style={{ color: '#aaa' }}>Active Participants:</strong>
+                        <strong style={{ color: '#aaa' }}>{t('chat.participants')}:</strong>
                         <div style={{
                             marginTop: '4px',
                             display: 'flex',
@@ -75,7 +79,7 @@ export function ChatSettings({ roomInfo, onCopyLink, onLeave }: ChatSettingsProp
                                 ))
                             ) : (
                                 <div style={{ color: '#888', fontStyle: 'italic' }}>
-                                    No active participants
+                                    {t('chat.noParticipants')}
                                 </div>
                             )}
                         </div>
@@ -94,7 +98,7 @@ export function ChatSettings({ roomInfo, onCopyLink, onLeave }: ChatSettingsProp
                     cursor: 'pointer'
                 }}
             >
-                Copy Room Link
+                {t('chat.copyLink')}
             </button>
             <button
                 onClick={onLeave}
@@ -107,7 +111,7 @@ export function ChatSettings({ roomInfo, onCopyLink, onLeave }: ChatSettingsProp
                     cursor: 'pointer'
                 }}
             >
-                Leave Room
+                {t('chat.leave')}
             </button>
         </div>
     );

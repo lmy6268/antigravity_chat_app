@@ -1,3 +1,5 @@
+import { useTranslation } from '@/i18n/LanguageContext';
+
 interface RoomJoinFormProps {
     roomName: string;
     password: string;
@@ -17,6 +19,8 @@ export function RoomJoinForm({
     onJoin,
     onBack
 }: RoomJoinFormProps) {
+    const { t } = useTranslation();
+
     return (
         <div style={{
             display: 'flex',
@@ -43,14 +47,14 @@ export function RoomJoinForm({
                     textAlign: 'center',
                     fontSize: 'clamp(1.25rem, 4vw, 1.5rem)'
                 }}>
-                    Join {roomName}
+                    {t('chat.joinTitle', { roomName })}
                 </h2>
                 <p style={{
                     textAlign: 'center',
                     color: '#aaa',
                     fontSize: 'clamp(0.875rem, 3vw, 1rem)'
                 }}>
-                    Enter password to decrypt messages.
+                    {t('chat.passwordPrompt')}
                 </p>
 
                 <div style={{ position: 'relative', width: '100%' }}>
@@ -58,7 +62,7 @@ export function RoomJoinForm({
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Room Password"
+                        placeholder={t('dashboard.createRoom.passwordPlaceholder')}
                         style={{
                             padding: '12px',
                             paddingRight: '40px',
@@ -89,7 +93,6 @@ export function RoomJoinForm({
                             alignItems: 'center',
                             justifyContent: 'center'
                         }}
-                        title={showPassword ? "Hide password" : "Show password"}
                     >
                         {showPassword ? "🙈" : "👁️"}
                     </button>
@@ -108,7 +111,7 @@ export function RoomJoinForm({
                         cursor: 'pointer'
                     }}
                 >
-                    Join Room
+                    {t('chat.joinButton')}
                 </button>
 
                 <button
@@ -123,7 +126,7 @@ export function RoomJoinForm({
                         fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)'
                     }}
                 >
-                    Back to Dashboard
+                    {t('chat.backButton')}
                 </button>
             </div>
         </div>

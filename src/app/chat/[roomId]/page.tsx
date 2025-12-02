@@ -40,6 +40,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     cryptoKey,
     joinRoom,
     leaveRoom,
+    error
   } = useRoomJoin(roomId, roomName);
 
   const {
@@ -86,7 +87,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   // Handle room deletion
   useEffect(() => {
     onRoomDeleted(() => {
-      alert(t('alerts.roomDeleted'));
+      alert(t.dashboard.alerts.roomDeleted);
       disconnectSocket();
       leaveRoom();
     });
@@ -106,7 +107,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   const copyInviteLink = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url);
-    alert(t('alerts.linkCopied'));
+    alert(t.dashboard.alerts.linkCopied);
   };
 
   // Render join form if not joined
@@ -120,6 +121,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
         togglePasswordVisibility={togglePasswordVisibility}
         onJoin={joinRoom}
         onBack={leaveRoom}
+        error={error}
       />
     );
   }

@@ -25,6 +25,7 @@ export function useRoomJoin(roomId: string, roomName: string) {
   const [isJoined, setIsJoined] = useState(false);
   const [roomInfo, setRoomInfo] = useState<any>(null);
   const [cryptoKey, setCryptoKey] = useState<CryptoKey | null>(null);
+  const [error, setError] = useState('');
 
   // Load nickname from localStorage
   useEffect(() => {
@@ -58,6 +59,7 @@ export function useRoomJoin(roomId: string, roomName: string) {
   const joinRoom = async (e?: React.FormEvent, manualPassword?: string) => {
     if (e) e.preventDefault();
     
+    setError(''); // Clear previous errors
     const pwdToUse = manualPassword || password;
     if (!pwdToUse || !roomInfo) return;
 
@@ -70,39 +72,38 @@ export function useRoomJoin(roomId: string, roomName: string) {
       );
       
       setCryptoKey(decryptedKey);
+
+      // Call join API to add user to participants
+      await fetch(`/api/rooms/${roomId}/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          username: nickname,
+          // We don't strictly need to send encryptedKey here since we use shared key, 
+          // but keeping it for schema compatibility if needed
+          encryptedKey: '' 
+        })
+      });
+
       setIsJoined(true);
 
-      // Save password to localStorage on success
-      const savedPasswords = JSON.parse(localStorage.getItem('chat_room_passwords') || '{}');
-      savedPasswords[roomId] = pwdToUse;
-      localStorage.setItem('chat_room_passwords', JSON.stringify(savedPasswords));
-
-    } catch (error) {
-      // Only show alert if it was a manual attempt
-      if (e) alert(t('alerts.invalidPassword'));
+    } catch (err) {
+      // Only show error if it was a manual attempt
+      if (e) {
+        setError(t.dashboard.alerts.invalidPassword);
+      }
     }
   };
 
-  // Trigger auto-join
+  // Trigger auto-join for creator only (they know the password)
   useEffect(() => {
     if (roomInfo && nickname && !isJoined) {
-      const savedPasswords = JSON.parse(localStorage.getItem('chat_room_passwords') || '{}');
-      const savedPassword = savedPasswords[roomId];
-      
       const isCreator = roomInfo.creator === nickname;
-      const isParticipant = roomInfo.participants && roomInfo.participants.includes(nickname);
-
-      if (savedPassword) {
-        // If we have a saved password, pre-fill it for display
-        setPassword(savedPassword);
-
-        // If user is creator or participant, try to auto-join
-        if (isCreator || isParticipant) {
-          joinRoom(undefined, savedPassword);
-        }
-      }
+      
+      // Auto-join disabled - users must always enter password manually
+      // This ensures security and prevents unauthorized access
     }
-  }, [roomInfo, nickname, isJoined, roomId, joinRoom]); // Added joinRoom to deps, ensure it's stable if needed (e.g., with useCallback)
+  }, [roomInfo, nickname, isJoined]);
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
@@ -122,5 +123,6 @@ export function useRoomJoin(roomId: string, roomName: string) {
     cryptoKey,
     joinRoom,
     leaveRoom,
+    error
   };
 }

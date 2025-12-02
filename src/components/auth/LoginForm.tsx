@@ -26,7 +26,7 @@ export default function LoginForm() {
       display: 'flex', flexDirection: 'column', gap: '20px'
     }}>
       <h2 style={{ margin: 0, textAlign: 'center', color: '#f0f0f0', fontSize: 'clamp(1.5rem, 5vw, 2rem)' }}>
-        {t('auth.login')}
+        {t.auth.login}
       </h2>
 
       {error && (
@@ -41,7 +41,7 @@ export default function LoginForm() {
       <form onSubmit={login} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <input
           type="text"
-          placeholder={t('auth.username')}
+          placeholder={t.auth.username}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           disabled={isLoading}
@@ -52,7 +52,7 @@ export default function LoginForm() {
         />
         <input
           type="password"
-          placeholder={t('auth.password')}
+          placeholder={t.auth.password}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           disabled={isLoading}
@@ -70,12 +70,12 @@ export default function LoginForm() {
             cursor: isLoading ? 'not-allowed' : 'pointer', opacity: isLoading ? 0.7 : 1
           }}
         >
-          {isLoading ? t('common.loading') : t('auth.login')}
+          {isLoading ? t.common.loading : t.auth.login}
         </button>
       </form>
 
       <div style={{ textAlign: 'center', fontSize: '14px', color: '#aaa' }}>
-        Don't have an account? <Link href="/register" style={{ color: '#007acc' }}>{t('auth.register')}</Link>
+        Don't have an account? <Link href="/register" style={{ color: '#007acc' }}>{t.auth.register}</Link>
       </div>
     </div>
   );

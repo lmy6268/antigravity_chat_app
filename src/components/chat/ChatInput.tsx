@@ -33,7 +33,7 @@ export function ChatInput({ inputMessage, setInputMessage, sendMessage, isConnec
                 <input
                     className="chat-input"
                     type="text"
-                    placeholder={t('chat.placeholder')}
+                    placeholder={t.chat.placeholder}
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     disabled={!isConnected}
@@ -65,7 +65,7 @@ export function ChatInput({ inputMessage, setInputMessage, sendMessage, isConnec
                         opacity: isConnected ? 1 : 0.6
                     }}
                 >
-                    {t('chat.send')}
+                    {t.chat.send}
                 </button>
             </form>
         </>

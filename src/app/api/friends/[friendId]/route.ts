@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
 import { HTTP_STATUS } from '@/lib/constants';
+import { dao } from '@/dao/supabase';
 
 export async function PUT(
   request: Request,
@@ -16,22 +16,12 @@ export async function PUT(
 
     if (status === 'rejected') {
       // Rejecting means deleting the request
-      const { error } = await supabase
-        .from('friends')
-        .delete()
-        .eq('id', friendId);
-        
-      if (error) throw error;
+      await dao.friend.delete(friendId);
       return NextResponse.json({ message: 'Friend request rejected' });
     }
 
     // Accepting
-    const { error } = await supabase
-      .from('friends')
-      .update({ status: 'accepted' })
-      .eq('id', friendId);
-
-    if (error) throw error;
+    await dao.friend.updateStatus(friendId, 'accepted');
 
     return NextResponse.json({ message: 'Friend request accepted' });
   } catch (error) {
@@ -47,12 +37,7 @@ export async function DELETE(
   try {
     const { friendId } = await params;
 
-    const { error } = await supabase
-      .from('friends')
-      .delete()
-      .eq('id', friendId);
-
-    if (error) throw error;
+    await dao.friend.delete(friendId);
 
     return NextResponse.json({ message: 'Friend removed' });
   } catch (error) {

@@ -9,6 +9,12 @@ export const en = {
     save: 'Save',
     delete: 'Delete',
     edit: 'Edit',
+    loginFailed: 'Login failed',
+    registrationFailed: 'Registration failed',
+    errorOccurred: 'An error occurred',
+    errorDuringRegistration: 'An error occurred during registration',
+    failedToSendMessage: 'Failed to send message.',
+    failedToCreateRoom: 'Failed to create room',
   },
   auth: {
     login: 'Login',
@@ -23,6 +29,8 @@ export const en = {
       usernameHelp: 'Min 6 chars, must contain letters (alphanumeric)',
       passwordHelp: 'Min 8 chars, allowed: letters, numbers, @ ! # $',
     },
+    alreadyHaveAccount: 'Already have an account?',
+    dontHaveAccount: "Don't have an account?",
   },
   dashboard: {
     title: 'Chat Dashboard',
@@ -67,6 +75,7 @@ export const en = {
       invalidPassword: 'Invalid room password',
       roomDeleted: 'The room has been deleted by the creator.',
       linkCopied: 'Invite link copied to clipboard!',
+      confirmDeleteRoom: 'If you leave, the room will be deleted. Are you sure?',
     }
   },
   chat: {
@@ -82,5 +91,6 @@ export const en = {
     passwordPrompt: 'Enter password to decrypt messages.',
     joinButton: 'Join Room',
     backButton: 'Back to Dashboard',
+    welcomeMessage: 'Welcome to {roomName}, {nickname}!',
   }
 };

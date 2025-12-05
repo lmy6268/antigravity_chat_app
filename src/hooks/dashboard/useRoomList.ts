@@ -1,15 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-
-export interface Room {
-  id: string;
-  name: string;
-  password?: string;
-}
+import { routes } from '@/lib/routes';
+import type { RoomUIModel } from '@/types/uimodel';
+import type { RoomDTO } from '@/types/dto';
+import { roomDTOToUIModel } from '@/lib/converters';
 
 export function useRoomList(username: string) {
   const router = useRouter();
-  const [myRooms, setMyRooms] = useState<Room[]>([]);
+  const [myRooms, setMyRooms] = useState<RoomUIModel[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchRooms = useCallback(async () => {
@@ -19,21 +17,38 @@ export function useRoomList(username: string) {
       const res = await fetch(`/api/users/${username}/rooms`);
       if (res.ok) {
         const data = await res.json();
-        setMyRooms(data.rooms || []);
+        const roomDTOs: RoomDTO[] = data.rooms || [];
+        
+        // Convert DTO to UIModel
+        const uiModels = roomDTOs.map(dto => {
+          const uiModel = roomDTOToUIModel(dto);
+          // Manually set isCreator since we only have username here
+          uiModel.isCreator = dto.creator_username === username;
+          return uiModel;
+        });
+        
+        setMyRooms(uiModels);
+      } else if (res.status === 404) {
+        // User not found (Stale Session)
+        console.warn('User not found in DB. Clearing stale session.');
+        localStorage.removeItem('chat_user');
+        localStorage.removeItem('chat_nickname');
+        alert('세션이 만료되었습니다. 다시 로그인해주세요.'); // Using native alert here as dialogService might not be available or needed for this critical path
+        router.push(routes.auth.login());
       }
     } catch (error) {
       console.error('Error fetching rooms:', error);
     } finally {
       setLoading(false);
     }
-  }, [username]);
+  }, [username, router]);
 
   useEffect(() => {
     fetchRooms();
   }, [fetchRooms]);
 
-  const joinRoom = (roomId: string, roomName: string) => {
-    router.push(`/chat/${roomId}?name=${encodeURIComponent(roomName)}`);
+  const joinRoom = (roomId: string) => {
+    router.push(routes.chat.room(roomId));
   };
 
   return { myRooms, loading, fetchRooms, joinRoom, setMyRooms };

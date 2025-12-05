@@ -1,13 +1,8 @@
 import { ChatMessage } from './ChatMessage';
-
-interface Message {
-    sender: string;
-    text: string;
-    isSystem?: boolean;
-}
+import type { MessageUIModel } from '@/types/uimodel';
 
 interface ChatMessageListProps {
-    messages: Message[];
+    messages: MessageUIModel[];
     nickname: string;
     roomCreator?: string;
     containerRef: React.RefObject<HTMLDivElement | null>;
@@ -26,9 +21,9 @@ export function ChatMessageList({ messages, nickname, roomCreator, containerRef 
                 gap: '12px'
             }}
         >
-            {messages.map((msg, index) => (
+            {messages.map((msg) => (
                 <ChatMessage
-                    key={index}
+                    key={msg.id}
                     message={msg}
                     nickname={nickname}
                     roomCreator={roomCreator}

@@ -1,22 +1,25 @@
 // .env.local 파일에서 환경 변수 로드
-require('dotenv').config({ path: '.env.local' });
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
 
-const { createServer } = require('http');
-const { createServer: createHttpsServer } = require('https');
-const fs = require('fs');
-const { parse } = require('url');
-const next = require('next');
-const { Server } = require('socket.io');
-const { supabase } = require('../src/lib/supabase');
+import { createServer } from 'http';
+import { createServer as createHttpsServer } from 'https';
+import fs from 'fs';
+import { parse } from 'url';
+import next from 'next';
+import { Server } from 'socket.io';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-// Constants defined directly to avoid importing TypeScript file in Node.js
-const TABLES = {
-  USERS: 'users',
-  ROOMS: 'rooms',
-  MESSAGES: 'messages',
-  ROOM_PARTICIPANTS: 'room_participants'
-};
+// ESM에서 __dirname 대체
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
+// TypeScript Models import
+import { messageModel } from '../src/models/MessageModel.ts';
+import { dao } from '../src/dao/supabase.ts';
+
+// Constants
 const SOCKET_EVENTS = {
   CONNECTION: 'connection',
   DISCONNECT: 'disconnect',
@@ -38,59 +41,41 @@ let useHttps = false;
 let httpsOptions = {};
 
 if (dev) {
-  try {
-    const keyPath = './localhost+3-key.pem';
-    const certPath = './localhost+3.pem';
-    
-    if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
-      httpsOptions = {
-        key: fs.readFileSync(keyPath),
-        cert: fs.readFileSync(certPath),
-      };
-      useHttps = true;
-      console.log('✅ SSL 인증서 발견, HTTPS 서버 시작');
-    } else {
-      console.log('ℹ️  SSL 인증서 없음, HTTP 서버 시작');
-    }
-  } catch (err) {
-    console.log('⚠️  SSL 인증서 로딩 오류, HTTP로 전환:', err.message);
+  const certPath = './localhost+3.pem';
+  const keyPath = './localhost+3-key.pem';
+  
+  if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+    useHttps = true;
+    httpsOptions = {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath)
+    };
+    console.log('✅ SSL 인증서 발견, HTTPS 서버 시작');
+  } else {
+    console.log('⚠️  SSL 인증서 없음, HTTP 서버 시작');
   }
 }
 
 app.prepare().then(() => {
   const server = useHttps 
-    ? createHttpsServer(httpsOptions, async (req, res) => {
-    try {
-      const parsedUrl = parse(req.url, true);
-      await handle(req, res, parsedUrl);
-    } catch (err) {
-      console.error('Error occurred handling', req.url, err);
-      res.statusCode = 500;
-      res.end('internal server error');
-    }
-  })
-  : createServer(async (req, res) => {
-    try {
-      const parsedUrl = parse(req.url, true);
-      await handle(req, res, parsedUrl);
-    } catch (err) {
-      console.error('Error occurred handling', req.url, err);
-      res.statusCode = 500;
-      res.end('internal server error');
-    }
-  });
+    ? createHttpsServer(httpsOptions, (req, res) => {
+        const parsedUrl = parse(req.url, true);
+        handle(req, res, parsedUrl);
+      })
+    : createServer((req, res) => {
+        const parsedUrl = parse(req.url, true);
+        handle(req, res, parsedUrl);
+      });
 
-  // Socket.io 서버
   const io = new Server(server, {
     cors: {
       origin: '*',
       methods: ['GET', 'POST']
-    },
-    transports: ['websocket', 'polling'],
-    allowEIO3: true
+    }
   });
 
-  io.on('connection', (socket) => {
+  // Socket.io 연결 처리
+  io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     console.log('New Socket.io connection:', socket.id);
 
     // 방 참가 처리
@@ -100,72 +85,63 @@ app.prepare().then(() => {
       socket.username = username;
       console.log(`User ${username} joined room ${roomId}`);
 
-      // 참가자 정보를 DB에 저장 (선택 사항, 현재 접속자 추적용)
+      // 참가자 정보를 DB에 저장
       try {
-        const { error } = await supabase
-          .from(TABLES.ROOM_PARTICIPANTS)
-          .insert({
-            room_id: roomId,
-            username: username,
-            socket_id: socket.id
-          });
+        const userEntity = await dao.user.findByUsername(username);
         
-        if (error) console.error('Error saving participant:', error);
-      } catch (e) {
-        console.error('Error in join-room:', e);
-      }
-
-      try {
-        // 메시지 히스토리 로드 및 전송
-        const { data: messages, error: messagesError } = await supabase
-          .from(TABLES.MESSAGES)
-          .select('*')
-          .eq('room_id', roomId)
-          .order('created_at', { ascending: true });
-
-        if (messagesError) {
-          console.error('Error loading message history:', messagesError);
+        if (!userEntity) {
+          console.error('Error finding user:', username);
         } else {
-          console.log(`Sending ${messages.length} history messages to ${socket.id}`);
-          messages.forEach(msg => {
-            socket.emit('message', { iv: msg.iv, data: msg.data });
+          await dao.participant.upsert({
+            room_id: roomId,
+            user_id: userEntity.id,
+            username: username
           });
         }
       } catch (e) {
-        console.error('Error in join handler:', e);
+        console.error('Error in join-room:', e);
+      }
+    });
+
+    // 클라이언트가 준비되면 히스토리 요청
+    socket.on('request_history', async (roomId) => {
+      // roomId가 인자로 오거나 socket.roomId 사용
+      const targetRoomId = roomId || socket.roomId;
+      
+      if (!targetRoomId) {
+        console.error('No roomId provided for history request');
+        return;
+      }
+
+      try {
+        // MessageModel 사용
+        const messageDTOs = await messageModel.findByRoomId(targetRoomId);
+        
+        console.log(`[request_history] Sending ${messageDTOs.length} messages to ${socket.id} for room ${targetRoomId}`);
+        messageDTOs.forEach((dto, idx) => {
+          socket.emit(SOCKET_EVENTS.MESSAGE, { iv: dto.iv, data: dto.data, timestamp: dto.created_at, id: dto.id });
+        });
+      } catch (e) {
+        console.error('Error in request_history:', e);
       }
     });
 
     // 새 메시지 저장 및 브로드캐스트
     socket.on(SOCKET_EVENTS.MESSAGE, async (messageData) => {
       try {
-        // Supabase에 메시지 저장
-        const { data, error } = await supabase
-          .from(TABLES.MESSAGES)
-          .insert([
-            {
-              room_id: messageData.roomId,
-              user_id: messageData.userId,
-              content: messageData.content,
-              is_encrypted: messageData.isEncrypted,
-              iv: messageData.iv
-            }
-          ])
-          .select()
-          .single();
+        // MessageModel 사용
+        const messageDTO = await messageModel.createMessage(
+          messageData.roomId,
+          messageData.iv,
+          messageData.data
+        );
 
-        if (error) throw error;
-
-        // 방의 다른 사용자들에게 메시지 브로드캐스트
-        // 송신자를 제외하고 전송 (송신자는 이미 UI에 추가함)
+        // 방의 다른 사용자들에게 암호화된 메시지 브로드캐스트
         socket.to(messageData.roomId).emit(SOCKET_EVENTS.MESSAGE, {
-          id: data.id,
-          userId: messageData.userId,
-          username: messageData.username,
-          content: messageData.content,
-          timestamp: new Date().toISOString(),
-          isEncrypted: messageData.isEncrypted,
-          iv: messageData.iv
+          iv: messageDTO.iv,
+          data: messageDTO.data,
+          timestamp: messageDTO.created_at,
+          id: messageDTO.id
         });
       } catch (err) {
         console.error('Error saving message:', err);
@@ -176,34 +152,35 @@ app.prepare().then(() => {
     // 연결 해제 처리
     socket.on(SOCKET_EVENTS.DISCONNECT, async () => {
       console.log('Client disconnected:', socket.id);
-      
-      // 방 참가자 목록에서 사용자 제거
-      if (socket.roomId && socket.username) {
-        try {
-          const { error } = await supabase
-            .from(TABLES.ROOM_PARTICIPANTS)
-            .delete()
-            .eq('room_id', socket.roomId)
-            .eq('username', socket.username);
+      // 영구 채팅방이므로 연결 해제 시 참가자를 제거하지 않음
+    });
 
-          if (error) {
-            console.error('Error removing participant:', error);
-          } else {
-            console.log(`Removed ${socket.username} from room ${socket.roomId} participants`);
-          }
-        } catch (e) {
-          console.error('Error in disconnect handler:', e);
-        }
-      }
+    // 방 삭제 알림 (방장이 방을 삭제할 때)
+    socket.on('delete-room', async (roomId) => {
+      // 방장(sender)을 제외한 다른 참가자들에게만 알림 전송
+      socket.to(roomId).emit(SOCKET_EVENTS.ROOM_DELETED);
+      // 모든 소켓을 방에서 내보냄 (방장 포함, 하지만 방장은 클라이언트에서 처리됨)
+      io.in(roomId).socketsLeave(roomId);
     });
   });
 
-  server.listen(port, '0.0.0.0', (err) => {
-    if (err) throw err;
+  server.listen(port, hostname, async () => {
     const protocol = useHttps ? 'https' : 'http';
-    console.log(`> Ready on ${protocol}://0.0.0.0:${port}`);
+    console.log(`> Ready on ${protocol}://${hostname}:${port}`);
     console.log(`> Access from your Mac: ${protocol}://localhost:${port}`);
-    console.log(`> Access from iPhone: ${protocol}://192.168.0.3:${port}`);
-    console.log(`> Socket.io server running`);
+    if (dev && useHttps) {
+      // Get the local IP address
+      const { networkInterfaces } = await import('os');
+      const nets = networkInterfaces();
+      for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+          if (net.family === 'IPv4' && !net.internal) {
+            console.log(`> Access from iPhone: ${protocol}://${net.address}:${port}`);
+            break;
+          }
+        }
+      }
+    }
+    console.log('> Socket.io server running');
   });
 });

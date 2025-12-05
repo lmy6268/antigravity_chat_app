@@ -1,17 +1,14 @@
-interface Message {
-    sender: string;
-    text: string;
-    isSystem?: boolean;
-}
+import type { MessageUIModel } from '@/types/uimodel';
 
 interface ChatMessageProps {
-    message: Message;
+    message: MessageUIModel;
     nickname: string;
     roomCreator?: string;
 }
 
 export function ChatMessage({ message, nickname, roomCreator }: ChatMessageProps) {
-    const isMe = message.sender === nickname;
+    // isMine is available in MessageUIModel, but fallback to comparison just in case
+    const isMe = message.isMine ?? (message.sender === nickname);
     const isSystem = message.isSystem;
 
     if (isSystem) {
@@ -50,9 +47,20 @@ export function ChatMessage({ message, nickname, roomCreator }: ChatMessageProps
                 borderTopRightRadius: isMe ? '2px' : '12px',
                 borderTopLeftRadius: isMe ? '12px' : '2px',
                 color: 'white',
-                wordBreak: 'break-word'
+                wordBreak: 'break-word',
+                position: 'relative'
             }}>
                 {message.text}
+                {message.timestamp && (
+                    <div style={{
+                        fontSize: '10px',
+                        color: 'rgba(255,255,255,0.6)',
+                        marginTop: '4px',
+                        textAlign: 'right'
+                    }}>
+                        {message.timestamp}
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { generateRoomKey, generateSalt, encryptRoomKeyWithPassword } from '@/lib/crypto';
+import { routes } from '@/lib/routes';
 import { Room } from './useRoomList';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 export function useRoomCreate(nickname: string, onRoomCreated: (room: Room) => void) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
 
@@ -16,16 +19,16 @@ export function useRoomCreate(nickname: string, onRoomCreated: (room: Room) => v
     const roomId = crypto.randomUUID();
     
     try {
-      // 1. Generate AES Room Key
+      // 1. AES 룸 키 생성
       const roomKey = await generateRoomKey();
 
-      // 2. Generate Salt
+      // 2. Salt 생성
       const salt = generateSalt();
 
-      // 3. Encrypt Room Key with Password
+      // 3. 비밀번호로 룸 키 암호화
       const encryptedKey = await encryptRoomKeyWithPassword(roomKey, password, salt);
 
-      // 4. Call API to create room on server
+      // 4. 서버에 룸 생성 API 호출
       const res = await fetch('/api/rooms/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -39,7 +42,7 @@ export function useRoomCreate(nickname: string, onRoomCreated: (room: Room) => v
         })
       });
 
-      if (!res.ok) throw new Error('Failed to create room');
+      if (!res.ok) throw new Error(t.common.failedToCreateRoom);
 
       const newRoom: Room = {
         id: roomId,
@@ -49,11 +52,11 @@ export function useRoomCreate(nickname: string, onRoomCreated: (room: Room) => v
 
       onRoomCreated(newRoom);
       
-      // Navigate to the new room
-      router.push(`/chat/${newRoom.id}?name=${encodeURIComponent(newRoom.name)}`);
+      // 새 룸으로 이동
+      router.push(routes.chat.room(newRoom.id) + `?name=${encodeURIComponent(newRoom.name)}`);
     } catch (error: any) {
       console.error('Error creating room:', error);
-      setError(error.message || 'Failed to create room');
+      setError(error.message || t.common.failedToCreateRoom);
     } finally {
       setIsCreating(false);
     }

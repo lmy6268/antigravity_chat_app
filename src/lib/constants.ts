@@ -23,7 +23,7 @@ export const CRYPTO = {
 
 // Socket.io 이벤트 이름
 export const SOCKET_EVENTS = {
-  CONNECTION: 'connection',
+  CONNECT: 'connect',
   DISCONNECT: 'disconnect',
   JOIN_ROOM: 'join-room',
   LEAVE_ROOM: 'leave-room',

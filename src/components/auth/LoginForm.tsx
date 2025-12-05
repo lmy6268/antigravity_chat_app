@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useLogin } from '@/hooks/auth/useLogin';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { routes } from '@/lib/routes';
+import styles from '@/styles/auth-form.module.css';
 
 /**
  * LoginForm Component (Pure View)
@@ -20,35 +22,25 @@ export default function LoginForm() {
   const { t } = useTranslation();
 
   return (
-    <div style={{
-      backgroundColor: '#252526', padding: 'clamp(20px, 5vw, 40px)', borderRadius: '12px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.3)', width: '100%', maxWidth: '400px',
-      display: 'flex', flexDirection: 'column', gap: '20px'
-    }}>
-      <h2 style={{ margin: 0, textAlign: 'center', color: '#f0f0f0', fontSize: 'clamp(1.5rem, 5vw, 2rem)' }}>
+    <div className={styles.formContainer}>
+      <h2 className={styles.formTitle}>
         {t.auth.login}
       </h2>
 
       {error && (
-        <div style={{
-          backgroundColor: 'rgba(217, 83, 79, 0.1)', color: '#d9534f', padding: '10px',
-          borderRadius: '6px', fontSize: '14px', textAlign: 'center'
-        }}>
+        <div className={styles.errorMessage}>
           {error}
         </div>
       )}
 
-      <form onSubmit={login} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+      <form onSubmit={login} className={styles.form}>
         <input
           type="text"
           placeholder={t.auth.username}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           disabled={isLoading}
-          style={{
-            padding: '12px', borderRadius: '6px', border: '1px solid #3e3e3e',
-            backgroundColor: '#1e1e1e', color: 'white', fontSize: '16px'
-          }}
+          className={styles.input}
         />
         <input
           type="password"
@@ -56,26 +48,20 @@ export default function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           disabled={isLoading}
-          style={{
-            padding: '12px', borderRadius: '6px', border: '1px solid #3e3e3e',
-            backgroundColor: '#1e1e1e', color: 'white', fontSize: '16px'
-          }}
+          className={styles.input}
         />
         <button
           type="submit"
           disabled={isLoading}
-          style={{
-            padding: '14px', borderRadius: '6px', border: 'none',
-            backgroundColor: '#007acc', color: 'white', fontSize: '16px', fontWeight: 'bold',
-            cursor: isLoading ? 'not-allowed' : 'pointer', opacity: isLoading ? 0.7 : 1
-          }}
+          className={`${styles.submitButton} ${styles.login}`}
         >
           {isLoading ? t.common.loading : t.auth.login}
         </button>
       </form>
 
-      <div style={{ textAlign: 'center', fontSize: '14px', color: '#aaa' }}>
-        Don't have an account? <Link href="/register" style={{ color: '#007acc' }}>{t.auth.register}</Link>
+      <div className={styles.footer}>
+        {t.auth.dontHaveAccount} <Link href={routes.auth.register()}
+          className={styles.footerLink}>{t.auth.register}</Link>
       </div>
     </div>
   );

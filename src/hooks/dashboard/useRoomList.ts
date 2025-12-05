@@ -5,8 +5,11 @@ import type { RoomUIModel } from '@/types/uimodel';
 import type { RoomDTO } from '@/types/dto';
 import { roomDTOToUIModel } from '@/lib/converters';
 
+import { useTranslation } from '@/i18n/LanguageContext';
+
 export function useRoomList(username: string) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [myRooms, setMyRooms] = useState<RoomUIModel[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +36,7 @@ export function useRoomList(username: string) {
         console.warn('User not found in DB. Clearing stale session.');
         localStorage.removeItem('chat_user');
         localStorage.removeItem('chat_nickname');
-        alert('세션이 만료되었습니다. 다시 로그인해주세요.'); // Using native alert here as dialogService might not be available or needed for this critical path
+        alert(t.common.sessionExpired); // Using native alert here as dialogService might not be available or needed for this critical path
         router.push(routes.auth.login());
       }
     } catch (error) {

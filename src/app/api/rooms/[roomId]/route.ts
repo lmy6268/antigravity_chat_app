@@ -42,14 +42,39 @@ export async function GET(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ roomId: string }> }
 ) {
   try {
     const { roomId } = await params;
     
-    // TODO: Add requester verification (only creator can delete)
-    await roomModel.deleteRoom(roomId, 'user-id-placeholder');
+    // Get user ID from header (temporary auth)
+    const userId = request.headers.get('x-user-id');
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized: User ID required' },
+        { status: HTTP_STATUS.UNAUTHORIZED }
+      );
+    }
+
+    // Verify room ownership
+    const room = await roomModel.findById(roomId);
+    if (!room) {
+      return NextResponse.json(
+        { error: 'Room not found' },
+        { status: HTTP_STATUS.NOT_FOUND }
+      );
+    }
+
+    if (room.creator_id !== userId) {
+      return NextResponse.json(
+        { error: 'Forbidden: Only the creator can delete this room' },
+        { status: HTTP_STATUS.FORBIDDEN }
+      );
+    }
+    
+    await roomModel.deleteRoom(roomId, userId);
 
     return NextResponse.json({ success: true }, { status: HTTP_STATUS.OK });
   } catch (error) {

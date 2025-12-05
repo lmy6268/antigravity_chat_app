@@ -16,6 +16,7 @@ export interface LoginRequestDTO {
 export interface RegisterRequestDTO {
   username: string;
   password: string;
+  publicKey?: string;
 }
 
 export interface AuthResponseDTO {

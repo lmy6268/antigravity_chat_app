@@ -6,6 +6,7 @@ import type { RoomDTO } from '@/types/dto';
 import { roomDTOToUIModel } from '@/lib/converters';
 
 import { useTranslation } from '@/i18n/LanguageContext';
+import { STORAGE_KEYS } from '@/lib/storage-constants';
 
 export function useRoomList(username: string) {
   const router = useRouter();
@@ -34,10 +35,10 @@ export function useRoomList(username: string) {
       } else if (res.status === 404) {
         // User not found (Stale Session)
         console.warn('User not found in DB. Clearing stale session.');
-        localStorage.removeItem('chat_user');
-        localStorage.removeItem('chat_nickname');
+        localStorage.removeItem(STORAGE_KEYS.USER);
         alert(t.common.sessionExpired); // Using native alert here as dialogService might not be available or needed for this critical path
         router.push(routes.auth.login());
+        return;
       }
     } catch (error) {
       console.error('Error fetching rooms:', error);

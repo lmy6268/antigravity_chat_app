@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { encryptMessage, decryptMessage } from '@/lib/crypto';
-import { SOCKET_EVENTS } from '@/lib/constants';
+import { CLIENT_EVENTS, SERVER_EVENTS } from '@/types/events';
 import { withParams } from '@/i18n/LanguageContext';
 import type { en } from '@/i18n/locales/en';
 import type { MessageUIModel } from '@/types/uimodel';
@@ -54,7 +54,7 @@ export function useChat(
     if (cryptoKey && socketRef.current && isConnected) {
       console.log('[useChat] ✅ Requesting history...');
       // roomId를 함께 보내서 서버에서 socket.roomId가 아직 설정되지 않았더라도 처리 가능하게 함
-      socketRef.current.emit('request_history', roomId);
+      socketRef.current.emit(CLIENT_EVENTS.REQUEST_HISTORY, roomId);
     } else {
       console.log('[useChat] ❌ Cannot request history yet');
     }
@@ -113,11 +113,11 @@ export function useChat(
       }
     };
 
-    socketRef.current.on(SOCKET_EVENTS.MESSAGE, handleMessage);
+    socketRef.current.on(SERVER_EVENTS.MESSAGE_RECEIVED, handleMessage);
 
     return () => {
       if (socketRef.current) {
-        socketRef.current.off(SOCKET_EVENTS.MESSAGE, handleMessage);
+        socketRef.current.off(SERVER_EVENTS.MESSAGE_RECEIVED, handleMessage);
       }
     };
   }, [socketRef, nickname]);
@@ -146,14 +146,10 @@ export function useChat(
       }]);
 
       // 서버로 전송
-      socketRef.current.emit(SOCKET_EVENTS.MESSAGE, {
+      socketRef.current.emit(CLIENT_EVENTS.SEND_MESSAGE, {
         roomId,
-        userId: nickname,
-        content: messagePayload,
-        isEncrypted: true,
         iv: encrypted.iv,
-        data: encrypted.data,
-        payload: encrypted
+        data: encrypted.data
       });
       
       setInputMessage('');

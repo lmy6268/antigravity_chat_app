@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { generateRoomKey, generateSalt, encryptRoomKeyWithPassword } from '@/lib/crypto';
 import { routes } from '@/lib/routes';
-import { Room } from './useRoomList';
 import { useTranslation } from '@/i18n/LanguageContext';
+import type { RoomUIModel } from '@/types/uimodel';
 
-export function useRoomCreate(nickname: string, onRoomCreated: (room: Room) => void) {
+export function useRoomCreate(nickname: string, onRoomCreated: (room: RoomUIModel) => void) {
   const router = useRouter();
   const { t } = useTranslation();
   const [isCreating, setIsCreating] = useState(false);
@@ -44,16 +44,18 @@ export function useRoomCreate(nickname: string, onRoomCreated: (room: Room) => v
 
       if (!res.ok) throw new Error(t.common.failedToCreateRoom);
 
-      const newRoom: Room = {
+      const newRoom: RoomUIModel = {
         id: roomId,
         name: name,
-        password: password
+        creatorName: nickname,
+        createdAt: new Date().toLocaleString(),
+        isCreator: true
       };
 
       onRoomCreated(newRoom);
       
-      // 새 룸으로 이동
-      router.push(routes.chat.room(newRoom.id) + `?name=${encodeURIComponent(newRoom.name)}`);
+      // 성공 시 해당 방으로 이동 (이름 파라미터 제거)
+      router.push(routes.chat.room(newRoom.id));
     } catch (error: any) {
       console.error('Error creating room:', error);
       setError(error.message || t.common.failedToCreateRoom);

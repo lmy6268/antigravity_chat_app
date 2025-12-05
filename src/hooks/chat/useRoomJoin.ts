@@ -6,6 +6,7 @@ import { decryptRoomKeyWithPassword } from '@/lib/crypto';
 import { routes } from '@/lib/routes';
 
 import { useTranslation } from '@/i18n/LanguageContext';
+import { STORAGE_KEYS } from '@/lib/storage-constants';
 import { dialogService } from '@/lib/dialog';
 
 /**
@@ -34,8 +35,9 @@ export function useRoomJoin(roomId: string, roomName: string) {
   const autoJoinAttemptedRef = useRef(false);
 
   // localStorage에서 nickname 불러오기
+  // localStorage에서 nickname 불러오기
   useEffect(() => {
-    const storedUser = localStorage.getItem('chat_user');
+    const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
     if (!storedUser) {
       setNeedsLogin(true);
       setIsLoading(false);
@@ -48,8 +50,7 @@ export function useRoomJoin(roomId: string, roomName: string) {
   // 로그인 필요 시 리다이렉트
   useEffect(() => {
     if (needsLogin) {
-      const nameParam = roomName ? `?name=${encodeURIComponent(roomName)}` : '';
-      const returnUrl = encodeURIComponent(routes.chat.room(roomId) + nameParam);
+      const returnUrl = encodeURIComponent(routes.chat.room(roomId));
       router.push(routes.auth.login() + `?redirect=${returnUrl}`);
     }
   }, [needsLogin, roomId, roomName, router]);

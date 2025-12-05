@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { userModel } from '@/models/UserModel';
-import { HTTP_STATUS } from '@/lib/constants';
+import { HTTP_STATUS } from '@/lib/api-constants';
 import type { RegisterRequestDTO } from '@/types/dto';
 
 export async function POST(request: Request) {

@@ -1,4 +1,13 @@
-import { CRYPTO } from './constants';
+// 암호화 관련 상수
+export const CRYPTO = {
+  ALGORITHM: 'AES-GCM',
+  HASH: 'SHA-256',
+  KDF: 'PBKDF2',
+  SALT: 'websocket-demo-salt',
+  ITERATIONS: 100000,
+  KEY_LENGTH: 256,
+  IV_LENGTH: 12
+} as const;
 
 /**
  * RSA 키 쌍 생성 (Identity Key)

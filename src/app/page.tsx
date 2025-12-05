@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useTranslation, withParams } from '@/i18n/LanguageContext';
+import { STORAGE_KEYS } from '@/lib/storage-constants';
 import { routes } from '@/lib/routes';
 import { useRoomList } from '@/hooks/dashboard/useRoomList';
 import { useRoomCreate } from '@/hooks/dashboard/useRoomCreate';
@@ -46,17 +47,23 @@ export default function Dashboard() {
 
   // Load user on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('chat_user');
+    const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
     if (!storedUser) {
       router.push(routes.auth.login());
       return;
     }
-    const user = JSON.parse(storedUser);
-    setNickname(user.username);
-    setIsProfileSet(true);
+    try {
+      const user = JSON.parse(storedUser);
+      setNickname(user.username);
+      setIsProfileSet(true); // Keep this line to ensure profile is set
 
-    // Friends fetch (Room fetch is handled by useRoomList)
-    fetchFriends(user.username);
+      // Friends fetch (Room fetch is handled by useRoomList)
+      fetchFriends(user.username);
+    } catch (e) {
+      console.error('Failed to parse user info', e);
+      localStorage.removeItem(STORAGE_KEYS.USER);
+      router.push(routes.auth.login());
+    }
   }, [router]);
 
   const fetchFriends = async (username: string) => {

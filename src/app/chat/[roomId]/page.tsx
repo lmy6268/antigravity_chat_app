@@ -1,16 +1,16 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, use, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRoomJoin } from '@/hooks/chat/useRoomJoin';
 import { useWebSocket } from '@/hooks/chat/useWebSocket';
+import { dialogService } from '@/lib/dialog';
 import { useChat } from '@/hooks/chat/useChat';
 import { RoomJoinForm } from '@/components/chat/RoomJoinForm';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatSettings } from '@/components/chat/ChatSettings';
 import { ChatMessageList } from '@/components/chat/ChatMessageList';
 import { ChatInput } from '@/components/chat/ChatInput';
-
 import { useTranslation } from '@/i18n/LanguageContext';
 
 /**
@@ -22,13 +22,14 @@ import { useTranslation } from '@/i18n/LanguageContext';
  * - Minimal business logic (event handlers only)
  */
 export default function ChatRoom({ params }: { params: Promise<{ roomId: string }> }) {
+  // use()는 다른 hooks 전에 호출해야 함 (Rules of Hooks)
+  const { roomId } = use(params);
+
   const searchParams = useSearchParams();
   const { t } = useTranslation();
+  const roomName = searchParams.get('name') || '';
 
-  const { roomId } = use(params);
-  const roomName = searchParams.get('name') || 'Chat Room';
-
-  // Hooks
+  // Hooks - 모든 hooks를 조건문 전에 호출 (Rules of Hooks)
   const {
     nickname,
     password,
@@ -36,10 +37,12 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     showPassword,
     togglePasswordVisibility,
     isJoined,
+    isLoading,
     roomInfo,
     cryptoKey,
     joinRoom,
-    leaveRoom,
+    quitRoom,
+    goBack,
     error
   } = useRoomJoin(roomId, roomName);
 
@@ -48,7 +51,6 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     isConnected,
     connectSocket,
     disconnectSocket,
-    onRoomDeleted,
   } = useWebSocket(roomId, nickname);
 
   const {
@@ -58,59 +60,97 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     chatContainerRef,
     sendMessage,
     initializeChat,
-  } = useChat(roomId, roomName, nickname, cryptoKey, socketRef, isConnected);
+  } = useChat(roomId, roomName, nickname, cryptoKey, socketRef, isConnected, t);
 
   // Local state
   const [showSettings, setShowSettings] = useState(false);
+  const hasInitializedRef = useRef(false);
 
-  // Auto-join for creator/participant
+  // (auto-join 로직은 useRoomJoin에서 처리됨)
+
+  // Connect socket when joined AND cryptoKey is ready (한 번만 실행)
   useEffect(() => {
-    if (roomInfo && nickname && !isJoined) {
-      const isCreator = roomInfo.creator === nickname;
-      const isParticipant = roomInfo.participants && roomInfo.participants.includes(nickname);
-
-      if (isCreator || isParticipant) {
-        setPassword(roomInfo.password);
-        joinRoom(new Event('submit') as any);
-      }
-    }
-  }, [roomInfo, nickname, isJoined, setPassword, joinRoom]);
-
-  // Connect socket when joined
-  useEffect(() => {
-    if (isJoined && nickname) {
+    if (isJoined && nickname && cryptoKey && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
       connectSocket();
       initializeChat();
     }
-  }, [isJoined, nickname, connectSocket, initializeChat]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isJoined, nickname, cryptoKey]);
 
-  // Handle room deletion
+  // Handle room deletion (socketRef 변경 시에만 재설정)
   useEffect(() => {
-    onRoomDeleted(() => {
+    if (!socketRef.current) return;
+
+    const handleRoomDeleted = () => {
       alert(t.dashboard.alerts.roomDeleted);
       disconnectSocket();
-      leaveRoom();
-    });
-  }, [onRoomDeleted, disconnectSocket, leaveRoom]);
+      quitRoom(); // 방이 삭제되었으므로 나가기 처리 (API 호출은 불필요할 수 있으나 클린업 차원)
+    };
+
+    socketRef.current.on('room_deleted', handleRoomDeleted);
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off('room_deleted', handleRoomDeleted);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socketRef.current]);
 
   // Event handlers
   const handleBack = () => {
     disconnectSocket();
-    leaveRoom();
+    goBack();
   };
 
-  const handleLeave = () => {
+  // ...
+
+  const handleLeave = async () => {
+    console.log('[ChatRoom] handleLeave called');
+    // Check if creator
+    const isCreator = roomInfo?.creator === nickname;
+
+    if (isCreator) {
+      if (!dialogService.confirm(t.dashboard.alerts.confirmDeleteRoom)) {
+        console.log('[ChatRoom] Delete cancelled');
+        return;
+      }
+      console.log('[ChatRoom] Delete confirmed, emitting event');
+      // Emit delete-room event to notify others
+      if (socketRef.current) {
+        socketRef.current.emit('delete-room', roomId);
+      }
+    }
+
+    console.log('[ChatRoom] Disconnecting and quitting');
     disconnectSocket();
-    leaveRoom();
+    await quitRoom();
   };
 
   const copyInviteLink = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url);
-    alert(t.dashboard.alerts.linkCopied);
+    dialogService.alert(t.dashboard.alerts.linkCopied);
   };
 
-  // Render join form if not joined
+  // 로딩 중일 때 (권한 체크 중)
+  if (isLoading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        backgroundColor: '#1e1e1e',
+        color: '#f0f0f0'
+      }}>
+        {t.common.loading}
+      </div>
+    );
+  }
+
+  // 권한이 없어서 비밀번호 입력이 필요한 경우
   if (!isJoined) {
     return (
       <RoomJoinForm
@@ -120,7 +160,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
         showPassword={showPassword}
         togglePasswordVisibility={togglePasswordVisibility}
         onJoin={joinRoom}
-        onBack={leaveRoom}
+        onBack={goBack}
         error={error}
       />
     );

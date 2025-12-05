@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
-import { TABLES, MESSAGES, HTTP_STATUS } from '@/lib/constants';
+import { HTTP_STATUS } from '@/lib/constants';
+import { roomModel } from '@/models/RoomModel';
 
 export async function GET(
   request: Request,
@@ -18,21 +18,17 @@ export async function GET(
       );
     }
 
-    // Check if user is the creator of the room
-    const { data: room, error } = await supabase
-      .from(TABLES.ROOMS)
-      .select('creator_username')
-      .eq('id', roomId)
-      .single();
+    // Get room to check creator
+    const roomDTO = await roomModel.findById(roomId);
 
-    if (error || !room) {
+    if (!roomDTO) {
       return NextResponse.json(
         { error: 'Room not found' },
         { status: HTTP_STATUS.NOT_FOUND }
       );
     }
 
-    const isCreator = room.creator_username === username;
+    const isCreator = roomDTO.creator_username === username;
 
     return NextResponse.json({ isCreator }, { status: HTTP_STATUS.OK });
   } catch (error) {

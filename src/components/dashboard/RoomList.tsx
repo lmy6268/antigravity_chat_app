@@ -1,8 +1,8 @@
-import { Room } from '@/hooks/dashboard/useRoomList';
+import { RoomUIModel } from '@/types/uimodel';
 import { useTranslation } from '@/i18n/LanguageContext';
 
 interface RoomListProps {
-    rooms: Room[];
+    rooms: RoomUIModel[];
     onJoinRoom: (roomId: string, roomName: string) => void;
     onCreateClick: () => void;
 }
@@ -31,10 +31,25 @@ export function RoomList({ rooms, onJoinRoom, onCreateClick }: RoomListProps) {
                     {rooms.map((room) => (
                         <div key={room.id} onClick={() => onJoinRoom(room.id, room.name)} style={{
                             backgroundColor: '#252526', padding: '20px', borderRadius: '8px',
-                            cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid #3e3e3e'
+                            cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid #3e3e3e',
+                            position: 'relative'
                         }}>
                             <h3 style={{ margin: '0 0 10px 0' }}>{room.name}</h3>
-                            <div style={{ fontSize: '12px', color: '#aaa' }}>{t.dashboard.rooms.id}: {room.id.slice(0, 8)}...</div>
+                            <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '5px' }}>
+                                {t.dashboard.rooms.id}: {room.id.slice(0, 8)}...
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#888' }}>
+                                Created by {room.creatorName} • {room.createdAt}
+                            </div>
+                            {room.isCreator && (
+                                <div style={{
+                                    position: 'absolute', top: '10px', right: '10px',
+                                    backgroundColor: '#007acc', color: 'white',
+                                    padding: '2px 6px', borderRadius: '4px', fontSize: '10px'
+                                }}>
+                                    OWNER
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

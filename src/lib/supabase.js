@@ -1,4 +1,8 @@
-const { createClient } = require('@supabase/supabase-js');
+// Load environment variables
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+
+import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client for server-side operations
 // Using Secret API Key (formerly service_role) to bypass Row Level Security (RLS)
@@ -11,11 +15,9 @@ if (!supabaseUrl || !supabaseServiceKey) {
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
   }
 });
-
-module.exports = { supabase };

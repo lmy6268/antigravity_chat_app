@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useTranslation, withParams } from '@/i18n/LanguageContext';
+import { routes } from '@/lib/routes';
 import { useRoomList } from '@/hooks/dashboard/useRoomList';
 import { useRoomCreate } from '@/hooks/dashboard/useRoomCreate';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
@@ -47,7 +48,7 @@ export default function Dashboard() {
   useEffect(() => {
     const storedUser = localStorage.getItem('chat_user');
     if (!storedUser) {
-      router.push('/login');
+      router.push(routes.auth.login());
       return;
     }
     const user = JSON.parse(storedUser);
@@ -120,7 +121,7 @@ export default function Dashboard() {
     localStorage.removeItem('chat_nickname');
     setIsProfileSet(false);
     setNickname('');
-    router.push('/login');
+    router.push(routes.auth.login());
   };
 
   if (!isProfileSet) return null;

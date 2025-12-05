@@ -107,3 +107,25 @@ CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
 DROP TRIGGER IF EXISTS update_rooms_updated_at ON rooms;
 CREATE TRIGGER update_rooms_updated_at BEFORE UPDATE ON rooms
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 9. Trigger to automatically delete room when creator leaves
+CREATE OR REPLACE FUNCTION delete_room_if_creator_leaves()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Check if the user leaving is the creator of the room
+  IF EXISTS (
+    SELECT 1 FROM rooms
+    WHERE id = OLD.room_id AND creator_id = OLD.user_id
+  ) THEN
+    -- Delete the room (this will cascade to messages and other participants)
+    DELETE FROM rooms WHERE id = OLD.room_id;
+  END IF;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS on_participant_leave ON room_participants;
+CREATE TRIGGER on_participant_leave
+AFTER DELETE ON room_participants
+FOR EACH ROW
+EXECUTE FUNCTION delete_room_if_creator_leaves();

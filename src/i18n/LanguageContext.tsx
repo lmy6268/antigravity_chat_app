@@ -12,12 +12,12 @@ const dictionaries: Record<Locale, Dictionary> = {
     ko,
 };
 
-// Deep readonly type for translations
+// 번역을 위한 Deep readonly 타입
 type DeepReadonly<T> = T extends object
     ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
     : T;
 
-// Helper to replace parameters in translation strings
+// 번역 문자열의 파라미터를 교체하는 헬퍼
 export function withParams(template: string, params: Record<string, string>): string {
     return template.replace(/{(\w+)}/g, (_, key) => params[key] || `{${key}}`);
 }
@@ -32,14 +32,17 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
     const [locale, setLocale] = useState<Locale>('ko');
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
-        // Check local storage first
+        setIsMounted(true);
+
+        // 먼저 local storage 확인
         const storedLocale = localStorage.getItem('app_locale') as Locale;
         if (storedLocale && (storedLocale === 'en' || storedLocale === 'ko')) {
             setLocale(storedLocale);
         } else {
-            // If no preference, check browser language
+            // 선호도가 없다면 브라우저 언어 확인
             const browserLang = navigator.language.split('-')[0];
             if (browserLang === 'en') {
                 setLocale('en');

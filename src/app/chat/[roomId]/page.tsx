@@ -11,7 +11,9 @@ import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatSettings } from '@/components/chat/ChatSettings';
 import { ChatMessageList } from '@/components/chat/ChatMessageList';
 import { ChatInput } from '@/components/chat/ChatInput';
+import { ChatContainer } from '@/components/chat/ChatContainer';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { SERVER_EVENTS, CLIENT_EVENTS } from '@/types/events';
 
 /**
  * ChatRoom Component (Orchestrator)
@@ -66,8 +68,6 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   const [showSettings, setShowSettings] = useState(false);
   const hasInitializedRef = useRef(false);
 
-  // (auto-join 로직은 useRoomJoin에서 처리됨)
-
   // Connect socket when joined AND cryptoKey is ready (한 번만 실행)
   useEffect(() => {
     if (isJoined && nickname && cryptoKey && !hasInitializedRef.current) {
@@ -88,11 +88,11 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
       quitRoom(); // 방이 삭제되었으므로 나가기 처리 (API 호출은 불필요할 수 있으나 클린업 차원)
     };
 
-    socketRef.current.on('room_deleted', handleRoomDeleted);
+    socketRef.current.on(SERVER_EVENTS.ROOM_DELETED, handleRoomDeleted);
 
     return () => {
       if (socketRef.current) {
-        socketRef.current.off('room_deleted', handleRoomDeleted);
+        socketRef.current.off(SERVER_EVENTS.ROOM_DELETED, handleRoomDeleted);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -119,7 +119,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
       console.log('[ChatRoom] Delete confirmed, emitting event');
       // Emit delete-room event to notify others
       if (socketRef.current) {
-        socketRef.current.emit('delete-room', roomId);
+        socketRef.current.emit(CLIENT_EVENTS.DELETE_ROOM, roomId);
       }
     }
 
@@ -154,7 +154,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   if (!isJoined) {
     return (
       <RoomJoinForm
-        roomName={roomName}
+        roomName={roomInfo?.name || roomName}
         password={password}
         setPassword={setPassword}
         showPassword={showPassword}
@@ -168,15 +168,9 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
 
   // Render chat room
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100vh',
-      backgroundColor: '#1e1e1e',
-      color: '#f0f0f0'
-    }}>
+    <ChatContainer>
       <ChatHeader
-        roomName={roomName}
+        roomName={roomInfo?.name || roomName}
         nickname={nickname}
         isConnected={isConnected}
         onBack={handleBack}
@@ -204,6 +198,6 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
         sendMessage={sendMessage}
         isConnected={isConnected}
       />
-    </div>
+    </ChatContainer>
   );
 }

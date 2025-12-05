@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { en } from './locales/en';
+import { STORAGE_KEYS } from '@/lib/storage-constants';
 import { ko } from './locales/ko';
 
 type Locale = 'en' | 'ko';
@@ -38,7 +39,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         setIsMounted(true);
 
         // 먼저 local storage 확인
-        const storedLocale = localStorage.getItem('app_locale') as Locale;
+        const storedLocale = localStorage.getItem(STORAGE_KEYS.LOCALE) as Locale;
         if (storedLocale && (storedLocale === 'en' || storedLocale === 'ko')) {
             setLocale(storedLocale);
         } else {

@@ -17,7 +17,7 @@ export default function LoginForm() {
     isLoading,
     setUsername,
     setPassword,
-    login,
+    handleLogin,
   } = useLogin();
   const { t } = useTranslation();
 
@@ -33,7 +33,7 @@ export default function LoginForm() {
         </div>
       )}
 
-      <form onSubmit={login} className={styles.form}>
+      <form onSubmit={handleLogin} className={styles.form}>
         <input
           type="text"
           placeholder={t.auth.username}

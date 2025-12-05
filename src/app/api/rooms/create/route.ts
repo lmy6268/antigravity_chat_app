@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { HTTP_STATUS } from '@/lib/constants';
+import { HTTP_STATUS } from '@/lib/api-constants';
 import { roomModel } from '@/models/RoomModel';
 import { userModel } from '@/models/UserModel';
 import type { CreateRoomRequestDTO } from '@/types/dto';

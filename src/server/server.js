@@ -16,19 +16,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // TypeScript Models import
-import { messageModel } from '../src/models/MessageModel.ts';
-import { dao } from '../src/dao/supabase.ts';
+import { messageModel } from '../models/MessageModel.ts';
+import { dao } from '../dao/supabase.ts';
 
 // Constants
-const SOCKET_EVENTS = {
-  CONNECTION: 'connection',
-  DISCONNECT: 'disconnect',
-  JOIN_ROOM: 'join-room',
-  LEAVE_ROOM: 'leave-room',
-  MESSAGE: 'message',
-  ROOM_DELETED: 'room-deleted',
-  ERROR: 'error'
-};
+import { CLIENT_EVENTS, SERVER_EVENTS, SOCKET_LIFECYCLE } from '../types/events.ts';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = '0.0.0.0';
@@ -75,11 +67,11 @@ app.prepare().then(() => {
   });
 
   // Socket.io 연결 처리
-  io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
+  io.on(SOCKET_LIFECYCLE.CONNECTION, (socket) => {
     console.log('New Socket.io connection:', socket.id);
 
     // 방 참가 처리
-    socket.on(SOCKET_EVENTS.JOIN_ROOM, async ({ roomId, username }) => {
+    socket.on(CLIENT_EVENTS.JOIN_ROOM, async ({ roomId, username }) => {
       socket.join(roomId);
       socket.roomId = roomId;
       socket.username = username;
@@ -104,7 +96,7 @@ app.prepare().then(() => {
     });
 
     // 클라이언트가 준비되면 히스토리 요청
-    socket.on('request_history', async (roomId) => {
+    socket.on(CLIENT_EVENTS.REQUEST_HISTORY, async (roomId) => {
       // roomId가 인자로 오거나 socket.roomId 사용
       const targetRoomId = roomId || socket.roomId;
       
@@ -119,7 +111,7 @@ app.prepare().then(() => {
         
         console.log(`[request_history] Sending ${messageDTOs.length} messages to ${socket.id} for room ${targetRoomId}`);
         messageDTOs.forEach((dto, idx) => {
-          socket.emit(SOCKET_EVENTS.MESSAGE, { iv: dto.iv, data: dto.data, timestamp: dto.created_at, id: dto.id });
+          socket.emit(SERVER_EVENTS.MESSAGE_RECEIVED, { iv: dto.iv, data: dto.data, timestamp: dto.created_at, id: dto.id });
         });
       } catch (e) {
         console.error('Error in request_history:', e);
@@ -127,7 +119,7 @@ app.prepare().then(() => {
     });
 
     // 새 메시지 저장 및 브로드캐스트
-    socket.on(SOCKET_EVENTS.MESSAGE, async (messageData) => {
+    socket.on(CLIENT_EVENTS.SEND_MESSAGE, async (messageData) => {
       try {
         // MessageModel 사용
         const messageDTO = await messageModel.createMessage(
@@ -137,7 +129,7 @@ app.prepare().then(() => {
         );
 
         // 방의 다른 사용자들에게 암호화된 메시지 브로드캐스트
-        socket.to(messageData.roomId).emit(SOCKET_EVENTS.MESSAGE, {
+        socket.to(messageData.roomId).emit(SERVER_EVENTS.MESSAGE_RECEIVED, {
           iv: messageDTO.iv,
           data: messageDTO.data,
           timestamp: messageDTO.created_at,
@@ -145,20 +137,20 @@ app.prepare().then(() => {
         });
       } catch (err) {
         console.error('Error saving message:', err);
-        socket.emit(SOCKET_EVENTS.ERROR, { message: 'Failed to save message' });
+        socket.emit(SERVER_EVENTS.ERROR, { message: 'Failed to save message' });
       }
     });
 
     // 연결 해제 처리
-    socket.on(SOCKET_EVENTS.DISCONNECT, async () => {
+    socket.on(SOCKET_LIFECYCLE.DISCONNECT, async () => {
       console.log('Client disconnected:', socket.id);
       // 영구 채팅방이므로 연결 해제 시 참가자를 제거하지 않음
     });
 
     // 방 삭제 알림 (방장이 방을 삭제할 때)
-    socket.on('delete-room', async (roomId) => {
+    socket.on(CLIENT_EVENTS.DELETE_ROOM, async (roomId) => {
       // 방장(sender)을 제외한 다른 참가자들에게만 알림 전송
-      socket.to(roomId).emit(SOCKET_EVENTS.ROOM_DELETED);
+      socket.to(roomId).emit(SERVER_EVENTS.ROOM_DELETED);
       // 모든 소켓을 방에서 내보냄 (방장 포함, 하지만 방장은 클라이언트에서 처리됨)
       io.in(roomId).socketsLeave(roomId);
     });

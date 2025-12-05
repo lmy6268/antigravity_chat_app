@@ -7,6 +7,7 @@ import { savePrivateKey } from '@/lib/key-storage';
 import { routes } from '@/lib/routes';
 
 import { useTranslation } from '@/i18n/LanguageContext';
+import { STORAGE_KEYS } from '@/lib/storage-constants';
 
 /**
  * useRegister Hook (ViewModel)
@@ -79,8 +80,9 @@ export function useRegister() {
       });
 
       if (res.ok) {
-        // alert 없이 로그인으로 직접 리다이렉트
-        router.push(routes.auth.login());
+        const data = await res.json();
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+        router.push(routes.dashboard());
       } else {
         const data = await res.json();
         setError(data.error || t.common.registrationFailed);

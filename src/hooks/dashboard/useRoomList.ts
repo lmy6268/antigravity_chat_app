@@ -55,5 +55,33 @@ export function useRoomList(username: string) {
     router.push(routes.chat.room(roomId));
   };
 
-  return { myRooms, loading, fetchRooms, joinRoom, setMyRooms };
+  const deleteRoom = async (roomId: string) => {
+    if (!confirm(t.dashboard.rooms.deleteConfirm)) return;
+
+    try {
+      const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
+      if (!storedUser) return;
+      
+      const user = JSON.parse(storedUser);
+      
+      const res = await fetch(`/api/rooms/${roomId}`, {
+        method: 'DELETE',
+        headers: {
+          'x-user-id': user.id
+        }
+      });
+
+      if (res.ok) {
+        setMyRooms(prev => prev.filter(room => room.id !== roomId));
+      } else {
+        const data = await res.json();
+        alert(data.error || t.common.error);
+      }
+    } catch (error) {
+      console.error('Error deleting room:', error);
+      alert(t.common.error);
+    }
+  };
+
+  return { myRooms, loading, fetchRooms, joinRoom, deleteRoom, setMyRooms };
 }

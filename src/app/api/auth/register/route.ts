@@ -6,7 +6,7 @@ import type { RegisterRequestDTO } from '@/types/dto';
 export async function POST(request: Request) {
   try {
     const body: RegisterRequestDTO = await request.json();
-    const { username, password } = body;
+    const { username, password, publicKey } = body;
 
     if (!username || !password) {
       return NextResponse.json({ error: 'Username and password are required' }, { status: HTTP_STATUS.BAD_REQUEST });
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     }
 
     try {
-      const authResponse = await userModel.register(username, password);
+      const authResponse = await userModel.register(username, password, publicKey);
       return NextResponse.json({ message: 'User registered successfully', ...authResponse });
     } catch (error) {
       if ((error as Error).message === 'Username already exists') {

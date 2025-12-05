@@ -46,6 +46,7 @@ export const en = {
       noRooms: "You haven't joined any rooms yet. Create one to get started!",
       join: 'Join',
       id: 'ID',
+      deleteConfirm: 'Are you sure you want to delete this room? This action cannot be undone.'
     },
     friends: {
       addTitle: 'Add Friend',

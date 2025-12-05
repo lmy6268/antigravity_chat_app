@@ -4,10 +4,11 @@ import { useTranslation } from '@/i18n/LanguageContext';
 interface RoomListProps {
     rooms: RoomUIModel[];
     onJoinRoom: (roomId: string, roomName: string) => void;
+    onDeleteRoom: (roomId: string) => void;
     onCreateClick: () => void;
 }
 
-export function RoomList({ rooms, onJoinRoom, onCreateClick }: RoomListProps) {
+export function RoomList({ rooms, onJoinRoom, onDeleteRoom, onCreateClick }: RoomListProps) {
     const { t } = useTranslation();
 
     return (
@@ -44,10 +45,26 @@ export function RoomList({ rooms, onJoinRoom, onCreateClick }: RoomListProps) {
                             {room.isCreator && (
                                 <div style={{
                                     position: 'absolute', top: '10px', right: '10px',
-                                    backgroundColor: '#007acc', color: 'white',
-                                    padding: '2px 6px', borderRadius: '4px', fontSize: '10px'
+                                    display: 'flex', gap: '5px'
                                 }}>
-                                    OWNER
+                                    <div style={{
+                                        backgroundColor: '#007acc', color: 'white',
+                                        padding: '2px 6px', borderRadius: '4px', fontSize: '10px'
+                                    }}>
+                                        OWNER
+                                    </div>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDeleteRoom(room.id);
+                                        }}
+                                        style={{
+                                            backgroundColor: '#d9534f', color: 'white', border: 'none',
+                                            padding: '2px 6px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer'
+                                        }}
+                                    >
+                                        DELETE
+                                    </button>
                                 </div>
                             )}
                         </div>

@@ -43,9 +43,10 @@ export const ko = {
     rooms: {
       title: '내 채팅방',
       create: '방 만들기',
-      noRooms: '아직 참여한 방이 없습니다. 새로운 방을 만들어보세요!',
-      join: '참여하기',
-      id: 'ID',
+      noRooms: '참여 중인 방이 없습니다. 새로운 방을 만들어보세요!',
+      join: '입장',
+      id: '방 ID',
+      deleteConfirm: '정말로 이 방을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'
     },
     friends: {
       addTitle: '친구 추가',

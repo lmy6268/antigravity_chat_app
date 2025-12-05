@@ -107,7 +107,6 @@ export function matchRoute(pathname: string, pattern: string): boolean {
  * 
  * @example
  * extractParams('/chat/room123', '/chat/:roomId')
- * // Returns: { roomId: 'room123' }
  */
 export function extractParams(
   pathname: string,

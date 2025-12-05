@@ -15,6 +15,7 @@ export const en = {
     errorDuringRegistration: 'An error occurred during registration',
     failedToSendMessage: 'Failed to send message.',
     failedToCreateRoom: 'Failed to create room',
+    sessionExpired: 'Session expired. Please login again.',
   },
   auth: {
     login: 'Login',
@@ -76,6 +77,7 @@ export const en = {
       roomDeleted: 'The room has been deleted by the creator.',
       linkCopied: 'Invite link copied to clipboard!',
       confirmDeleteRoom: 'If you leave, the room will be deleted. Are you sure?',
+      roomNotFound: 'Room not found',
     }
   },
   chat: {

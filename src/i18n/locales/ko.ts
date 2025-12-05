@@ -15,6 +15,7 @@ export const ko = {
     errorDuringRegistration: '회원가입 중 오류가 발생했습니다',
     failedToSendMessage: '메시지 전송 실패',
     failedToCreateRoom: '방 생성 실패',
+    sessionExpired: '세션이 만료되었습니다. 다시 로그인해주세요.',
   },
   auth: {
     login: '로그인',
@@ -75,6 +76,8 @@ export const ko = {
       invalidPassword: '비밀번호가 올바르지 않습니다',
       roomDeleted: '방장이 방을 삭제했습니다.',
       linkCopied: '초대 링크가 클립보드에 복사되었습니다!',
+      confirmDeleteRoom: '방을 나가면 방이 삭제됩니다. 정말 나가시겠습니까?',
+      roomNotFound: '방을 찾을 수 없습니다',
     }
   },
   chat: {

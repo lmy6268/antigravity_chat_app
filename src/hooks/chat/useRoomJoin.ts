@@ -63,7 +63,7 @@ export function useRoomJoin(roomId: string, roomName: string) {
           const data = await res.json();
           setRoomInfo(data.room);
         } else if (res.status === 404) {
-          dialogService.alert(t.dashboard.alerts.roomDeleted || 'Room not found');
+          dialogService.alert(t.dashboard.alerts.roomDeleted || t.dashboard.alerts.roomNotFound);
           router.push(routes.dashboard());
         }
       } catch (error) {

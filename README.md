@@ -170,21 +170,19 @@ npm start
 
 ```
 next-websocket-demo/
-├── server.js                 # 커스텀 Next.js + Socket.io 서버
-├── lib/
-│   └── supabase.js          # Supabase 클라이언트 설정
 ├── src/
-│   └── app/
-│       ├── page.tsx         # 대시보드 (방 목록)
-│       ├── login/           # 로그인 페이지
-│       ├── register/        # 회원가입 페이지
-│       ├── chat/[roomId]/   # 채팅방 페이지
-│       └── api/             # API Routes
-│           ├── auth/        # 인증 관련 API
-│           ├── rooms/       # 방 관리 API
-│           └── users/       # 사용자 관련 API
-├── daily/                    # 작업 일지
-├── study/                    # 학습 자료
+│   ├── server/
+│   │   └── server.js        # 커스텀 Next.js + Socket.io 서버
+│   ├── app/                 # Next.js App Router
+│   ├── components/          # React 컴포넌트
+│   ├── dao/                 # Data Access Objects (Supabase)
+│   ├── hooks/               # 커스텀 훅
+│   ├── i18n/                # 다국어 지원
+│   ├── lib/                 # 유틸리티 및 상수
+│   ├── models/              # 도메인 모델
+│   └── types/               # 타입 정의
+├── daily/                   # 작업 일지
+├── study/                   # 학습 자료
 └── .env.local               # 환경 변수 (gitignore)
 ```
 

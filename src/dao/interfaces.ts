@@ -8,7 +8,7 @@ import type {
   RoomEntity,
   MessageEntity,
   RoomParticipantEntity,
-  FriendEntity
+  FriendEntity,
 } from '../types/entities';
 
 // ============================================================================

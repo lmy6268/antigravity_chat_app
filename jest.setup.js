@@ -1,16 +1,16 @@
 // Jest 전역 설정
-import '@testing-library/jest-dom'
-import { TextEncoder, TextDecoder } from 'util'
+import '@testing-library/jest-dom';
+import { TextEncoder, TextDecoder } from 'util';
 
-global.TextEncoder = TextEncoder
-global.TextDecoder = TextDecoder
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 // Fetch API Polyfills
 if (!global.Request) {
-  const { Request, Response, Headers } = require('cross-fetch')
-  global.Request = Request
-  global.Response = Response
-  global.Headers = Headers
+  const { Request, Response, Headers } = require('cross-fetch');
+  global.Request = Request;
+  global.Response = Response;
+  global.Headers = Headers;
 }
 
 // Polyfill Response.json if missing (for NextResponse)
@@ -20,18 +20,18 @@ if (!global.Response.json) {
       ...init,
       headers: {
         'Content-Type': 'application/json',
-        ...(init && init.headers)
-      }
-    })
-  }
+        ...(init && init.headers),
+      },
+    });
+  };
 }
 
-console.log('Jest setup loaded')
+console.log('Jest setup loaded');
 
 // Web Crypto API 모킹 (jsdom에는 없음)
 if (typeof window !== 'undefined') {
-  const crypto = require('crypto')
-  
+  const crypto = require('crypto');
+
   Object.defineProperty(global, 'crypto', {
     value: {
       getRandomValues: (arr) => crypto.randomBytes(arr.length),
@@ -42,5 +42,5 @@ if (typeof window !== 'undefined') {
         decrypt: jest.fn(),
       },
     },
-  })
+  });
 }

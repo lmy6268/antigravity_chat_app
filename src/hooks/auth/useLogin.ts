@@ -8,19 +8,19 @@ import { STORAGE_KEYS } from '@/lib/storage-constants';
 
 /**
  * useLogin Hook (ViewModel)
- * 
+ *
  * 책임:
  * - 로그인 폼 상태 관리
  * - 로그인 로직 처리
  * - 이미 로그인된 경우 자동 리다이렉트
- * 
+ *
  * Android ViewModel 패턴과 유사
  */
 export function useLogin() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();
-  
+
   // 상태
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -53,7 +53,7 @@ export function useLogin() {
 
       if (response.ok) {
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
-        
+
         // 리다이렉트 URL이 있으면 거기로, 없으면 대시보드로
         const redirectUrl = searchParams.get('redirect');
         if (redirectUrl) {
@@ -80,7 +80,7 @@ export function useLogin() {
     showPassword,
     error,
     isLoading,
-    
+
     // 액션
     setUsername,
     setPassword,

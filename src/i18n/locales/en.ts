@@ -25,8 +25,10 @@ export const en = {
     password: 'Password',
     welcome: 'Welcome',
     validation: {
-      username: 'Username must be at least 6 characters long and contain at least one letter (alphanumeric only).',
-      password: 'Password must be at least 8 characters long and contain only letters, numbers, and @ ! # $',
+      username:
+        'Username must be at least 6 characters long and contain at least one letter (alphanumeric only).',
+      password:
+        'Password must be at least 8 characters long and contain only letters, numbers, and @ ! # $',
       usernameHelp: 'Min 6 chars, must contain letters (alphanumeric)',
       passwordHelp: 'Min 8 chars, allowed: letters, numbers, @ ! # $',
     },
@@ -46,7 +48,7 @@ export const en = {
       noRooms: "You haven't joined any rooms yet. Create one to get started!",
       join: 'Join',
       id: 'ID',
-      deleteConfirm: 'Are you sure you want to delete this room? This action cannot be undone.'
+      deleteConfirm: 'Are you sure you want to delete this room? This action cannot be undone.',
     },
     friends: {
       addTitle: 'Add Friend',
@@ -79,7 +81,7 @@ export const en = {
       linkCopied: 'Invite link copied to clipboard!',
       confirmDeleteRoom: 'If you leave, the room will be deleted. Are you sure?',
       roomNotFound: 'Room not found',
-    }
+    },
   },
   chat: {
     send: 'Send',
@@ -95,5 +97,5 @@ export const en = {
     joinButton: 'Join Room',
     backButton: 'Back to Dashboard',
     welcomeMessage: 'Welcome to {roomName}, {nickname}!',
-  }
+  },
 };

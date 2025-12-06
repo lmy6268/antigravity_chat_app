@@ -17,7 +17,7 @@ export function useRoomCreate(nickname: string, onRoomCreated: (room: RoomUIMode
     setError('');
 
     const roomId = crypto.randomUUID();
-    
+
     try {
       // 1. AES 룸 키 생성
       const roomKey = await generateRoomKey();
@@ -38,8 +38,8 @@ export function useRoomCreate(nickname: string, onRoomCreated: (room: RoomUIMode
           password: password,
           creator: nickname,
           salt: salt,
-          encryptedKey: encryptedKey
-        })
+          encryptedKey: encryptedKey,
+        }),
       });
 
       if (!res.ok) throw new Error(t.common.failedToCreateRoom);
@@ -49,11 +49,11 @@ export function useRoomCreate(nickname: string, onRoomCreated: (room: RoomUIMode
         name: name,
         creatorName: nickname,
         createdAt: new Date().toLocaleString(),
-        isCreator: true
+        isCreator: true,
       };
 
       onRoomCreated(newRoom);
-      
+
       // 성공 시 해당 방으로 이동 (이름 파라미터 제거)
       router.push(routes.chat.room(newRoom.id));
     } catch (error: any) {

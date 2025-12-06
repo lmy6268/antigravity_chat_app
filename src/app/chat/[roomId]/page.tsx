@@ -17,7 +17,7 @@ import { SERVER_EVENTS, CLIENT_EVENTS } from '@/types/events';
 
 /**
  * ChatRoom Component (Orchestrator)
- * 
+ *
  * Responsibilities:
  * - Orchestrate hooks and child components
  * - Handle component composition
@@ -45,24 +45,16 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     joinRoom,
     quitRoom,
     goBack,
-    error
+    error,
   } = useRoomJoin(roomId, roomName);
 
-  const {
-    socketRef,
-    isConnected,
-    connectSocket,
-    disconnectSocket,
-  } = useWebSocket(roomId, nickname);
+  const { socketRef, isConnected, connectSocket, disconnectSocket } = useWebSocket(
+    roomId,
+    nickname
+  );
 
-  const {
-    messages,
-    inputMessage,
-    setInputMessage,
-    chatContainerRef,
-    sendMessage,
-    initializeChat,
-  } = useChat(roomId, roomName, nickname, cryptoKey, socketRef, isConnected, t);
+  const { messages, inputMessage, setInputMessage, chatContainerRef, sendMessage, initializeChat } =
+    useChat(roomId, roomName, nickname, cryptoKey, socketRef, isConnected, t);
 
   // Local state
   const [showSettings, setShowSettings] = useState(false);
@@ -137,14 +129,16 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   // 로딩 중일 때 (권한 체크 중)
   if (isLoading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        backgroundColor: '#1e1e1e',
-        color: '#f0f0f0'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          backgroundColor: '#1e1e1e',
+          color: '#f0f0f0',
+        }}
+      >
         {t.common.loading}
       </div>
     );
@@ -178,11 +172,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
       />
 
       {showSettings && (
-        <ChatSettings
-          roomInfo={roomInfo}
-          onCopyLink={copyInviteLink}
-          onLeave={handleLeave}
-        />
+        <ChatSettings roomInfo={roomInfo} onCopyLink={copyInviteLink} onLeave={handleLeave} />
       )}
 
       <ChatMessageList

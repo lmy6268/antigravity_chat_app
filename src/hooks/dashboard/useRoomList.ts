@@ -22,15 +22,15 @@ export function useRoomList(username: string) {
       if (res.ok) {
         const data = await res.json();
         const roomDTOs: RoomDTO[] = data.rooms || [];
-        
+
         // Convert DTO to UIModel
-        const uiModels = roomDTOs.map(dto => {
+        const uiModels = roomDTOs.map((dto) => {
           const uiModel = roomDTOToUIModel(dto);
           // Manually set isCreator since we only have username here
           uiModel.isCreator = dto.creator_username === username;
           return uiModel;
         });
-        
+
         setMyRooms(uiModels);
       } else if (res.status === 404) {
         // User not found (Stale Session)
@@ -61,18 +61,18 @@ export function useRoomList(username: string) {
     try {
       const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
       if (!storedUser) return;
-      
+
       const user = JSON.parse(storedUser);
-      
+
       const res = await fetch(`/api/rooms/${roomId}`, {
         method: 'DELETE',
         headers: {
-          'x-user-id': user.id
-        }
+          'x-user-id': user.id,
+        },
       });
 
       if (res.ok) {
-        setMyRooms(prev => prev.filter(room => room.id !== roomId));
+        setMyRooms((prev) => prev.filter((room) => room.id !== roomId));
       } else {
         const data = await res.json();
         alert(data.error || t.common.error);

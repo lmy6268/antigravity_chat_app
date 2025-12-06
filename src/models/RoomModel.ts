@@ -1,5 +1,5 @@
 /**
- * Room Model - 방 비즈니스 로직  
+ * Room Model - 방 비즈니스 로직
  * DAO를 사용하여 DB에 접근하고, Entity ↔ DTO 변환을 수행합니다.
  */
 
@@ -33,14 +33,14 @@ export class RoomModel {
       creator_username: creatorUsername,
       password,
       salt,
-      encrypted_key: encryptedKey
+      encrypted_key: encryptedKey,
     });
 
     // 방장을 참가자로 등록
     await this.participantDAO.upsert({
       room_id: roomEntity.id,
       user_id: creatorId,
-      username: creatorUsername
+      username: creatorUsername,
     });
 
     return roomEntityToDTO(roomEntity);
@@ -61,17 +61,17 @@ export class RoomModel {
   async findUserRooms(userId: string): Promise<RoomDTO[]> {
     // 생성한 방
     const createdRooms = await this.roomDAO.findByCreatorId(userId);
-    
+
     // 참여한 방
     const participantRoomIds = await this.participantDAO.findRoomIdsByUserId(userId);
     const participantRooms = await Promise.all(
-      participantRoomIds.map(id => this.roomDAO.findById(id))
+      participantRoomIds.map((id) => this.roomDAO.findById(id))
     );
 
     // 중복 제거 및 DTO 변환
     const roomMap = new Map<string, RoomDTO>();
-    createdRooms.forEach(room => roomMap.set(room.id, roomEntityToDTO(room)));
-    participantRooms.forEach(room => {
+    createdRooms.forEach((room) => roomMap.set(room.id, roomEntityToDTO(room)));
+    participantRooms.forEach((room) => {
       if (room) roomMap.set(room.id, roomEntityToDTO(room));
     });
 
@@ -84,7 +84,7 @@ export class RoomModel {
   async deleteRoom(roomId: string, requesterId: string): Promise<void> {
     const roomEntity = await this.roomDAO.findById(roomId);
     if (!roomEntity) throw new Error('Room not found');
-    
+
     // 방장만 삭제 가능
     if (roomEntity.creator_id !== requesterId) {
       throw new Error('Only creator can delete room');
@@ -102,7 +102,7 @@ export class RoomModel {
 
     // 방장이거나 이미 참가자인 경우
     if (roomEntity.creator_id === userId) return true;
-    
+
     return this.participantDAO.isParticipant(roomId, userId);
   }
 
@@ -113,7 +113,7 @@ export class RoomModel {
     await this.participantDAO.upsert({
       room_id: roomId,
       user_id: userId,
-      username
+      username,
     });
   }
 }

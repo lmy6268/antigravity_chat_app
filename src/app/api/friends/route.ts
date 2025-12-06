@@ -22,16 +22,19 @@ export async function GET(request: Request) {
     const friendEntities = await dao.friend.findByUserId(userDTO.id);
 
     // Format response - simplified (full implementation would need join with users table)
-    const formattedFriends = friendEntities.map(f => ({
+    const formattedFriends = friendEntities.map((f) => ({
       id: f.id,
       status: f.status,
-      friendId: f.friend_id
+      friendId: f.friend_id,
     }));
 
     return NextResponse.json({ friends: formattedFriends });
   } catch (error) {
     console.error('Error fetching friends:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+    );
   }
 }
 
@@ -44,7 +47,10 @@ export async function POST(request: Request) {
     }
 
     if (username === targetUsername) {
-      return NextResponse.json({ error: 'Cannot add yourself' }, { status: HTTP_STATUS.BAD_REQUEST });
+      return NextResponse.json(
+        { error: 'Cannot add yourself' },
+        { status: HTTP_STATUS.BAD_REQUEST }
+      );
     }
 
     // Get users
@@ -59,12 +65,15 @@ export async function POST(request: Request) {
     await dao.friend.create({
       user_id: senderDTO.id,
       friend_id: targetDTO.id,
-      status: 'pending'
+      status: 'pending',
     });
 
     return NextResponse.json({ message: 'Friend request sent' });
   } catch (error) {
     console.error('Error sending friend request:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+    );
   }
 }

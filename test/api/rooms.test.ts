@@ -19,31 +19,31 @@ describe('Rooms API', () => {
     it('should create a room successfully', async () => {
       const req = new Request('http://localhost/api/rooms/create', {
         method: 'POST',
-        body: JSON.stringify({ 
-          id: 'room123', 
-          name: 'Test Room', 
-          password: 'password', 
-          creator: 'user1' 
+        body: JSON.stringify({
+          id: 'room123',
+          name: 'Test Room',
+          password: 'password',
+          creator: 'user1',
         }),
       });
 
       const mockInsert = jest.fn().mockReturnValue({
         select: jest.fn().mockReturnValue({
           single: jest.fn().mockResolvedValue({
-            data: { 
-              id: 'room123', 
-              name: 'Test Room', 
-              creator_username: 'user1', 
+            data: {
+              id: 'room123',
+              name: 'Test Room',
+              creator_username: 'user1',
               password: 'password',
-              created_at: '2023-01-01'
+              created_at: '2023-01-01',
             },
-            error: null
-          })
-        })
+            error: null,
+          }),
+        }),
       });
 
       (supabase.from as jest.Mock).mockReturnValue({
-        insert: mockInsert
+        insert: mockInsert,
       });
 
       const res = await createRoom(req);
@@ -75,20 +75,20 @@ describe('Rooms API', () => {
       const mockSelect = jest.fn().mockReturnValue({
         eq: jest.fn().mockReturnValue({
           single: jest.fn().mockResolvedValue({
-            data: { 
-              id: 'room123', 
-              name: 'Test Room', 
-              creator_username: 'user1', 
+            data: {
+              id: 'room123',
+              name: 'Test Room',
+              creator_username: 'user1',
               password: 'password',
-              created_at: '2023-01-01'
+              created_at: '2023-01-01',
             },
-            error: null
-          })
-        })
+            error: null,
+          }),
+        }),
       });
 
       (supabase.from as jest.Mock).mockReturnValue({
-        select: mockSelect
+        select: mockSelect,
       });
 
       const res = await getRoom(req, { params });
@@ -106,17 +106,17 @@ describe('Rooms API', () => {
         eq: jest.fn().mockReturnValue({
           single: jest.fn().mockResolvedValue({
             data: null,
-            error: { message: 'Not found' }
-          })
-        })
+            error: { message: 'Not found' },
+          }),
+        }),
       });
 
       (supabase.from as jest.Mock).mockReturnValue({
-        select: mockSelect
+        select: mockSelect,
       });
 
       const res = await getRoom(req, { params });
-      
+
       expect(res.status).toBe(HTTP_STATUS.NOT_FOUND);
     });
   });
@@ -124,16 +124,16 @@ describe('Rooms API', () => {
   describe('DELETE /api/rooms/[roomId]', () => {
     it('should delete room successfully', async () => {
       const req = new Request('http://localhost/api/rooms/room123', {
-        method: 'DELETE'
+        method: 'DELETE',
       });
       const params = Promise.resolve({ roomId: 'room123' });
 
       const mockDelete = jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ error: null })
+        eq: jest.fn().mockResolvedValue({ error: null }),
       });
 
       (supabase.from as jest.Mock).mockReturnValue({
-        delete: mockDelete
+        delete: mockDelete,
       });
 
       const res = await deleteRoom(req, { params });

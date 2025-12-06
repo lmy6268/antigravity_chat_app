@@ -2,36 +2,33 @@ import { NextResponse } from 'next/server';
 import { HTTP_STATUS } from '@/lib/api-constants';
 import { roomModel } from '@/models/RoomModel';
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ roomId: string }> }
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ roomId: string }> }) {
   try {
     const { roomId } = await params;
 
     const roomDTO = await roomModel.findById(roomId);
-    
+
     if (!roomDTO) {
-      return NextResponse.json(
-        { error: 'Room not found' },
-        { status: HTTP_STATUS.NOT_FOUND }
-      );
+      return NextResponse.json({ error: 'Room not found' }, { status: HTTP_STATUS.NOT_FOUND });
     }
 
     // Note: participants would need a separate DAO method
     // For now, returning room without participants
-    return NextResponse.json({ 
-      room: {
-        id: roomDTO.id,
-        name: roomDTO.name,
-        creator: roomDTO.creator_username,
-        password: roomDTO.password,
-        participants: [], // TODO: Add participants query
-        createdAt: roomDTO.created_at,
-        salt: roomDTO.salt,
-        encryptedKey: roomDTO.encrypted_key
-      }
-    }, { status: HTTP_STATUS.OK });
+    return NextResponse.json(
+      {
+        room: {
+          id: roomDTO.id,
+          name: roomDTO.name,
+          creator: roomDTO.creator_username,
+          password: roomDTO.password,
+          participants: [], // TODO: Add participants query
+          createdAt: roomDTO.created_at,
+          salt: roomDTO.salt,
+          encryptedKey: roomDTO.encrypted_key,
+        },
+      },
+      { status: HTTP_STATUS.OK }
+    );
   } catch (error) {
     console.error('Error fetching room:', error);
     return NextResponse.json(
@@ -47,10 +44,10 @@ export async function DELETE(
 ) {
   try {
     const { roomId } = await params;
-    
+
     // Get user ID from header (temporary auth)
     const userId = request.headers.get('x-user-id');
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized: User ID required' },
@@ -61,10 +58,7 @@ export async function DELETE(
     // Verify room ownership
     const room = await roomModel.findById(roomId);
     if (!room) {
-      return NextResponse.json(
-        { error: 'Room not found' },
-        { status: HTTP_STATUS.NOT_FOUND }
-      );
+      return NextResponse.json({ error: 'Room not found' }, { status: HTTP_STATUS.NOT_FOUND });
     }
 
     if (room.creator_id !== userId) {
@@ -73,7 +67,7 @@ export async function DELETE(
         { status: HTTP_STATUS.FORBIDDEN }
       );
     }
-    
+
     await roomModel.deleteRoom(roomId, userId);
 
     return NextResponse.json({ success: true }, { status: HTTP_STATUS.OK });

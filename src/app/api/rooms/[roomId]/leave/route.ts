@@ -14,18 +14,12 @@ export async function POST(
     const { username } = await request.json();
 
     if (!username) {
-      return NextResponse.json(
-        { error: 'Username is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
     const userDTO = await userModel.findByUsername(username);
     if (!userDTO) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // Check if user is creator
@@ -41,9 +35,6 @@ export async function POST(
     }
   } catch (error) {
     console.error('Error leaving room:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

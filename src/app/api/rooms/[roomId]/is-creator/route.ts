@@ -2,10 +2,7 @@ import { NextResponse } from 'next/server';
 import { HTTP_STATUS } from '@/lib/api-constants';
 import { roomModel } from '@/models/RoomModel';
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ roomId: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ roomId: string }> }) {
   try {
     const { roomId } = await params;
     const { searchParams } = new URL(request.url);
@@ -22,10 +19,7 @@ export async function GET(
     const roomDTO = await roomModel.findById(roomId);
 
     if (!roomDTO) {
-      return NextResponse.json(
-        { error: 'Room not found' },
-        { status: HTTP_STATUS.NOT_FOUND }
-      );
+      return NextResponse.json({ error: 'Room not found' }, { status: HTTP_STATUS.NOT_FOUND });
     }
 
     const isCreator = roomDTO.creator_username === username;

@@ -39,7 +39,23 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Run Gemini Code Review
-        uses: google-github-actions/run-gemini-cli@v0.1.16 # Note: Ensure this version is current or use 'v0'
+        uses: google-github-actions/run-gemini-cli@v0.1.16
         with:
-          api_key: ${{ secrets.GEMINI_API_KEY }}
-          args: "review --diff-only" 
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          prompt: |
+            이 Pull Request를 검토하고 **한국어로** 피드백을 제공해주세요.
+            
+            프로젝트는 Next.js 16 + React 19 + TypeScript 기반의 종단간 암호화(E2EE) WebSocket 채팅 애플리케이션입니다.
+            
+            중점 검토 사항:
+            1. 보안: 암호화 키가 클라이언트에서만 처리되는지, publicKey 인증이 올바른지 확인
+            2. 타입 안정성: TypeScript 타입 명확성, any 사용 최소화
+            3. 코드 스타일: ESLint/Prettier 규칙 준수
+            4. 성능: React Hook 의존성 배열, 불필요한 리렌더링 확인
+            5. 아키텍처: DAO/Model 계층 분리 적절성
+            
+            리뷰 형식:
+            - 긍정적 피드백과 개선 제안 모두 포함
+            - 코드 예시에 한국어 주석 추가
+            - 중요도: 🔴 중요, 🟡 권장, 🟢 제안
+ 

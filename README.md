@@ -102,7 +102,13 @@ cp .env.example .env.local
 
 `SUPABASE_SETUP.md` 파일을 참고하여 Supabase 프로젝트를 생성하고 스키마를 실행하세요.
 
-### 3. SSL 인증서 생성 (모바일 테스트용)
+### 3. CI/CD 및 AI 리뷰 설정
+GitHub Action을 통한 자동화된 Lint 검사 및 AI 코드 리뷰를 지원합니다.
+
+1.  **Secret 설정**: 저장소 설정(`Settings > Secrets > Actions`)에서 `GEMINI_API_KEY`를 추가해야 AI 리뷰가 작동합니다.
+2.  **브랜치 보호**: `main` 및 `develop` 브랜치에 직접 푸시를 제한하고 PR을 강제하는 것이 좋습니다.
+
+### 4. SSL 인증서 생성 (모바일 테스트용)
 
 ```bash
 # mkcert 설치 (Mac)

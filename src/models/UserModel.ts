@@ -23,7 +23,7 @@ export class UserModel {
     if (!isValid) return null;
 
     return {
-      user: userEntityToDTO(userEntity)
+      user: userEntityToDTO(userEntity),
     };
   }
 
@@ -43,11 +43,11 @@ export class UserModel {
     const userEntity = await this.userDAO.create({
       username,
       password: hashedPassword,
-      public_key: publicKey
+      public_key: publicKey,
     });
 
     return {
-      user: userEntityToDTO(userEntity)
+      user: userEntityToDTO(userEntity),
     };
   }
 

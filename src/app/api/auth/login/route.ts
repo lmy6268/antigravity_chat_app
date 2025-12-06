@@ -9,19 +9,28 @@ export async function POST(request: Request) {
     const { username, password } = body;
 
     if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password are required' }, { status: HTTP_STATUS.BAD_REQUEST });
+      return NextResponse.json(
+        { error: 'Username and password are required' },
+        { status: HTTP_STATUS.BAD_REQUEST }
+      );
     }
 
     const authResponse = await userModel.authenticate(username, password);
 
     if (!authResponse) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: HTTP_STATUS.UNAUTHORIZED });
+      return NextResponse.json(
+        { error: 'Invalid credentials' },
+        { status: HTTP_STATUS.UNAUTHORIZED }
+      );
     }
 
     // Return DTO
     return NextResponse.json(authResponse);
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: HTTP_STATUS.INTERNAL_SERVER_ERROR });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+    );
   }
 }

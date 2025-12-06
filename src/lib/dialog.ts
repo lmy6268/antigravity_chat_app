@@ -1,9 +1,9 @@
 /**
  * Dialog Service
- * 
+ *
  * Native window.alert and window.confirm are difficult to test and can block execution.
  * This service provides an abstraction layer to handle dialogs.
- * 
+ *
  * It can be extended or mocked for testing purposes.
  */
 

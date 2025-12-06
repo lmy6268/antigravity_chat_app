@@ -11,7 +11,7 @@ import { dialogService } from '@/lib/dialog';
 
 /**
  * useRoomJoin Hook (ViewModel)
- * 
+ *
  * 책임:
  * - 룸 참여 로직 처리
  * - 비밀번호 입력 관리
@@ -22,7 +22,7 @@ import { dialogService } from '@/lib/dialog';
 export function useRoomJoin(roomId: string, roomName: string) {
   const router = useRouter();
   const { t } = useTranslation();
-  
+
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -79,13 +79,13 @@ export function useRoomJoin(roomId: string, roomName: string) {
     const attemptAutoJoin = async () => {
       // 이미 시도했거나 필요한 정보가 없으면 스킵
       if (autoJoinAttemptedRef.current || !roomInfo || !nickname) return;
-      
+
       const isCreator = roomInfo.creator === nickname;
       const isParticipant = roomInfo.participants?.includes(nickname);
-      
+
       if (isCreator || isParticipant) {
         autoJoinAttemptedRef.current = true;
-        
+
         // roomInfo.password로 자동 입장 시도
         if (roomInfo.password) {
           try {
@@ -103,18 +103,18 @@ export function useRoomJoin(roomId: string, roomName: string) {
           }
         }
       }
-      
+
       // 권한이 없거나 자동 입장 실패 시 비밀번호 화면 표시
       setIsLoading(false);
     };
-    
+
     attemptAutoJoin();
   }, [roomInfo, nickname]);
 
   // 수동 비밀번호 입력으로 입장
   const joinRoom = async (e?: React.FormEvent, manualPassword?: string) => {
     if (e) e.preventDefault();
-    
+
     setError('');
     const pwdToUse = manualPassword || password;
     if (!pwdToUse || !roomInfo) return;
@@ -125,21 +125,20 @@ export function useRoomJoin(roomId: string, roomName: string) {
         pwdToUse,
         roomInfo.salt
       );
-      
+
       setCryptoKey(decryptedKey);
 
       // 참여자에 사용자 추가
       await fetch(`/api/rooms/${roomId}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           username: nickname,
-          encryptedKey: '' 
-        })
+          encryptedKey: '',
+        }),
       });
 
       setIsJoined(true);
-
     } catch (err) {
       if (e) {
         setError(t.dashboard.alerts.invalidPassword);
@@ -157,7 +156,7 @@ export function useRoomJoin(roomId: string, roomName: string) {
         const res = await fetch(`/api/rooms/${roomId}/leave`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: nickname })
+          body: JSON.stringify({ username: nickname }),
         });
         console.log('[useRoomJoin] Leave API response:', res.status);
       } catch (error) {
@@ -185,6 +184,6 @@ export function useRoomJoin(roomId: string, roomName: string) {
     joinRoom,
     quitRoom,
     goBack,
-    error
+    error,
   };
 }

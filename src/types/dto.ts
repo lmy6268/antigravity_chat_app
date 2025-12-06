@@ -49,7 +49,7 @@ export interface RoomDTO {
   name: string;
   creator_id: string;
   creator_username: string;
-  password: string;  // 필요시 클라이언트에서 암호화 키 복호화에 사용
+  password: string; // 필요시 클라이언트에서 암호화 키 복호화에 사용
   salt?: string;
   encrypted_key?: string;
   created_at: string;

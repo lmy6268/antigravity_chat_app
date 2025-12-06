@@ -11,7 +11,7 @@ import { STORAGE_KEYS } from '@/lib/storage-constants';
 
 /**
  * useRegister Hook (ViewModel)
- * 
+ *
  * 책임:
  * - 회원가입 폼 상태 관리
  * - 키 생성 처리
@@ -21,7 +21,7 @@ import { STORAGE_KEYS } from '@/lib/storage-constants';
 export function useRegister() {
   const router = useRouter();
   const { t } = useTranslation();
-  
+
   // 상태
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -60,7 +60,7 @@ export function useRegister() {
     try {
       // 1. RSA 키 쌍 생성
       const keyPair = await generateKeyPair();
-      
+
       // 2. Public Key를 JWK 문자열로 내보내기
       const publicKeyJwk = await exportKey(keyPair.publicKey);
       const publicKeyString = JSON.stringify(publicKeyJwk);
@@ -72,10 +72,10 @@ export function useRegister() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          username, 
+        body: JSON.stringify({
+          username,
           password,
-          publicKey: publicKeyString
+          publicKey: publicKeyString,
         }),
       });
 
@@ -104,7 +104,7 @@ export function useRegister() {
     showPassword,
     error,
     isLoading,
-    
+
     // 액션
     setUsername,
     setPassword,

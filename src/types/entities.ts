@@ -9,7 +9,7 @@ export interface UserEntity {
   username: string;
   password: string;
   public_key?: string;
-  created_at: string;  // Supabase returns ISO string
+  created_at: string; // Supabase returns ISO string
   updated_at: string;
 }
 
@@ -21,7 +21,7 @@ export interface RoomEntity {
   password: string;
   salt?: string;
   encrypted_key?: string;
-  created_at: string;  // Supabase returns ISO string
+  created_at: string; // Supabase returns ISO string
   updated_at: string;
 }
 
@@ -30,7 +30,7 @@ export interface MessageEntity {
   room_id: string;
   iv: number[];
   data: number[];
-  created_at: string;  // Supabase returns ISO string
+  created_at: string; // Supabase returns ISO string
 }
 
 export interface RoomParticipantEntity {
@@ -38,7 +38,7 @@ export interface RoomParticipantEntity {
   user_id: string;
   username: string;
   encrypted_key?: string;
-  joined_at: string;  // Supabase returns ISO string
+  joined_at: string; // Supabase returns ISO string
 }
 
 export interface FriendEntity {
@@ -46,6 +46,6 @@ export interface FriendEntity {
   user_id: string;
   friend_id: string;
   status: 'pending' | 'accepted';
-  created_at: string;  // Supabase returns ISO string
+  created_at: string; // Supabase returns ISO string
   updated_at: string;
 }

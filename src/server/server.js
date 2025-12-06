@@ -33,7 +33,7 @@ if (dev) {
     useHttps = true;
     httpsOptions = {
       key: fs.readFileSync(keyPath),
-      cert: fs.readFileSync(certPath)
+      cert: fs.readFileSync(certPath),
     };
     logger.info('✅ SSL 인증서 발견, HTTPS 서버 시작');
   } else {
@@ -44,19 +44,19 @@ if (dev) {
 app.prepare().then(() => {
   const server = useHttps
     ? createHttpsServer(httpsOptions, (req, res) => {
-      const parsedUrl = parse(req.url, true);
-      handle(req, res, parsedUrl);
-    })
+        const parsedUrl = parse(req.url, true);
+        handle(req, res, parsedUrl);
+      })
     : createServer((req, res) => {
-      const parsedUrl = parse(req.url, true);
-      handle(req, res, parsedUrl);
-    });
+        const parsedUrl = parse(req.url, true);
+        handle(req, res, parsedUrl);
+      });
 
   const io = new Server(server, {
     cors: {
       origin: '*',
-      methods: ['GET', 'POST']
-    }
+      methods: ['GET', 'POST'],
+    },
   });
 
   // Socket.io 연결 처리
@@ -80,7 +80,7 @@ app.prepare().then(() => {
           await dao.participant.upsert({
             room_id: roomId,
             user_id: userEntity.id,
-            username: username
+            username: username,
           });
         }
       } catch (e) {
@@ -102,9 +102,16 @@ app.prepare().then(() => {
         // MessageModel 사용
         const messageDTOs = await messageModel.findByRoomId(targetRoomId);
 
-        logger.debug(`[request_history] Sending ${messageDTOs.length} messages to ${socket.id} for room ${targetRoomId}`);
+        logger.debug(
+          `[request_history] Sending ${messageDTOs.length} messages to ${socket.id} for room ${targetRoomId}`
+        );
         messageDTOs.forEach((dto, idx) => {
-          socket.emit(SERVER_EVENTS.MESSAGE_RECEIVED, { iv: dto.iv, data: dto.data, timestamp: dto.created_at, id: dto.id });
+          socket.emit(SERVER_EVENTS.MESSAGE_RECEIVED, {
+            iv: dto.iv,
+            data: dto.data,
+            timestamp: dto.created_at,
+            id: dto.id,
+          });
         });
       } catch (e) {
         logger.error('Error in request_history:', e);
@@ -126,7 +133,7 @@ app.prepare().then(() => {
           iv: messageDTO.iv,
           data: messageDTO.data,
           timestamp: messageDTO.created_at,
-          id: messageDTO.id
+          id: messageDTO.id,
         });
       } catch (err) {
         logger.error('Error saving message:', err);

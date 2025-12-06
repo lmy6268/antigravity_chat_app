@@ -18,12 +18,9 @@ export async function POST(request: Request) {
 
     // 1. Get user
     const userDTO = await userModel.findByUsername(creator);
-    
+
     if (!userDTO) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: HTTP_STATUS.NOT_FOUND }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: HTTP_STATUS.NOT_FOUND });
     }
 
     // 2. Create room (also adds creator as participant)
@@ -37,15 +34,18 @@ export async function POST(request: Request) {
       encryptedKey
     );
 
-    return NextResponse.json({ 
-      room: {
-        id: roomDTO.id,
-        name: roomDTO.name,
-        creator: roomDTO.creator_username,
-        password: roomDTO.password,
-        createdAt: roomDTO.created_at
-      }
-    }, { status: HTTP_STATUS.CREATED });
+    return NextResponse.json(
+      {
+        room: {
+          id: roomDTO.id,
+          name: roomDTO.name,
+          creator: roomDTO.creator_username,
+          password: roomDTO.password,
+          createdAt: roomDTO.created_at,
+        },
+      },
+      { status: HTTP_STATUS.CREATED }
+    );
   } catch (error) {
     console.error('Error creating room:', error);
     return NextResponse.json(

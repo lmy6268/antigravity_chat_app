@@ -6,7 +6,7 @@ import { CLIENT_EVENTS, SERVER_EVENTS, SOCKET_LIFECYCLE } from '@/types/events';
 
 /**
  * useWebSocket Hook (ViewModel)
- * 
+ *
  * 책임:
  * - 소켓 연결/해제 관리
  * - 소켓 이벤트 리스너 등록/해제
@@ -39,7 +39,7 @@ export function useWebSocket(roomId: string, username: string) {
       console.log('Socket connected:', socket.id);
       setIsConnected(true);
       isConnectingRef.current = false;
-      
+
       // Join room
       socket.emit(CLIENT_EVENTS.JOIN_ROOM, { roomId, username });
     });
@@ -54,7 +54,6 @@ export function useWebSocket(roomId: string, username: string) {
       console.error('Socket error:', error);
       isConnectingRef.current = false;
     });
-
   }, [roomId, username]);
 
   const disconnectSocket = useCallback(() => {
@@ -78,6 +77,6 @@ export function useWebSocket(roomId: string, username: string) {
     socketRef,
     isConnected,
     connectSocket,
-    disconnectSocket
+    disconnectSocket,
   };
 }

@@ -1,5 +1,5 @@
 export const SOCKET_LIFECYCLE = {
-  CONNECT: 'connect',       // Client-side: socket.on('connect')
+  CONNECT: 'connect', // Client-side: socket.on('connect')
   CONNECTION: 'connection', // Server-side: io.on('connection')
   DISCONNECT: 'disconnect',
 } as const;
@@ -17,4 +17,3 @@ export const SERVER_EVENTS = {
   ROOM_DELETED: 'room-deleted',
   ERROR: 'error',
 } as const;
-

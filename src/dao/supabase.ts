@@ -9,15 +9,9 @@ import type {
   RoomEntity,
   MessageEntity,
   RoomParticipantEntity,
-  FriendEntity
+  FriendEntity,
 } from '../types/entities';
-import type {
-  IUserDAO,
-  IRoomDAO,
-  IMessageDAO,
-  IParticipantDAO,
-  IFriendDAO
-} from './interfaces';
+import type { IUserDAO, IRoomDAO, IMessageDAO, IParticipantDAO, IFriendDAO } from './interfaces';
 
 // ============================================================================
 // User DAO
@@ -30,29 +24,21 @@ export class UserDAO implements IUserDAO {
       .select('*')
       .eq('username', username)
       .single();
-    
+
     if (error) return null;
     return data;
   }
 
   async findById(id: string): Promise<UserEntity | null> {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
+    const { data, error } = await supabase.from('users').select('*').eq('id', id).single();
+
     if (error) return null;
     return data;
   }
 
   async create(user: Omit<UserEntity, 'id' | 'created_at' | 'updated_at'>): Promise<UserEntity> {
-    const { data, error } = await supabase
-      .from('users')
-      .insert([user])
-      .select()
-      .single();
-    
+    const { data, error } = await supabase.from('users').insert([user]).select().single();
+
     if (error) throw error;
     return data;
   }
@@ -64,7 +50,7 @@ export class UserDAO implements IUserDAO {
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   }
@@ -76,12 +62,8 @@ export class UserDAO implements IUserDAO {
 
 export class RoomDAO implements IRoomDAO {
   async findById(roomId: string): Promise<RoomEntity | null> {
-    const { data, error } = await supabase
-      .from('rooms')
-      .select('*')
-      .eq('id', roomId)
-      .single();
-    
+    const { data, error } = await supabase.from('rooms').select('*').eq('id', roomId).single();
+
     if (error) return null;
     return data;
   }
@@ -92,18 +74,14 @@ export class RoomDAO implements IRoomDAO {
       .select('*')
       .eq('creator_id', creatorId)
       .order('created_at', { ascending: false });
-    
+
     if (error) return [];
     return data;
   }
 
   async create(room: Omit<RoomEntity, 'created_at' | 'updated_at'>): Promise<RoomEntity> {
-    const { data, error } = await supabase
-      .from('rooms')
-      .insert([room])
-      .select()
-      .single();
-    
+    const { data, error } = await supabase.from('rooms').insert([room]).select().single();
+
     if (error) throw error;
     return data;
   }
@@ -115,17 +93,14 @@ export class RoomDAO implements IRoomDAO {
       .eq('id', roomId)
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   }
 
   async delete(roomId: string): Promise<void> {
-    const { error } = await supabase
-      .from('rooms')
-      .delete()
-      .eq('id', roomId);
-    
+    const { error } = await supabase.from('rooms').delete().eq('id', roomId);
+
     if (error) throw error;
   }
 }
@@ -141,18 +116,14 @@ export class MessageDAO implements IMessageDAO {
       .select('*')
       .eq('room_id', roomId)
       .order('created_at', { ascending: true });
-    
+
     if (error) return [];
     return data;
   }
 
   async create(message: Omit<MessageEntity, 'id' | 'created_at'>): Promise<MessageEntity> {
-    const { data, error } = await supabase
-      .from('messages')
-      .insert([message])
-      .select()
-      .single();
-    
+    const { data, error } = await supabase.from('messages').insert([message]).select().single();
+
     if (error) throw error;
     return data;
   }
@@ -168,7 +139,7 @@ export class ParticipantDAO implements IParticipantDAO {
       .from('room_participants')
       .select('*')
       .eq('room_id', roomId);
-    
+
     if (error) return [];
     return data;
   }
@@ -178,7 +149,7 @@ export class ParticipantDAO implements IParticipantDAO {
       .from('room_participants')
       .select('*')
       .eq('user_id', userId);
-    
+
     if (error) return [];
     return data;
   }
@@ -188,9 +159,9 @@ export class ParticipantDAO implements IParticipantDAO {
       .from('room_participants')
       .select('room_id')
       .eq('user_id', userId);
-    
+
     if (error) return [];
-    return data.map(p => p.room_id);
+    return data.map((p) => p.room_id);
   }
 
   async isParticipant(roomId: string, userId: string): Promise<boolean> {
@@ -200,17 +171,19 @@ export class ParticipantDAO implements IParticipantDAO {
       .eq('room_id', roomId)
       .eq('user_id', userId)
       .single();
-    
+
     return !error && data !== null;
   }
 
-  async upsert(participant: Omit<RoomParticipantEntity, 'joined_at'>): Promise<RoomParticipantEntity> {
+  async upsert(
+    participant: Omit<RoomParticipantEntity, 'joined_at'>
+  ): Promise<RoomParticipantEntity> {
     const { data, error } = await supabase
       .from('room_participants')
       .upsert([participant], { onConflict: 'room_id,user_id' })
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   }
@@ -221,7 +194,7 @@ export class ParticipantDAO implements IParticipantDAO {
       .delete()
       .eq('room_id', roomId)
       .eq('user_id', userId);
-    
+
     if (error) throw error;
   }
 }
@@ -232,22 +205,17 @@ export class ParticipantDAO implements IParticipantDAO {
 
 export class FriendDAO implements IFriendDAO {
   async findByUserId(userId: string): Promise<FriendEntity[]> {
-    const { data, error } = await supabase
-      .from('friends')
-      .select('*')
-      .eq('user_id', userId);
-    
+    const { data, error } = await supabase.from('friends').select('*').eq('user_id', userId);
+
     if (error) return [];
     return data;
   }
 
-  async create(friend: Omit<FriendEntity, 'id' | 'created_at' | 'updated_at'>): Promise<FriendEntity> {
-    const { data, error } = await supabase
-      .from('friends')
-      .insert([friend])
-      .select()
-      .single();
-    
+  async create(
+    friend: Omit<FriendEntity, 'id' | 'created_at' | 'updated_at'>
+  ): Promise<FriendEntity> {
+    const { data, error } = await supabase.from('friends').insert([friend]).select().single();
+
     if (error) throw error;
     return data;
   }
@@ -259,17 +227,14 @@ export class FriendDAO implements IFriendDAO {
       .eq('id', friendId)
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   }
 
   async delete(friendId: string): Promise<void> {
-    const { error } = await supabase
-      .from('friends')
-      .delete()
-      .eq('id', friendId);
-    
+    const { error } = await supabase.from('friends').delete().eq('id', friendId);
+
     if (error) throw error;
   }
 }
@@ -283,5 +248,5 @@ export const dao = {
   room: new RoomDAO(),
   message: new MessageDAO(),
   participant: new ParticipantDAO(),
-  friend: new FriendDAO()
+  friend: new FriendDAO(),
 } as const;

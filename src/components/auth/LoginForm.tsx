@@ -10,28 +10,15 @@ import styles from '@/styles/auth-form.module.css';
  * LoginForm Component (Pure View)
  */
 export default function LoginForm() {
-  const {
-    username,
-    password,
-    error,
-    isLoading,
-    setUsername,
-    setPassword,
-    handleLogin,
-  } = useLogin();
+  const { username, password, error, isLoading, setUsername, setPassword, handleLogin } =
+    useLogin();
   const { t } = useTranslation();
 
   return (
     <div className={styles.formContainer}>
-      <h2 className={styles.formTitle}>
-        {t.auth.login}
-      </h2>
+      <h2 className={styles.formTitle}>{t.auth.login}</h2>
 
-      {error && (
-        <div className={styles.errorMessage}>
-          {error}
-        </div>
-      )}
+      {error && <div className={styles.errorMessage}>{error}</div>}
 
       <form onSubmit={handleLogin} className={styles.form}>
         <input
@@ -60,8 +47,10 @@ export default function LoginForm() {
       </form>
 
       <div className={styles.footer}>
-        {t.auth.dontHaveAccount} <Link href={routes.auth.register()}
-          className={styles.footerLink}>{t.auth.register}</Link>
+        {t.auth.dontHaveAccount}{' '}
+        <Link href={routes.auth.register()} className={styles.footerLink}>
+          {t.auth.register}
+        </Link>
       </div>
     </div>
   );

@@ -10,7 +10,7 @@
 export interface UserUIModel {
   id: string;
   username: string;
-  displayName: string;  // @username 형식
+  displayName: string; // @username 형식
 }
 
 // ============================================================================
@@ -21,15 +21,15 @@ export interface RoomUIModel {
   id: string;
   name: string;
   creatorName: string;
-  createdAt: string;  // 포맷된 날짜 (예: "2시간 전")
-  isCreator: boolean;  // 현재 사용자가 방장인지
+  createdAt: string; // 포맷된 날짜 (예: "2시간 전")
+  isCreator: boolean; // 현재 사용자가 방장인지
 }
 
 export interface RoomListItemUIModel {
   id: string;
   name: string;
   creatorName: string;
-  lastActivity: string;  // "방금 전", "5분 전" 등
+  lastActivity: string; // "방금 전", "5분 전" 등
 }
 
 // ============================================================================
@@ -41,8 +41,8 @@ export interface MessageUIModel {
   sender: string;
   text: string;
   isSystem: boolean;
-  timestamp?: string;  // 포맷된 시간
-  isMine?: boolean;    // 내가 보낸 메시지인지
+  timestamp?: string; // 포맷된 시간
+  isMine?: boolean; // 내가 보낸 메시지인지
 }
 
 // ============================================================================
@@ -54,5 +54,5 @@ export interface FriendUIModel {
   username: string;
   displayName: string;
   status: 'pending' | 'accepted';
-  statusText: string;  // "친구 요청 대기 중" 등
+  statusText: string; // "친구 요청 대기 중" 등
 }

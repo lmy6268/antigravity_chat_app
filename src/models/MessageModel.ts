@@ -22,15 +22,11 @@ export class MessageModel {
   /**
    * 메시지 생성
    */
-  async createMessage(
-    roomId: string,
-    iv: number[],
-    data: number[]
-  ): Promise<MessageDTO> {
+  async createMessage(roomId: string, iv: number[], data: number[]): Promise<MessageDTO> {
     const entity = await this.messageDAO.create({
       room_id: roomId,
       iv,
-      data
+      data,
     });
     return messageEntityToDTO(entity);
   }

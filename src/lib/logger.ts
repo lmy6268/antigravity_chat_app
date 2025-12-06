@@ -1,6 +1,6 @@
 /**
  * Simple Logger Utility
- * 
+ *
  * 구분:
  * - debug: 개발 환경이나 DEBUG=true일 때만 출력
  * - info: 일반적인 정보 (항상 출력)
@@ -24,5 +24,5 @@ export const logger = {
   },
   error: (message: string, ...args: any[]) => {
     console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, ...args);
-  }
+  },
 };

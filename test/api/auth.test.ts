@@ -32,13 +32,13 @@ describe('Auth API', () => {
       // Mock Supabase responses
       const mockSingle = jest.fn().mockResolvedValue({ data: null, error: null }); // No existing user
       const mockInsert = jest.fn().mockResolvedValue({ error: null });
-      
+
       (supabase.from as jest.Mock).mockImplementation((table) => {
         if (table === 'users') {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
-                single: mockSingle
+                single: mockSingle,
               }),
             }),
             insert: mockInsert,
@@ -65,17 +65,17 @@ describe('Auth API', () => {
       });
 
       // Mock existing user
-      const mockSingle = jest.fn().mockResolvedValue({ 
-        data: [{ username: 'existinguser' }], 
-        error: null 
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: [{ username: 'existinguser' }],
+        error: null,
       });
-      
+
       (supabase.from as jest.Mock).mockImplementation((table) => {
         if (table === 'users') {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
-                single: mockSingle
+                single: mockSingle,
               }),
             }),
           };
@@ -112,17 +112,17 @@ describe('Auth API', () => {
       });
 
       // Mock user found
-      const mockSingle = jest.fn().mockResolvedValue({ 
-        data: { id: 'user123', username: 'testuser', password: 'hashed_password' }, 
-        error: null 
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: { id: 'user123', username: 'testuser', password: 'hashed_password' },
+        error: null,
       });
-      
+
       (supabase.from as jest.Mock).mockImplementation((table) => {
         if (table === 'users') {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
-                single: mockSingle
+                single: mockSingle,
               }),
             }),
           };
@@ -137,11 +137,11 @@ describe('Auth API', () => {
       const body = await res.json();
 
       expect(res.status).toBe(HTTP_STATUS.OK);
-      expect(body).toEqual({ 
-        user: { 
+      expect(body).toEqual({
+        user: {
           id: 'user123',
-          username: 'testuser' 
-        } 
+          username: 'testuser',
+        },
       });
     });
 
@@ -152,17 +152,17 @@ describe('Auth API', () => {
       });
 
       // Mock user found
-      const mockSingle = jest.fn().mockResolvedValue({ 
-        data: { username: 'testuser', password: 'hashed_password' }, 
-        error: null 
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: { username: 'testuser', password: 'hashed_password' },
+        error: null,
       });
-      
+
       (supabase.from as jest.Mock).mockImplementation((table) => {
         if (table === 'users') {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
-                single: mockSingle
+                single: mockSingle,
               }),
             }),
           };
@@ -187,17 +187,17 @@ describe('Auth API', () => {
       });
 
       // Mock user not found
-      const mockSingle = jest.fn().mockResolvedValue({ 
-        data: null, 
-        error: { message: 'User not found' } 
+      const mockSingle = jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'User not found' },
       });
-      
+
       (supabase.from as jest.Mock).mockImplementation((table) => {
         if (table === 'users') {
           return {
             select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
-                single: mockSingle
+                single: mockSingle,
               }),
             }),
           };

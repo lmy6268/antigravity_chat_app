@@ -62,9 +62,11 @@ export const routeMetadata = {
 /**
  * Type helper to extract all valid route paths
  */
-export type RoutePath = ReturnType<typeof routes[keyof typeof routes] extends (...args: any[]) => any 
-  ? typeof routes[keyof typeof routes]
-  : never>;
+export type RoutePath = ReturnType<
+  (typeof routes)[keyof typeof routes] extends (...args: any[]) => any
+    ? (typeof routes)[keyof typeof routes]
+    : never
+>;
 
 /**
  * Type helper for route metadata keys

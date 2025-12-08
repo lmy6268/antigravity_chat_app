@@ -36,7 +36,7 @@ export function useRoomList(username: string) {
         // User not found (Stale Session)
         console.warn('User not found in DB. Clearing stale session.');
         localStorage.removeItem(STORAGE_KEYS.USER);
-        alert(t.common.sessionExpired); // Using native alert here as dialogService might not be available or needed for this critical path
+        dialogService.alert(t.common.sessionExpired);
         router.push(routes.auth.login());
         return;
       }

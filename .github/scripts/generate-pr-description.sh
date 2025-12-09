@@ -14,7 +14,19 @@ COMMITS=$(git log $MERGE_BASE..origin/$SOURCE_BRANCH --oneline)
 DIFF_CONTENT=$(git diff $MERGE_BASE..origin/$SOURCE_BRANCH)
 DIFF_STATS=$(git diff --stat $MERGE_BASE..origin/$SOURCE_BRANCH)
 
-PROMPT="다음 코드 변경사항을 분석해서 Pull Request 제목과 설명을 작성해줘.
+# diff가 너무 크면 앞부분만 사용 (Argument list too long 방지)
+DIFF_LINES=$(echo "$DIFF_CONTENT" | wc -l)
+if [ "$DIFF_LINES" -gt 150 ]; then
+  DIFF_CONTENT=$(echo "$DIFF_CONTENT" | head -n 150)
+  DIFF_CONTENT="$DIFF_CONTENT
+
+... (diff가 너무 길어 생략됨. 총 $DIFF_LINES 줄)"
+fi
+
+# 임시 파일에 프롬프트 작성
+TEMP_PROMPT=$(mktemp)
+cat > "$TEMP_PROMPT" <<EOF
+다음 코드 변경사항을 분석해서 Pull Request 제목과 설명을 작성해줘.
 
 **중요: 반드시 아래 형식을 정확히 따라야 함**
 
@@ -39,9 +51,14 @@ $COMMITS
 $DIFF_STATS
 
 상세 변경 내용:
-$DIFF_CONTENT"
+$DIFF_CONTENT
+EOF
 
-FULL_RESPONSE=$(gemini -p "$PROMPT")
+# stdin으로 프롬프트 전달
+FULL_RESPONSE=$(cat "$TEMP_PROMPT" | gemini)
+
+# 임시 파일 삭제
+rm -f "$TEMP_PROMPT"
 
 # 제목과 본문 분리
 PR_TITLE=$(echo "$FULL_RESPONSE" | grep "^TITLE:" | sed 's/^TITLE: //')

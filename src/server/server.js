@@ -26,31 +26,35 @@ let useHttps = false;
 let httpsOptions = {};
 
 if (dev) {
-  const certPath = './localhost+3.pem';
-  const keyPath = './localhost+3-key.pem';
+  const certPath = process.env.SSL_CERT_PATH;
+  const keyPath = process.env.SSL_KEY_PATH;
 
-  if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
-    useHttps = true;
-    httpsOptions = {
-      key: fs.readFileSync(keyPath),
-      cert: fs.readFileSync(certPath),
-    };
-    logger.info('✅ SSL 인증서 발견, HTTPS 서버 시작');
-  } else {
-    logger.warn('⚠️  SSL 인증서 없음, HTTP 서버 시작');
+  if (!fs.existsSync(certPath) || !fs.existsSync(keyPath)) {
+    logger.error('🔴 SSL 인증서 파일을 찾을 수 없습니다!');
+    logger.error(`인증서 경로: ${certPath}`);
+    logger.error(`키 경로: ${keyPath}`);
+    logger.error('\n파일이 존재하는지 확인하거나 mkcert로 새로 생성하세요.');
+    process.exit(1);
   }
+
+  useHttps = true;
+  httpsOptions = {
+    key: fs.readFileSync(keyPath),
+    cert: fs.readFileSync(certPath),
+  };
+  logger.info('✅ SSL 인증서 발견, HTTPS 서버 시작');
 }
 
 app.prepare().then(() => {
   const server = useHttps
     ? createHttpsServer(httpsOptions, (req, res) => {
-        const parsedUrl = parse(req.url, true);
-        handle(req, res, parsedUrl);
-      })
+      const parsedUrl = parse(req.url, true);
+      handle(req, res, parsedUrl);
+    })
     : createServer((req, res) => {
-        const parsedUrl = parse(req.url, true);
-        handle(req, res, parsedUrl);
-      });
+      const parsedUrl = parse(req.url, true);
+      handle(req, res, parsedUrl);
+    });
 
   const io = new Server(server, {
     cors: {

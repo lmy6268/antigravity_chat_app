@@ -33,7 +33,6 @@ export function useRoomList(username: string) {
 
         setMyRooms(uiModels);
       } else if (res.status === 404) {
-        // User not found (Stale Session)
         console.warn('User not found in DB. Clearing stale session.');
         localStorage.removeItem(STORAGE_KEYS.USER);
         dialogService.alert(t.common.sessionExpired);
@@ -45,7 +44,7 @@ export function useRoomList(username: string) {
     } finally {
       setLoading(false);
     }
-  }, [username, router]);
+  }, [username, router, t]);
 
   useEffect(() => {
     fetchRooms();
@@ -55,7 +54,7 @@ export function useRoomList(username: string) {
     router.push(routes.chat.room(roomId));
   };
 
-  const deleteRoom = async (roomId: string) => {
+  const deleteRoom = useCallback(async (roomId: string) => {
     if (!confirm(t.dashboard.rooms.deleteConfirm)) return;
 
     try {
@@ -81,7 +80,7 @@ export function useRoomList(username: string) {
       console.error('Error deleting room:', error);
       alert(t.common.error);
     }
-  };
+  }, [t]);
 
   return { myRooms, loading, fetchRooms, joinRoom, deleteRoom, setMyRooms };
 }

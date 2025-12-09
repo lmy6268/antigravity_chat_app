@@ -26,6 +26,7 @@ fi
 
 # 임시 파일에 프롬프트 작성
 TEMP_PROMPT=$(mktemp)
+trap 'rm -f "$TEMP_PROMPT"' EXIT
 cat > "$TEMP_PROMPT" <<EOF
 다음 코드 변경사항을 분석해서 Pull Request 제목과 설명을 작성해줘.
 

@@ -133,28 +133,28 @@ export function useChat(
       }
 
       try {
-        const decryptedMessages = await Promise.all(
-          payload.messages.map(async (msg) => {
-            if (msg.iv && msg.data) {
+        const validMessages: MessageUIModel[] = [];
+        
+        for (const msg of payload.messages) {
+          if (msg.iv && msg.data) {
+            try {
               const decryptedString = await decryptMessage(msg.iv, msg.data, cryptoKeyRef.current!);
               const messageData = JSON.parse(decryptedString);
 
-              return {
+              validMessages.push({
                 id: msg.id || `msg-${Date.now()}-${Math.random()}`,
                 sender: messageData.senderNickname,
                 text: messageData.text,
                 timestamp: new Date(msg.timestamp || Date.now()).toLocaleTimeString(),
                 isMine: messageData.senderNickname === nickname,
                 isSystem: false,
-              };
+              });
+            } catch (err) {
+              console.warn('[useChat] Failed to decrypt individual message:', err);
             }
-            return null;
-          })
-        );
+          }
+        }
 
-        const validMessages = decryptedMessages.filter(
-          (msg): msg is MessageUIModel => msg !== null
-        );
         setMessages((prev) => [...prev, ...validMessages]);
       } catch (e) {
         console.warn('Failed to decrypt history:', e);

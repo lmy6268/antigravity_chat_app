@@ -54,8 +54,8 @@ $DIFF_STATS
 $DIFF_CONTENT
 EOF
 
-# stdin으로 프롬프트 전달
-FULL_RESPONSE=$(cat "$TEMP_PROMPT" | gemini)
+# stdin으로 프롬프트 전달 (모델 지정)
+FULL_RESPONSE=$(cat "$TEMP_PROMPT" | gemini -m gemini-2.5-flash-lite)
 
 # 임시 파일 삭제
 rm -f "$TEMP_PROMPT"

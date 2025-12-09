@@ -66,6 +66,11 @@ rm -f "$TEMP_PROMPT"
 PR_TITLE=$(echo "$FULL_RESPONSE" | grep "^TITLE:" | sed 's/^TITLE: //')
 PR_BODY=$(echo "$FULL_RESPONSE" | sed '1,/^---$/d')
 
+if [ -z "$PR_TITLE" ]; then
+  echo "Error: Failed to parse PR title from AI response." >&2
+  exit 1
+fi
+
 # GitHub Actions 환경변수로 출력
 echo "title=$PR_TITLE" >> "$GITHUB_OUTPUT"
 echo "body<<EOF" >> "$GITHUB_OUTPUT"

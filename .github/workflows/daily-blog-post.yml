@@ -1,0 +1,103 @@
+name: Daily Dev Blog Post
+
+on:
+  schedule:
+    # 매일 자정 (KST) = UTC 15:00
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '포스팅할 날짜 (YYYY-MM-DD, 기본값: 어제)'
+        required: false
+        type: string
+
+env:
+  BLOG_DATE: ${{ github.event.inputs.date || '' }}
+
+permissions:
+  contents: read
+  issues: write  # Issue 생성 권한
+
+jobs:
+  create-and-post-blog:
+    name: Generate and Post Daily Blog
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 전체 히스토리 필요
+      
+      - name: Analyze Yesterday's Commits
+        id: analyze
+        run: |
+          bash .github/scripts/analyze-daily-commits.sh
+      
+      - name: Check if commits exist
+        id: check-commits
+        run: |
+          COMMIT_COUNT=$(jq -r '.summary.total_commits' commits_data.json)
+          if [ "$COMMIT_COUNT" -eq 0 ]; then
+            echo "has_commits=false" >> $GITHUB_OUTPUT
+            echo "📭 커밋이 없어서 블로그를 생성하지 않습니다."
+          else
+            echo "has_commits=true" >> $GITHUB_OUTPUT
+            echo "✅ $COMMIT_COUNT 개의 커밋 발견"
+          fi
+      
+      - name: Setup Gemini CLI
+        if: steps.check-commits.outputs.has_commits == 'true'
+        uses: google-github-actions/run-gemini-cli@v0.1.16
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+      
+      - name: Generate Blog Post
+        if: steps.check-commits.outputs.has_commits == 'true'
+        id: generate
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          bash .github/scripts/generate-blog-post.sh
+      
+      - name: Post to GitHub Issues
+        if: steps.check-commits.outputs.has_commits == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Issue 생성
+          ISSUE_URL=$(gh issue create \
+            --title "${{ steps.generate.outputs.title }}" \
+            --body-file blog_post.md \
+            --label "daily-log,auto-generated,dev-diary")
+          
+          echo "issue_url=$ISSUE_URL" >> $GITHUB_OUTPUT
+          echo "✅ Issue 생성 완료: $ISSUE_URL"
+      
+      - name: Upload Blog Post Artifact
+        if: always() && steps.check-commits.outputs.has_commits == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: blog-post-${{ steps.analyze.outputs.date || github.run_id }}
+          path: |
+            blog_post.md
+            commits_data.json
+          retention-days: 30
+      
+      - name: Summary
+        if: always()
+        run: |
+          if [ "${{ steps.check-commits.outputs.has_commits }}" == "true" ]; then
+            echo "## ✅ 블로그 포스팅 완료" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **제목**: ${{ steps.generate.outputs.title }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **날짜**: ${{ steps.generate.outputs.date }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **커밋 수**: ${{ steps.analyze.outputs.commit_count }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **변경 파일**: ${{ steps.analyze.outputs.files_changed }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Issue URL**: [바로가기](${{ steps.post.outputs.issue_url }})" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## 📭 블로그 미생성" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "어제 커밋이 없어서 블로그 글을 생성하지 않았습니다." >> $GITHUB_STEP_SUMMARY
+          fi
+

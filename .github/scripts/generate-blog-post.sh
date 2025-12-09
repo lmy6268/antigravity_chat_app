@@ -67,8 +67,8 @@ $FILE_LIST
 독자들이 '오늘 어떤 작업을 했구나', '이런 기술을 사용했구나' 라고 이해할 수 있게 작성하되,
 너무 기술적이지 않고 일상적인 개발 일지 느낌으로 작성해주세요."
 
-# Gemini CLI로 블로그 글 생성
-BLOG_CONTENT=$(gemini -p "$PROMPT")
+# Gemini CLI로 블로그 글 생성 (gemini-2.5-flash 모델 사용)
+BLOG_CONTENT=$(gemini -m gemini-2.5-flash -p "$PROMPT")
 
 # 제목 추출
 TITLE=$(echo "$BLOG_CONTENT" | grep "^TITLE:" | sed 's/^TITLE: //')

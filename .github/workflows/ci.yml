@@ -66,6 +66,8 @@ jobs:
       - name: Generate PR Title and Description
         if: steps.check-pr.outputs.exists == 'false'
         id: generate-pr
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           bash .github/scripts/generate-pr-description.sh \
             ${{ env.TARGET_BRANCH }} \

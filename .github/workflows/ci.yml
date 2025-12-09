@@ -26,7 +26,50 @@ jobs:
         run: npm install
         
       - name: Run Lint
-        run: npm run lint
+        id: lint
+        continue-on-error: true
+        run: npm run lint > lint-results.txt 2>&1 || true
+        
+      - name: Post Lint Results to PR
+        if: always() && github.event_name == 'pull_request' && steps.lint.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let lintOutput = '';
+            try {
+              lintOutput = fs.readFileSync('lint-results.txt', 'utf8');
+            } catch (e) {
+              lintOutput = 'Could not read lint results';
+            }
+            
+            const comment = `## 🔴 ESLint 오류 발생
+            
+            CI에서 lint 검사 중 오류가 발생했습니다:
+            
+            \`\`\`
+            ${lintOutput}
+            \`\`\`
+            
+            **해결 방법**:
+            \`\`\`bash
+            npm run lint -- --fix
+            git add -A
+            git commit -m "style: lint 수정"
+            git push
+            \`\`\`
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+      
+      - name: Fail if Lint Failed
+        if: steps.lint.outcome == 'failure'
+        run: exit 1
 
   auto-pull-request:
     name: Auto Create PR to Develop 

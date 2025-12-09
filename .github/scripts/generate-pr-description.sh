@@ -2,8 +2,8 @@
 set -eo pipefail
 
 # 인자로 받기
-TARGET_BRANCH=$1
-SOURCE_BRANCH=$2
+TARGET_BRANCH="$1"
+SOURCE_BRANCH="$2"
 
 # merge-base로 공통 조상 찾기
 MERGE_BASE=$(git merge-base origin/$TARGET_BRANCH origin/$SOURCE_BRANCH)

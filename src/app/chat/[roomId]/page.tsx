@@ -72,10 +72,10 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
 
   // Handle room deletion (socketRef 변경 시에만 재설정)
   useEffect(() => {
-    if (!socketRef.current) return;
+    if (!isConnected || !socketRef.current) return;
 
     const handleRoomDeleted = () => {
-      alert(t.dashboard.alerts.roomDeleted);
+      dialogService.alert(t.dashboard.alerts.roomDeleted);
       disconnectSocket();
       quitRoom(); // 방이 삭제되었으므로 나가기 처리 (API 호출은 불필요할 수 있으나 클린업 차원)
     };
@@ -87,8 +87,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
         socketRef.current.off(SERVER_EVENTS.ROOM_DELETED, handleRoomDeleted);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socketRef.current]);
+  }, [isConnected, disconnectSocket, quitRoom, t]);
 
   // Event handlers
   const handleBack = () => {

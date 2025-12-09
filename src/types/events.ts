@@ -14,6 +14,7 @@ export const CLIENT_EVENTS = {
 
 export const SERVER_EVENTS = {
   MESSAGE_RECEIVED: 'message',
+  HISTORY_RECEIVED: 'history',
   ROOM_DELETED: 'room-deleted',
   ERROR: 'error',
 } as const;

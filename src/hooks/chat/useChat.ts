@@ -123,9 +123,48 @@ export function useChat(
 
     socketRef.current.on(SERVER_EVENTS.MESSAGE_RECEIVED, handleMessage);
 
+    // Handle batch history messages
+    const handleHistory = async (payload: { messages: any[] }) => {
+      console.log('[useChat] History received:', payload.messages.length, 'messages');
+      
+      if (!cryptoKeyRef.current) {
+        console.warn('[useChat] No cryptoKey - skipping history');
+        return;
+      }
+
+      try {
+        const decryptedMessages = await Promise.all(
+          payload.messages.map(async (msg) => {
+            if (msg.iv && msg.data) {
+              const decryptedString = await decryptMessage(msg.iv, msg.data, cryptoKeyRef.current!);
+              const messageData = JSON.parse(decryptedString);
+              
+              return {
+                id: msg.id || `msg-${Date.now()}-${Math.random()}`,
+                sender: messageData.senderNickname,
+                text: messageData.text,
+                timestamp: new Date(msg.timestamp || Date.now()).toLocaleTimeString(),
+                isMine: messageData.senderNickname === nickname,
+                isSystem: false,
+              };
+            }
+            return null;
+          })
+        );
+
+        const validMessages = decryptedMessages.filter((msg): msg is MessageUIModel => msg !== null);
+        setMessages((prev) => [...prev, ...validMessages]);
+      } catch (e) {
+        console.warn('Failed to decrypt history:', e);
+      }
+    };
+
+    socketRef.current.on(SERVER_EVENTS.HISTORY_RECEIVED, handleHistory);
+
     return () => {
       if (socketRef.current) {
         socketRef.current.off(SERVER_EVENTS.MESSAGE_RECEIVED, handleMessage);
+        socketRef.current.off(SERVER_EVENTS.HISTORY_RECEIVED, handleHistory);
       }
     };
   }, [socketRef, nickname]);

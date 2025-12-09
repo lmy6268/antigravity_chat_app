@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { HTTP_STATUS } from '@/lib/api-constants';
 import { roomModel } from '@/models/RoomModel';
+import { dao } from '@/dao/supabase';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ roomId: string }> }) {
   try {
@@ -14,6 +15,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ roo
 
     // Note: participants would need a separate DAO method
     // For now, returning room without participants
+    
+    // Fetch participants
+    const participants = await dao.participant.findByRoomId(roomId);
+    const participantUsernames = participants.map(p => p.user_id); // Note: This returns user IDs, not usernames
+    // TODO: Consider joining with users table to get actual usernames if needed
+    
     return NextResponse.json(
       {
         room: {
@@ -21,7 +28,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ roo
           name: roomDTO.name,
           creator: roomDTO.creator_username,
           password: roomDTO.password,
-          participants: [], // TODO: Add participants query
+          participants: participantUsernames,
           createdAt: roomDTO.created_at,
           salt: roomDTO.salt,
           encryptedKey: roomDTO.encrypted_key,

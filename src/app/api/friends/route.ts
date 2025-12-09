@@ -21,12 +21,20 @@ export async function GET(request: Request) {
     // Use DAO directly for friends
     const friendEntities = await dao.friend.findByUserId(userDTO.id);
 
-    // Format response - simplified (full implementation would need join with users table)
-    const formattedFriends = friendEntities.map((f) => ({
-      id: f.id,
-      status: f.status,
-      friendId: f.friend_id,
-    }));
+    // Format response - include friend details by resolving friend_id to username
+    const formattedFriends = await Promise.all(
+      friendEntities.map(async (f) => {
+        const friendUser = await userModel.findById(f.friend_id);
+        return {
+          id: f.id,
+          friendId: f.friend_id,
+          username: friendUser?.username || 'Unknown',
+          publicKey: friendUser?.public_key,
+          status: f.status,
+          createdAt: f.created_at,
+        };
+      })
+    );
 
     return NextResponse.json({ friends: formattedFriends });
   } catch (error) {

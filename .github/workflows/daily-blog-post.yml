@@ -1,9 +1,12 @@
 name: Daily Dev Blog Post
 
 on:
+  push:
+    branches:
+      - develop  # develop에 푸시되면 바로 실행
   schedule:
-    # 테스트: 곧 실행 (UTC 15:30 = KST 00:30)
-    - cron: '30 15 * * *'
+    # 매일 자정 (KST) = UTC 15:00
+    - cron: '0 15 * * *'
   workflow_dispatch:
     inputs:
       date:

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 
 # 인자로 받기
 TARGET_BRANCH=$1

@@ -134,7 +134,7 @@ export function useChat(
 
       try {
         const validMessages: MessageUIModel[] = [];
-        
+
         for (const msg of payload.messages) {
           if (msg.iv && msg.data) {
             try {

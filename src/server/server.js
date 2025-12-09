@@ -109,13 +109,15 @@ app.prepare().then(() => {
         logger.debug(
           `[request_history] Sending ${messageDTOs.length} messages to ${socket.id} for room ${targetRoomId}`
         );
-        messageDTOs.forEach((dto, idx) => {
-          socket.emit(SERVER_EVENTS.MESSAGE_RECEIVED, {
+
+        // Send all messages in a single event for better performance
+        socket.emit(SERVER_EVENTS.HISTORY_RECEIVED, {
+          messages: messageDTOs.map((dto) => ({
             iv: dto.iv,
             data: dto.data,
             timestamp: dto.created_at,
             id: dto.id,
-          });
+          })),
         });
       } catch (e) {
         logger.error('Error in request_history:', e);

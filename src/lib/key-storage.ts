@@ -27,7 +27,7 @@ export async function savePrivateKey(privateKey: CryptoKey): Promise<void> {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
       const putRequest = store.put(privateKey, KEY_ID);
-      
+
       putRequest.onsuccess = () => resolve();
       putRequest.onerror = () => reject(putRequest.error);
     };
@@ -44,7 +44,7 @@ export async function loadPrivateKey(): Promise<CryptoKey | null> {
       const tx = db.transaction(STORE_NAME, 'readonly');
       const store = tx.objectStore(STORE_NAME);
       const getRequest = store.get(KEY_ID);
-      
+
       getRequest.onsuccess = () => resolve(getRequest.result || null);
       getRequest.onerror = () => reject(getRequest.error);
     };

@@ -9,6 +9,13 @@ export const en = {
     save: 'Save',
     delete: 'Delete',
     edit: 'Edit',
+    loginFailed: 'Login failed',
+    registrationFailed: 'Registration failed',
+    errorOccurred: 'An error occurred',
+    errorDuringRegistration: 'An error occurred during registration',
+    failedToSendMessage: 'Failed to send message.',
+    failedToCreateRoom: 'Failed to create room',
+    sessionExpired: 'Session expired. Please login again.',
   },
   auth: {
     login: 'Login',
@@ -18,11 +25,15 @@ export const en = {
     password: 'Password',
     welcome: 'Welcome',
     validation: {
-      username: 'Username must be at least 6 characters long and contain at least one letter (alphanumeric only).',
-      password: 'Password must be at least 8 characters long and contain only letters, numbers, and @ ! # $',
+      username:
+        'Username must be at least 6 characters long and contain at least one letter (alphanumeric only).',
+      password:
+        'Password must be at least 8 characters long and contain only letters, numbers, and @ ! # $',
       usernameHelp: 'Min 6 chars, must contain letters (alphanumeric)',
       passwordHelp: 'Min 8 chars, allowed: letters, numbers, @ ! # $',
     },
+    alreadyHaveAccount: 'Already have an account?',
+    dontHaveAccount: "Don't have an account?",
   },
   dashboard: {
     title: 'Chat Dashboard',
@@ -37,6 +48,7 @@ export const en = {
       noRooms: "You haven't joined any rooms yet. Create one to get started!",
       join: 'Join',
       id: 'ID',
+      deleteConfirm: 'Are you sure you want to delete this room? This action cannot be undone.',
     },
     friends: {
       addTitle: 'Add Friend',
@@ -67,7 +79,9 @@ export const en = {
       invalidPassword: 'Invalid room password',
       roomDeleted: 'The room has been deleted by the creator.',
       linkCopied: 'Invite link copied to clipboard!',
-    }
+      confirmDeleteRoom: 'If you leave, the room will be deleted. Are you sure?',
+      roomNotFound: 'Room not found',
+    },
   },
   chat: {
     send: 'Send',
@@ -82,5 +96,6 @@ export const en = {
     passwordPrompt: 'Enter password to decrypt messages.',
     joinButton: 'Join Room',
     backButton: 'Back to Dashboard',
-  }
+    welcomeMessage: 'Welcome to {roomName}, {nickname}!',
+  },
 };

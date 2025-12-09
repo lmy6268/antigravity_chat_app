@@ -1,87 +1,82 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { SOCKET_EVENTS } from '@/lib/constants';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { io } from 'socket.io-client';
+import { CLIENT_EVENTS, SERVER_EVENTS, SOCKET_LIFECYCLE } from '@/types/events';
 
 /**
  * useWebSocket Hook (ViewModel)
- * 
- * Responsibilities:
- * - Manage WebSocket connection
- * - Handle socket events
- * - Provide connection status
- * 
- * Similar to Android ViewModel managing network state
+ *
+ * 책임:
+ * - 소켓 연결/해제 관리
+ * - 소켓 이벤트 리스너 등록/해제
+ * - 연결 상태 관리
  */
-export function useWebSocket(roomId: string, nickname: string) {
+export function useWebSocket(roomId: string, username: string) {
   const socketRef = useRef<any>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const isConnectingRef = useRef(false);
 
-  const connectSocket = () => {
-    // Dynamic import socket.io-client
-    import('socket.io-client').then(({ io }) => {
-      const socket = io(window.location.origin, {
-        transports: ['websocket', 'polling'],
-        reconnection: true,
-        reconnectionDelay: 1000,
-        reconnectionAttempts: 5
-      });
-      
-      socketRef.current = socket;
+  const connectSocket = useCallback(() => {
+    if (isConnectingRef.current || socketRef.current?.connected) {
+      console.log('Socket already connecting or connected, skipping...');
+      return;
+    }
 
-      socket.on(SOCKET_EVENTS.CONNECTION, () => {
-        console.log('Connected to Socket.io');
-        setIsConnected(true);
-        socket.emit(SOCKET_EVENTS.JOIN_ROOM, { roomId, username: nickname });
-      });
+    if (!roomId || !username) return;
 
-      socket.on(SOCKET_EVENTS.DISCONNECT, () => {
-        console.log('Socket disconnected');
-        setIsConnected(false);
-      });
+    isConnectingRef.current = true;
+    console.log('Initializing socket connection...');
+
+    const socket = io({
+      path: '/api/socket',
+      addTrailingSlash: false,
     });
-  };
 
-  const disconnectSocket = () => {
+    socketRef.current = socket;
+
+    socket.on(SOCKET_LIFECYCLE.CONNECT, () => {
+      console.log('Socket connected:', socket.id);
+      setIsConnected(true);
+      isConnectingRef.current = false;
+
+      // Join room
+      socket.emit(CLIENT_EVENTS.JOIN_ROOM, { roomId, username });
+    });
+
+    socket.on(SOCKET_LIFECYCLE.DISCONNECT, () => {
+      console.log('Socket disconnected');
+      setIsConnected(false);
+      isConnectingRef.current = false;
+    });
+
+    socket.on(SERVER_EVENTS.ERROR, (error: any) => {
+      console.error('Socket error:', error);
+      isConnectingRef.current = false;
+    });
+  }, [roomId, username]);
+
+  const disconnectSocket = useCallback(() => {
     if (socketRef.current) {
+      console.log('Disconnecting socket...');
       socketRef.current.disconnect();
       socketRef.current = null;
       setIsConnected(false);
+      isConnectingRef.current = false;
     }
-  };
-
-  const emitMessage = (event: string, payload: any) => {
-    if (socketRef.current && isConnected) {
-      socketRef.current.emit(event, payload);
-    }
-  };
-
-  const onMessage = (callback: (payload: any) => void) => {
-    if (socketRef.current) {
-      socketRef.current.on(SOCKET_EVENTS.MESSAGE, callback);
-    }
-  };
-
-  const onRoomDeleted = (callback: () => void) => {
-    if (socketRef.current) {
-      socketRef.current.on(SOCKET_EVENTS.ROOM_DELETED, callback);
-    }
-  };
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       disconnectSocket();
     };
-  }, []);
+  }, [disconnectSocket]);
 
   return {
     socketRef,
     isConnected,
     connectSocket,
     disconnectSocket,
-    emitMessage,
-    onMessage,
-    onRoomDeleted,
   };
 }

@@ -2,61 +2,70 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { routes } from '@/lib/routes';
+import { useTranslation } from '@/i18n/LanguageContext';
+import { STORAGE_KEYS } from '@/lib/storage-constants';
 
 /**
  * useLogin Hook (ViewModel)
- * 
- * Responsibilities:
- * - Manage login form state
- * - Handle login logic
- * - Auto-redirect if already logged in
- * 
- * Similar to Android ViewModel pattern
+ *
+ * 책임:
+ * - 로그인 폼 상태 관리
+ * - 로그인 로직 처리
+ * - 이미 로그인된 경우 자동 리다이렉트
+ *
+ * Android ViewModel 패턴과 유사
  */
 export function useLogin() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get('redirect') || '/';
-  
-  // State
+  const { t } = useTranslation();
+
+  // 상태
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Effects - Auto-redirect if already logged in
+  // 효과 - 이미 로그인된 경우 자동 리다이렉트
   useEffect(() => {
-    const storedUser = localStorage.getItem('chat_user');
+    const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
     if (storedUser) {
-      router.push('/');
+      router.push(routes.dashboard());
     }
   }, [router]);
 
-  // Actions
-  const login = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setError('');
+  // 액션
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
+    setError('');
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        localStorage.setItem('chat_user', JSON.stringify(data.user));
-        localStorage.setItem('chat_nickname', data.user.username);
-        router.push(redirectUrl);
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+
+        // 리다이렉트 URL이 있으면 거기로, 없으면 대시보드로
+        const redirectUrl = searchParams.get('redirect');
+        if (redirectUrl) {
+          router.push(decodeURIComponent(redirectUrl));
+        } else {
+          router.push(routes.dashboard());
+        }
       } else {
-        const data = await res.json();
-        setError(data.error || 'Login failed');
+        setError(data.message || t.common.loginFailed);
       }
     } catch (err) {
-      setError('An error occurred');
+      setError(t.common.errorOccurred);
     } finally {
       setIsLoading(false);
     }
@@ -65,17 +74,17 @@ export function useLogin() {
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   return {
-    // State (readonly)
+    // 상태 (읽기 전용)
     username,
     password,
     showPassword,
     error,
     isLoading,
-    
-    // Actions
+
+    // 액션
     setUsername,
     setPassword,
     togglePasswordVisibility,
-    login,
+    handleLogin,
   };
 }

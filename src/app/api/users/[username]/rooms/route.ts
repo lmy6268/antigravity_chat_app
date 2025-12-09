@@ -1,46 +1,35 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
-import { TABLES, MESSAGES, HTTP_STATUS } from '@/lib/constants';
+import { HTTP_STATUS } from '@/lib/api-constants';
+import { roomModel } from '@/models/RoomModel';
+import { userModel } from '@/models/UserModel';
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ username: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ username: string }> }) {
   try {
     const { username } = await params;
 
-    // Get rooms created by the user
-    const { data: rooms, error } = await supabase
-      .from(TABLES.ROOMS)
-      .select('id, name, creator_username')
-      .eq('creator_username', username);
-    
-    if (error || !rooms || rooms.length === 0) {
+    // Get user first to ensure they exist
+    const userDTO = await userModel.findByUsername(username);
+    if (!userDTO) {
+      return NextResponse.json({ error: 'User not found' }, { status: HTTP_STATUS.NOT_FOUND });
+    }
+
+    // Get all rooms for this user (created or joined)
+    const roomDTOs = await roomModel.findUserRooms(userDTO.id);
+
+    if (!roomDTOs || roomDTOs.length === 0) {
       return NextResponse.json(
-        { error: 'No rooms found for this user or failed to fetch' },
+        { error: 'No rooms found for this user' },
         { status: HTTP_STATUS.NOT_FOUND }
       );
     }
 
-    // Get rooms where user is a participant
-    const { data: participants, error: participantsError } = await supabase
-      .from('room_participants')
-      .select('room_id, rooms(id, name, creator_username)')
-      .eq('username', username);
-
-    if (participantsError) {
-      console.error('Error fetching user rooms:', participantsError);
-      return NextResponse.json(
-        { error: 'Failed to fetch rooms' },
-        { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
-      );
-    }
-
-    // Map to the expected format
-    const userRooms = (participants || []).map((p: any) => ({
-      id: p.rooms.id,
-      name: p.rooms.name,
-      creator: p.rooms.creator_username
+    // Transform to expected format
+    const rooms = roomDTOs.map((room) => ({
+      id: room.id,
+      name: room.name,
+      creator_id: room.creator_id,
+      creator_username: room.creator_username,
+      created_at: room.created_at,
     }));
 
     return NextResponse.json({ rooms }, { status: HTTP_STATUS.OK });

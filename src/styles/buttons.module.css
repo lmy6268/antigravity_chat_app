@@ -1,0 +1,50 @@
+/* 재사용 가능한 버튼 스타일 */
+
+.ctas {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    max-width: 440px;
+    gap: 16px;
+    font-size: 14px;
+}
+
+.ctas a,
+.ctas button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 128px;
+    border: 1px solid transparent;
+    transition: 0.2s;
+    cursor: pointer;
+    width: fit-content;
+    font-weight: 500;
+}
+
+.primary {
+    background: var(--text-primary);
+    color: var(--background);
+    gap: 8px;
+}
+
+.secondary {
+    border-color: var(--button-secondary-border);
+    background: transparent;
+    color: var(--text-primary);
+}
+
+/* 터치 디바이스가 아닐 때만 hover 효과 활성화 */
+@media (hover: hover) and (pointer: fine) {
+    .primary:hover {
+        background: var(--button-primary-hover);
+        border-color: transparent;
+    }
+
+    .secondary:hover {
+        background: var(--button-secondary-hover);
+        border-color: transparent;
+    }
+}

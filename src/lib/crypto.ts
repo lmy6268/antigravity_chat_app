@@ -1,4 +1,13 @@
-import { CRYPTO } from './constants';
+// 암호화 관련 상수
+export const CRYPTO = {
+  ALGORITHM: 'AES-GCM',
+  HASH: 'SHA-256',
+  KDF: 'PBKDF2',
+  SALT: 'websocket-demo-salt',
+  ITERATIONS: 100000,
+  KEY_LENGTH: 256,
+  IV_LENGTH: 12,
+} as const;
 
 /**
  * RSA 키 쌍 생성 (Identity Key)
@@ -11,13 +20,13 @@ export async function generateKeyPair(): Promise<CryptoKeyPair> {
 
   return window.crypto.subtle.generateKey(
     {
-      name: "RSA-OAEP",
+      name: 'RSA-OAEP',
       modulusLength: 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
-      hash: "SHA-256",
+      hash: 'SHA-256',
     },
     true,
-    ["encrypt", "decrypt"]
+    ['encrypt', 'decrypt']
   );
 }
 
@@ -30,11 +39,10 @@ export async function generateRoomKey(): Promise<CryptoKey> {
     throw new Error('Web Crypto API not available');
   }
 
-  return window.crypto.subtle.generateKey(
-    { name: "AES-GCM", length: 256 },
-    true,
-    ["encrypt", "decrypt"]
-  );
+  return window.crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
+    'encrypt',
+    'decrypt',
+  ]);
 }
 
 /**
@@ -43,7 +51,7 @@ export async function generateRoomKey(): Promise<CryptoKey> {
  * @returns JWK 객체
  */
 export async function exportKey(key: CryptoKey): Promise<JsonWebKey> {
-  return window.crypto.subtle.exportKey("jwk", key);
+  return window.crypto.subtle.exportKey('jwk', key);
 }
 
 /**
@@ -54,17 +62,11 @@ export async function exportKey(key: CryptoKey): Promise<JsonWebKey> {
  * @returns CryptoKey
  */
 export async function importKey(
-  jwk: JsonWebKey, 
+  jwk: JsonWebKey,
   algorithm: string | RsaHashedImportParams | EcKeyImportParams | HmacImportParams,
   usage: KeyUsage[]
 ): Promise<CryptoKey> {
-  return window.crypto.subtle.importKey(
-    "jwk",
-    jwk,
-    algorithm,
-    true,
-    usage
-  );
+  return window.crypto.subtle.importKey('jwk', jwk, algorithm, true, usage);
 }
 
 /**
@@ -74,12 +76,7 @@ export async function importKey(
  * @returns 암호화된 키 (Base64 문자열)
  */
 export async function wrapKey(keyToWrap: CryptoKey, wrappingKey: CryptoKey): Promise<string> {
-  const wrapped = await window.crypto.subtle.wrapKey(
-    "raw",
-    keyToWrap,
-    wrappingKey,
-    "RSA-OAEP"
-  );
+  const wrapped = await window.crypto.subtle.wrapKey('raw', keyToWrap, wrappingKey, 'RSA-OAEP');
   return arrayBufferToBase64(wrapped);
 }
 
@@ -89,16 +86,19 @@ export async function wrapKey(keyToWrap: CryptoKey, wrappingKey: CryptoKey): Pro
  * @param unwrappingKey - 복호화에 사용할 키 (Private Key)
  * @returns 복호화된 Room Key
  */
-export async function unwrapKey(wrappedKeyStr: string, unwrappingKey: CryptoKey): Promise<CryptoKey> {
+export async function unwrapKey(
+  wrappedKeyStr: string,
+  unwrappingKey: CryptoKey
+): Promise<CryptoKey> {
   const wrappedKey = base64ToArrayBuffer(wrappedKeyStr);
   return window.crypto.subtle.unwrapKey(
-    "raw",
+    'raw',
     wrappedKey,
     unwrappingKey,
-    "RSA-OAEP",
-    "AES-GCM",
+    'RSA-OAEP',
+    'AES-GCM',
     true,
-    ["encrypt", "decrypt"]
+    ['encrypt', 'decrypt']
   );
 }
 
@@ -106,13 +106,13 @@ export async function unwrapKey(wrappedKeyStr: string, unwrappingKey: CryptoKey)
  * 메시지 암호화 (AES-GCM)
  */
 export async function encryptMessage(
-  text: string, 
+  text: string,
   key: CryptoKey
-): Promise<{ iv: number[], data: number[] }> {
+): Promise<{ iv: number[]; data: number[] }> {
   if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
     throw new Error('Web Crypto API not available');
   }
-  
+
   const enc = new TextEncoder();
   const iv = window.crypto.getRandomValues(new Uint8Array(CRYPTO.IV_LENGTH));
   const encrypted = await window.crypto.subtle.encrypt(
@@ -122,7 +122,7 @@ export async function encryptMessage(
   );
   return {
     iv: Array.from(iv),
-    data: Array.from(new Uint8Array(encrypted))
+    data: Array.from(new Uint8Array(encrypted)),
   };
 }
 
@@ -130,14 +130,14 @@ export async function encryptMessage(
  * 메시지 복호화 (AES-GCM)
  */
 export async function decryptMessage(
-  ivArr: number[], 
-  dataArr: number[], 
+  ivArr: number[],
+  dataArr: number[],
   key: CryptoKey
 ): Promise<string> {
   if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
     throw new Error('Web Crypto API not available');
   }
-  
+
   const iv = new Uint8Array(ivArr);
   const data = new Uint8Array(dataArr);
   const decrypted = await window.crypto.subtle.decrypt(
@@ -164,29 +164,32 @@ export function generateSalt(): string {
  * @param saltBase64 - Base64 솔트
  * @returns CryptoKey (AES-GCM Key Encryption Key)
  */
-export async function deriveKeyFromPassword(password: string, saltBase64: string): Promise<CryptoKey> {
+export async function deriveKeyFromPassword(
+  password: string,
+  saltBase64: string
+): Promise<CryptoKey> {
   const enc = new TextEncoder();
   const passwordKey = await window.crypto.subtle.importKey(
-    "raw",
+    'raw',
     enc.encode(password),
-    "PBKDF2",
+    'PBKDF2',
     false,
-    ["deriveKey"]
+    ['deriveKey']
   );
 
   const salt = base64ToArrayBuffer(saltBase64);
 
   return window.crypto.subtle.deriveKey(
     {
-      name: "PBKDF2",
+      name: 'PBKDF2',
       salt: salt,
       iterations: 100000,
-      hash: "SHA-256"
+      hash: 'SHA-256',
     },
     passwordKey,
-    { name: "AES-GCM", length: 256 },
+    { name: 'AES-GCM', length: 256 },
     true,
-    ["encrypt", "decrypt", "wrapKey", "unwrapKey"]
+    ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey']
   );
 }
 
@@ -197,19 +200,19 @@ export async function deriveKeyFromPassword(password: string, saltBase64: string
  * @param salt - 솔트
  * @returns 암호화된 Room Key (Base64)
  */
-export async function encryptRoomKeyWithPassword(roomKey: CryptoKey, password: string, salt: string): Promise<string> {
+export async function encryptRoomKeyWithPassword(
+  roomKey: CryptoKey,
+  password: string,
+  salt: string
+): Promise<string> {
   const kek = await deriveKeyFromPassword(password, salt);
-  
+
   // Export room key to raw bytes
-  const rawRoomKey = await window.crypto.subtle.exportKey("raw", roomKey);
-  
+  const rawRoomKey = await window.crypto.subtle.exportKey('raw', roomKey);
+
   // Encrypt raw room key with KEK
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
-  const encrypted = await window.crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
-    kek,
-    rawRoomKey
-  );
+  const encrypted = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, kek, rawRoomKey);
 
   // Combine IV and Encrypted Data
   const combined = new Uint8Array(iv.length + new Uint8Array(encrypted).length);
@@ -226,28 +229,25 @@ export async function encryptRoomKeyWithPassword(roomKey: CryptoKey, password: s
  * @param salt - 솔트
  * @returns 복호화된 Room Key
  */
-export async function decryptRoomKeyWithPassword(encryptedRoomKeyBase64: string, password: string, salt: string): Promise<CryptoKey> {
+export async function decryptRoomKeyWithPassword(
+  encryptedRoomKeyBase64: string,
+  password: string,
+  salt: string
+): Promise<CryptoKey> {
   const kek = await deriveKeyFromPassword(password, salt);
   const combined = base64ToArrayBuffer(encryptedRoomKeyBase64);
   const combinedArray = new Uint8Array(combined);
-  
+
   // Extract IV and Data
   const iv = combinedArray.slice(0, 12);
   const data = combinedArray.slice(12);
 
-  const decryptedRaw = await window.crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
-    kek,
-    data
-  );
+  const decryptedRaw = await window.crypto.subtle.decrypt({ name: 'AES-GCM', iv }, kek, data);
 
-  return window.crypto.subtle.importKey(
-    "raw",
-    decryptedRaw,
-    "AES-GCM",
-    true,
-    ["encrypt", "decrypt"]
-  );
+  return window.crypto.subtle.importKey('raw', decryptedRaw, 'AES-GCM', true, [
+    'encrypt',
+    'decrypt',
+  ]);
 }
 
 // 유틸리티 함수
@@ -270,4 +270,3 @@ export function base64ToArrayBuffer(base64: string): ArrayBuffer {
   }
   return bytes.buffer;
 }
-

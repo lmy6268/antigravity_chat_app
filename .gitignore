@@ -43,3 +43,12 @@ next-env.d.ts
 # data
 data/
 data/*.json
+
+.swc
+
+# gemini-cli settings (런타임 파일만 무시, commands는 커밋)
+.gemini/*
+!.gemini/commands/
+
+# GitHub App credentials
+gha-creds-*.json

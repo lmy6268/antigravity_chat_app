@@ -54,33 +54,36 @@ export function useRoomList(username: string) {
     router.push(routes.chat.room(roomId));
   };
 
-  const deleteRoom = useCallback(async (roomId: string) => {
-    if (!dialogService.confirm(t.dashboard.rooms.deleteConfirm)) return;
+  const deleteRoom = useCallback(
+    async (roomId: string) => {
+      if (!dialogService.confirm(t.dashboard.rooms.deleteConfirm)) return;
 
-    try {
-      const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
-      if (!storedUser) return;
+      try {
+        const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
+        if (!storedUser) return;
 
-      const user = JSON.parse(storedUser);
+        const user = JSON.parse(storedUser);
 
-      const res = await fetch(`/api/rooms/${roomId}`, {
-        method: 'DELETE',
-        headers: {
-          'x-user-id': user.id,
-        },
-      });
+        const res = await fetch(`/api/rooms/${roomId}`, {
+          method: 'DELETE',
+          headers: {
+            'x-user-id': user.id,
+          },
+        });
 
-      if (res.ok) {
-        setMyRooms((prev) => prev.filter((room) => room.id !== roomId));
-      } else {
-        const data = await res.json();
-        dialogService.alert(data.error || t.common.error);
+        if (res.ok) {
+          setMyRooms((prev) => prev.filter((room) => room.id !== roomId));
+        } else {
+          const data = await res.json();
+          dialogService.alert(data.error || t.common.error);
+        }
+      } catch (error) {
+        console.error('Error deleting room:', error);
+        dialogService.alert(t.common.error);
       }
-    } catch (error) {
-      console.error('Error deleting room:', error);
-      dialogService.alert(t.common.error);
-    }
-  }, [t]);
+    },
+    [t]
+  );
 
   return { myRooms, loading, fetchRooms, joinRoom, deleteRoom, setMyRooms };
 }

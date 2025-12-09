@@ -15,12 +15,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ roo
 
     // Note: participants would need a separate DAO method
     // For now, returning room without participants
-    
+
     // Fetch participants
     const participants = await dao.participant.findByRoomId(roomId);
-    const participantUsernames = participants.map(p => p.user_id); // Note: This returns user IDs, not usernames
+    const participantUsernames = participants.map((p) => p.user_id); // Note: This returns user IDs, not usernames
     // TODO: Consider joining with users table to get actual usernames if needed
-    
+
     return NextResponse.json(
       {
         room: {

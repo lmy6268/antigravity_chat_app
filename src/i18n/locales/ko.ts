@@ -9,6 +9,13 @@ export const ko = {
     save: '저장',
     delete: '삭제',
     edit: '수정',
+    loginFailed: '로그인 실패',
+    registrationFailed: '회원가입 실패',
+    errorOccurred: '오류가 발생했습니다',
+    errorDuringRegistration: '회원가입 중 오류가 발생했습니다',
+    failedToSendMessage: '메시지 전송 실패',
+    failedToCreateRoom: '방 생성 실패',
+    sessionExpired: '세션이 만료되었습니다. 다시 로그인해주세요.',
   },
   auth: {
     login: '로그인',
@@ -23,6 +30,8 @@ export const ko = {
       usernameHelp: '영문 포함 6자리 이상 (영문/숫자)',
       passwordHelp: '8자리 이상 (영문, 숫자, @ ! # $)',
     },
+    alreadyHaveAccount: '이미 계정이 있으신가요?',
+    dontHaveAccount: '계정이 없으신가요?',
   },
   dashboard: {
     title: '채팅 대시보드',
@@ -34,9 +43,10 @@ export const ko = {
     rooms: {
       title: '내 채팅방',
       create: '방 만들기',
-      noRooms: '아직 참여한 방이 없습니다. 새로운 방을 만들어보세요!',
-      join: '참여하기',
-      id: 'ID',
+      noRooms: '참여 중인 방이 없습니다. 새로운 방을 만들어보세요!',
+      join: '입장',
+      id: '방 ID',
+      deleteConfirm: '정말로 이 방을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
     },
     friends: {
       addTitle: '친구 추가',
@@ -67,7 +77,9 @@ export const ko = {
       invalidPassword: '비밀번호가 올바르지 않습니다',
       roomDeleted: '방장이 방을 삭제했습니다.',
       linkCopied: '초대 링크가 클립보드에 복사되었습니다!',
-    }
+      confirmDeleteRoom: '방을 나가면 방이 삭제됩니다. 정말 나가시겠습니까?',
+      roomNotFound: '방을 찾을 수 없습니다',
+    },
   },
   chat: {
     send: '전송',
@@ -82,5 +94,6 @@ export const ko = {
     passwordPrompt: '메시지를 복호화하려면 비밀번호를 입력하세요.',
     joinButton: '방 입장',
     backButton: '대시보드로 돌아가기',
-  }
+    welcomeMessage: '{roomName}에 오신 것을 환영합니다, {nickname}님!',
+  },
 };

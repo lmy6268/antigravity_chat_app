@@ -1,3 +1,6 @@
+/* 글로벌 CSS 변수 가져오기 */
+@import '../styles/variables.css';
+
 body {
   margin: 0;
   padding: 0;

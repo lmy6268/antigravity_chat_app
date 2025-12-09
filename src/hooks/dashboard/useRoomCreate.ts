@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { generateRoomKey, generateSalt, encryptRoomKeyWithPassword } from '@/lib/crypto';
-import { Room } from './useRoomList';
+import { routes } from '@/lib/routes';
+import { useTranslation } from '@/i18n/LanguageContext';
+import type { RoomUIModel } from '@/types/uimodel';
 
-export function useRoomCreate(nickname: string, onRoomCreated: (room: Room) => void) {
+export function useRoomCreate(nickname: string, onRoomCreated: (room: RoomUIModel) => void) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
 
@@ -14,18 +17,18 @@ export function useRoomCreate(nickname: string, onRoomCreated: (room: Room) => v
     setError('');
 
     const roomId = crypto.randomUUID();
-    
+
     try {
-      // 1. Generate AES Room Key
+      // 1. AES 룸 키 생성
       const roomKey = await generateRoomKey();
 
-      // 2. Generate Salt
+      // 2. Salt 생성
       const salt = generateSalt();
 
-      // 3. Encrypt Room Key with Password
+      // 3. 비밀번호로 룸 키 암호화
       const encryptedKey = await encryptRoomKeyWithPassword(roomKey, password, salt);
 
-      // 4. Call API to create room on server
+      // 4. 서버에 룸 생성 API 호출
       const res = await fetch('/api/rooms/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -35,25 +38,27 @@ export function useRoomCreate(nickname: string, onRoomCreated: (room: Room) => v
           password: password,
           creator: nickname,
           salt: salt,
-          encryptedKey: encryptedKey
-        })
+          encryptedKey: encryptedKey,
+        }),
       });
 
-      if (!res.ok) throw new Error('Failed to create room');
+      if (!res.ok) throw new Error(t.common.failedToCreateRoom);
 
-      const newRoom: Room = {
+      const newRoom: RoomUIModel = {
         id: roomId,
         name: name,
-        password: password
+        creatorName: nickname,
+        createdAt: new Date().toLocaleString(),
+        isCreator: true,
       };
 
       onRoomCreated(newRoom);
-      
-      // Navigate to the new room
-      router.push(`/chat/${newRoom.id}?name=${encodeURIComponent(newRoom.name)}`);
+
+      // 성공 시 해당 방으로 이동 (이름 파라미터 제거)
+      router.push(routes.chat.room(newRoom.id));
     } catch (error: any) {
       console.error('Error creating room:', error);
-      setError(error.message || 'Failed to create room');
+      setError(error.message || t.common.failedToCreateRoom);
     } finally {
       setIsCreating(false);
     }

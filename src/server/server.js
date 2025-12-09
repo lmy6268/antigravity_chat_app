@@ -48,13 +48,13 @@ if (dev) {
 app.prepare().then(() => {
   const server = useHttps
     ? createHttpsServer(httpsOptions, (req, res) => {
-      const parsedUrl = parse(req.url, true);
-      handle(req, res, parsedUrl);
-    })
+        const parsedUrl = parse(req.url, true);
+        handle(req, res, parsedUrl);
+      })
     : createServer((req, res) => {
-      const parsedUrl = parse(req.url, true);
-      handle(req, res, parsedUrl);
-    });
+        const parsedUrl = parse(req.url, true);
+        handle(req, res, parsedUrl);
+      });
 
   const io = new Server(server, {
     cors: {

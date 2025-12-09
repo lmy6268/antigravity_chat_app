@@ -126,7 +126,7 @@ export function useChat(
     // Handle batch history messages
     const handleHistory = async (payload: { messages: any[] }) => {
       console.log('[useChat] History received:', payload.messages.length, 'messages');
-      
+
       if (!cryptoKeyRef.current) {
         console.warn('[useChat] No cryptoKey - skipping history');
         return;
@@ -138,7 +138,7 @@ export function useChat(
             if (msg.iv && msg.data) {
               const decryptedString = await decryptMessage(msg.iv, msg.data, cryptoKeyRef.current!);
               const messageData = JSON.parse(decryptedString);
-              
+
               return {
                 id: msg.id || `msg-${Date.now()}-${Math.random()}`,
                 sender: messageData.senderNickname,
@@ -152,7 +152,9 @@ export function useChat(
           })
         );
 
-        const validMessages = decryptedMessages.filter((msg): msg is MessageUIModel => msg !== null);
+        const validMessages = decryptedMessages.filter(
+          (msg): msg is MessageUIModel => msg !== null
+        );
         setMessages((prev) => [...prev, ...validMessages]);
       } catch (e) {
         console.warn('Failed to decrypt history:', e);

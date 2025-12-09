@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { routes } from '@/lib/routes';
 import type { RoomUIModel } from '@/types/uimodel';
-import type { RoomDTO } from '@/types/dto';
+import { RoomDTO } from '@/types/dto';
 import { roomDTOToUIModel } from '@/lib/converters';
-
+import { dialogService } from '@/lib/dialog';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { STORAGE_KEYS } from '@/lib/storage-constants';
 
@@ -55,7 +55,7 @@ export function useRoomList(username: string) {
   };
 
   const deleteRoom = useCallback(async (roomId: string) => {
-    if (!confirm(t.dashboard.rooms.deleteConfirm)) return;
+    if (!dialogService.confirm(t.dashboard.rooms.deleteConfirm)) return;
 
     try {
       const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
@@ -74,11 +74,11 @@ export function useRoomList(username: string) {
         setMyRooms((prev) => prev.filter((room) => room.id !== roomId));
       } else {
         const data = await res.json();
-        alert(data.error || t.common.error);
+        dialogService.alert(data.error || t.common.error);
       }
     } catch (error) {
       console.error('Error deleting room:', error);
-      alert(t.common.error);
+      dialogService.alert(t.common.error);
     }
   }, [t]);
 

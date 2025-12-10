@@ -5,15 +5,21 @@ set -eo pipefail
 TARGET_BRANCH="$1"
 SOURCE_BRANCH="$2"
 
+# 동일 브랜치면 무의미
+if [ "$TARGET_BRANCH" = "$SOURCE_BRANCH" ]; then
+  echo "source and target branch are identical; skipping."
+  exit 0
+fi
+
 # merge-base로 공통 조상 찾기
-MERGE_BASE=$(git merge-base origin/$TARGET_BRANCH origin/$SOURCE_BRANCH)
+MERGE_BASE=$(git merge-base "origin/$TARGET_BRANCH" "origin/$SOURCE_BRANCH")
 
 # 해당 범위의 커밋만 추출
-COMMITS=$(git log $MERGE_BASE..origin/$SOURCE_BRANCH --oneline)
+COMMITS=$(git log "$MERGE_BASE..origin/$SOURCE_BRANCH" --oneline)
 
 # diff도 같은 범위로
-DIFF_CONTENT=$(git diff $MERGE_BASE..origin/$SOURCE_BRANCH)
-DIFF_STATS=$(git diff --stat $MERGE_BASE..origin/$SOURCE_BRANCH)
+DIFF_CONTENT=$(git diff "$MERGE_BASE..origin/$SOURCE_BRANCH")
+DIFF_STATS=$(git diff --stat "$MERGE_BASE..origin/$SOURCE_BRANCH")
 
 # diff가 너무 크면 앞부분만 사용 (Argument list too long 방지)
 DIFF_LINES=$(echo "$DIFF_CONTENT" | wc -l)

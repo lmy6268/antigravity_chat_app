@@ -20,9 +20,7 @@ export function ChatShareModal({ onClose, buildLink, password }: ChatShareModalP
 
   const copy = () => {
     if (!link) return;
-    navigator.clipboard.writeText(link);
-    alert(t.dashboard.alerts.linkCopied);
-  };
+    dialogService.alert(t.dashboard.alerts.linkCopied);
 
   return (
     <>

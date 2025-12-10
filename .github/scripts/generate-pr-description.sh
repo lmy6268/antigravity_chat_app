@@ -1,5 +1,8 @@
 #!/bin/bash
-set -eo pipefail
+set -e
+# pipefail은 broken pipe 에러를 발생시킬 수 있으므로 제거
+# SIGPIPE를 무시하도록 설정
+trap '' PIPE
 
 # 인자로 받기
 TARGET_BRANCH="$1"

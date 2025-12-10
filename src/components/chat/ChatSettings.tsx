@@ -126,7 +126,11 @@ export function ChatSettings({
                       />
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         {participant}
-                        {isCreator && <span role="img" aria-label="creator">👑</span>}
+                        {isCreator && (
+                          <span role="img" aria-label="creator">
+                            👑
+                          </span>
+                        )}
                       </span>
                     </div>
                   );

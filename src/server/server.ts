@@ -87,11 +87,7 @@ app.prepare().then(() => {
 
       // Fix for type error: IncomingMessage is not EngineRequest
       // Attach parsed query so engine can read EIO/transport params
-      (io.engine as any).handleUpgrade(
-        Object.assign(req, { _query: query }),
-        socket,
-        head
-      );
+      (io.engine as any).handleUpgrade(Object.assign(req, { _query: query }), socket, head);
       return;
     }
     // 나머지 업그레이드는 Next(HMR 등)에서 처리되도록 그대로 둔다.
@@ -99,8 +95,7 @@ app.prepare().then(() => {
 
   // --- Socket.io middleware 파이프라인 ---
   const registerHandlersMiddleware =
-    (ioInstance: Server) =>
-    (socket: any, next: (err?: Error) => void) => {
+    (ioInstance: Server) => (socket: any, next: (err?: Error) => void) => {
       registerRoomHandlers(ioInstance, socket);
       registerMessageHandlers(ioInstance, socket);
       next();

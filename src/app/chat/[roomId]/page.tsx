@@ -215,7 +215,11 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
 
   // Render chat room
   const slideTransform =
-    slideState === 'entering' ? 'translateX(-100%)' : slideState === 'entered' ? 'translateX(0)' : 'translateX(100%)';
+    slideState === 'entering'
+      ? 'translateX(-100%)'
+      : slideState === 'entered'
+        ? 'translateX(0)'
+        : 'translateX(100%)';
 
   return (
     <div
@@ -226,80 +230,80 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
       }}
     >
       <ChatContainer>
-      <ChatHeader
-        roomName={roomInfo?.name || roomName}
-        onBack={handleBack}
-        onSettings={openSettings}
-        onShare={() => setShowShare(true)}
-      />
-
-      {showSettings && (
-        <div
-          onClick={closeSettings}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.35)',
-            zIndex: 110,
-            opacity: settingsClosing ? 0 : 1,
-            transition: 'opacity 200ms ease',
-            pointerEvents: settingsClosing ? 'none' : 'auto',
-          }}
+        <ChatHeader
+          roomName={roomInfo?.name || roomName}
+          onBack={handleBack}
+          onSettings={openSettings}
+          onShare={() => setShowShare(true)}
         />
-      )}
 
-      {showSettings && (
-        <ChatSettings
-          roomInfo={roomInfo}
-          onCopyLink={copyInviteLink}
-          onLeave={handleLeave}
-          onClose={closeSettings}
-          currentUser={nickname}
+        {showSettings && (
+          <div
+            onClick={closeSettings}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.35)',
+              zIndex: 110,
+              opacity: settingsClosing ? 0 : 1,
+              transition: 'opacity 200ms ease',
+              pointerEvents: settingsClosing ? 'none' : 'auto',
+            }}
+          />
+        )}
+
+        {showSettings && (
+          <ChatSettings
+            roomInfo={roomInfo}
+            onCopyLink={copyInviteLink}
+            onLeave={handleLeave}
+            onClose={closeSettings}
+            currentUser={nickname}
+            isConnected={isConnected}
+            isClosing={settingsClosing}
+          />
+        )}
+
+        {showShare && (
+          <ChatShareModal
+            onClose={() => setShowShare(false)}
+            buildLink={buildInviteLink}
+            password={roomInfo?.password}
+          />
+        )}
+
+        <style jsx global>{`
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+            }
+            to {
+              opacity: 1;
+            }
+          }
+          @keyframes fadeOut {
+            from {
+              opacity: 1;
+            }
+            to {
+              opacity: 0;
+            }
+          }
+        `}</style>
+
+        <ChatMessageList
+          messages={messages}
+          nickname={nickname}
+          roomCreator={roomInfo?.creator}
+          containerRef={chatContainerRef}
+        />
+
+        <ChatInput
+          inputMessage={inputMessage}
+          setInputMessage={setInputMessage}
+          sendMessage={sendMessage}
           isConnected={isConnected}
-          isClosing={settingsClosing}
         />
-      )}
-
-      {showShare && (
-        <ChatShareModal
-          onClose={() => setShowShare(false)}
-          buildLink={buildInviteLink}
-          password={roomInfo?.password}
-        />
-      )}
-
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        @keyframes fadeOut {
-          from {
-            opacity: 1;
-          }
-          to {
-            opacity: 0;
-          }
-        }
-      `}</style>
-
-      <ChatMessageList
-        messages={messages}
-        nickname={nickname}
-        roomCreator={roomInfo?.creator}
-        containerRef={chatContainerRef}
-      />
-
-      <ChatInput
-        inputMessage={inputMessage}
-        setInputMessage={setInputMessage}
-        sendMessage={sendMessage}
-        isConnected={isConnected}
-      />
       </ChatContainer>
     </div>
   );

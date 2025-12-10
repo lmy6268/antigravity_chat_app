@@ -230,15 +230,15 @@ export function useChat(
 
   // roomName이 변경되면(로딩 완료 등) 시스템 메시지의 방 이름을 업데이트하거나 새로운 안내 메시지 추가
   // 여기서는 간단히 useEffect로 roomName이 유효해질 때 환영 메시지를 한 번 더 띄우거나,
-  // 기존 로직을 보완. 다만 initializeChat은 연결 시점에 한 번 불리므로, 
+  // 기존 로직을 보완. 다만 initializeChat은 연결 시점에 한 번 불리므로,
   // roomName이 나중에 로드되는 경우를 대비해 별도 처리가 필요할 수 있음.
   // 현재 구조상 initializeChat을 useEffect로 roomName 변경 시 호출하면 중복 환영 인사가 될 수 있으므로,
   // 가장 간단한 방법은 initializeChat 호출 시점의 roomName을 신뢰하는 것임.
-  // 하지만 page.tsx에서 roomInfo가 로드되면 roomName이 업데이트되므로, 
+  // 하지만 page.tsx에서 roomInfo가 로드되면 roomName이 업데이트되므로,
   // 이를 반영하려면 initializeChat을 useEffect 의존성에 넣거나 해야 함.
 
-  // 더 나은 UX: roomName이 '...' 이었다가 실제 이름으로 바뀌면 시스템 메시지 업데이트? 
-  // 복잡도를 낮추기 위해, page.tsx에서 cryptoKey와 nickname이 준비된 시점에(이미 roomInfo 로드됨) 
+  // 더 나은 UX: roomName이 '...' 이었다가 실제 이름으로 바뀌면 시스템 메시지 업데이트?
+  // 복잡도를 낮추기 위해, page.tsx에서 cryptoKey와 nickname이 준비된 시점에(이미 roomInfo 로드됨)
   // initializeChat을 부르므로 큰 문제는 없을 것으로 예상됨.
   // 다만 혹시 모르니 roomName 변경 로그만 남김.
   useEffect(() => {

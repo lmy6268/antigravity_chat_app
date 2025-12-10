@@ -13,10 +13,10 @@ import { logger } from './logger';
 
 /**
  * Server-Only Logger
- * 
- * "server-only" 패키지를 import하여 클라이언트 컴포넌트에서 
+ *
+ * "server-only" 패키지를 import하여 클라이언트 컴포넌트에서
  * 실수로 import 되는 것을 방지합니다.
- * 
+ *
  * 서버 사이드 로직(DB 접근, API 핸들러 등)에서만 사용해야 합니다.
  */
 export const serverLogger = {

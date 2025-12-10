@@ -43,11 +43,7 @@ export default function LoginForm() {
           disabled={isLoading}
           className={`${styles.submitButton} ${styles.login}`}
         >
-          {isLoading ? (
-            <LoadingSpinner size={20} color="#ffffff" />
-          ) : (
-            t.auth.login
-          )}
+          {isLoading ? <LoadingSpinner size={20} color="#ffffff" /> : t.auth.login}
         </button>
       </form>
 

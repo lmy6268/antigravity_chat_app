@@ -58,7 +58,11 @@ export function userDTOToUIModel(dto: UserDTO): UserUIModel {
 export function roomDTOToUIModel(
   dto: RoomDTO,
   currentUserId?: string,
-  meta?: { participantCount?: number; lastMessageAt?: string | null; lastMessagePreview?: string | null }
+  meta?: {
+    participantCount?: number;
+    lastMessageAt?: string | null;
+    lastMessagePreview?: string | null;
+  }
 ): RoomUIModel {
   return {
     id: dto.id,

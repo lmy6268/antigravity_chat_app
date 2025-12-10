@@ -50,11 +50,7 @@ export default function RegisterForm() {
           disabled={isLoading}
           className={`${styles.submitButton} ${styles.register}`}
         >
-          {isLoading ? (
-            <LoadingSpinner size={20} color="#ffffff" />
-          ) : (
-            t.auth.register
-          )}
+          {isLoading ? <LoadingSpinner size={20} color="#ffffff" /> : t.auth.register}
         </button>
       </form>
 

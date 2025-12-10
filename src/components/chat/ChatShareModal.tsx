@@ -13,7 +13,9 @@ export function ChatShareModal({ onClose, buildLink, password }: ChatShareModalP
   const [link, setLink] = useState<string>('');
 
   useEffect(() => {
-    buildLink().then(setLink).catch(() => setLink(''));
+    buildLink()
+      .then(setLink)
+      .catch(() => setLink(''));
   }, [buildLink]);
 
   const copy = () => {
@@ -75,7 +77,11 @@ export function ChatShareModal({ onClose, buildLink, password }: ChatShareModalP
 
         <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
           <div style={{ background: 'white', padding: '8px', borderRadius: '8px' }}>
-            {link ? <QRCodeCanvas value={link} size={200} /> : <div style={{ width: 200, height: 200 }} />}
+            {link ? (
+              <QRCodeCanvas value={link} size={200} />
+            ) : (
+              <div style={{ width: 200, height: 200 }} />
+            )}
           </div>
         </div>
 
@@ -129,4 +135,3 @@ export function ChatShareModal({ onClose, buildLink, password }: ChatShareModalP
     </>
   );
 }
-

@@ -47,25 +47,28 @@ export const registerMessageHandlers = (io: Server, socket: CustomSocket) => {
   });
 
   // 새 메시지 저장 및 브로드캐스트
-  socket.on(CLIENT_EVENTS.SEND_MESSAGE, async (messageData: { roomId: string; iv: number[]; data: number[] }) => {
-    try {
-      // MessageModel 사용
-      const messageDTO = await messageModel.createMessage(
-        messageData.roomId,
-        messageData.iv,
-        messageData.data
-      );
+  socket.on(
+    CLIENT_EVENTS.SEND_MESSAGE,
+    async (messageData: { roomId: string; iv: number[]; data: number[] }) => {
+      try {
+        // MessageModel 사용
+        const messageDTO = await messageModel.createMessage(
+          messageData.roomId,
+          messageData.iv,
+          messageData.data
+        );
 
-      // 방의 다른 사용자들에게 암호화된 메시지 브로드캐스트
-      socket.to(messageData.roomId).emit(SERVER_EVENTS.MESSAGE_RECEIVED, {
-        iv: messageDTO.iv,
-        data: messageDTO.data,
-        timestamp: messageDTO.created_at,
-        id: messageDTO.id,
-      });
-    } catch (err) {
-      serverLogger.error('Error saving message:', err);
-      socket.emit(SERVER_EVENTS.ERROR, { message: 'Failed to save message' });
+        // 방의 다른 사용자들에게 암호화된 메시지 브로드캐스트
+        socket.to(messageData.roomId).emit(SERVER_EVENTS.MESSAGE_RECEIVED, {
+          iv: messageDTO.iv,
+          data: messageDTO.data,
+          timestamp: messageDTO.created_at,
+          id: messageDTO.id,
+        });
+      } catch (err) {
+        serverLogger.error('Error saving message:', err);
+        socket.emit(SERVER_EVENTS.ERROR, { message: 'Failed to save message' });
+      }
     }
-  });
+  );
 };

@@ -72,53 +72,17 @@ export function RoomList({ rooms, onJoinRoom, onDeleteRoom, onCreateClick }: Roo
                 position: 'relative',
               }}
             >
-              <h3 style={{ margin: '0 0 10px 0' }}>{room.name}</h3>
-              <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '5px' }}>
-                {t.dashboard.rooms.id}: {room.id.slice(0, 8)}...
+              <h3 style={{ margin: '0 0 8px 0' }}>
+                {room.name}
+                {typeof room.participantCount === 'number' && (
+                  <span style={{ color: '#aaa', fontSize: '12px', marginLeft: '8px' }}>
+                    ({room.participantCount}명)
+                  </span>
+                )}
+              </h3>
+              <div style={{ fontSize: '12px', color: '#bbb', marginTop: '4px' }}>
+                최근 메시지 : {room.lastMessageAt ? room.lastMessageAt : '-'}
               </div>
-              <div style={{ fontSize: '12px', color: '#888' }}>
-                Created by {room.creatorName} • {room.createdAt}
-              </div>
-              {room.isCreator && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '10px',
-                    right: '10px',
-                    display: 'flex',
-                    gap: '5px',
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: '#007acc',
-                      color: 'white',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      fontSize: '10px',
-                    }}
-                  >
-                    OWNER
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteRoom(room.id);
-                    }}
-                    style={{
-                      backgroundColor: '#d9534f',
-                      color: 'white',
-                      border: 'none',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      fontSize: '10px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    DELETE
-                  </button>
-                </div>
-              )}
             </div>
           ))}
         </div>

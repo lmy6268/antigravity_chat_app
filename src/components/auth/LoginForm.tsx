@@ -5,6 +5,7 @@ import { useLogin } from '@/hooks/auth/useLogin';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { routes } from '@/lib/routes';
 import styles from '@/styles/auth-form.module.css';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 /**
  * LoginForm Component (Pure View)
@@ -42,7 +43,11 @@ export default function LoginForm() {
           disabled={isLoading}
           className={`${styles.submitButton} ${styles.login}`}
         >
-          {isLoading ? t.common.loading : t.auth.login}
+          {isLoading ? (
+            <LoadingSpinner size={20} color="#ffffff" />
+          ) : (
+            t.auth.login
+          )}
         </button>
       </form>
 

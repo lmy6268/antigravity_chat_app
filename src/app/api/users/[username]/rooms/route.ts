@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { HTTP_STATUS } from '@/lib/api-constants';
 import { roomModel } from '@/models/RoomModel';
 import { userModel } from '@/models/UserModel';
+import { dao } from '@/dao/supabase';
+import { messageModel } from '@/models/MessageModel';
 
 export async function GET(request: Request, { params }: { params: Promise<{ username: string }> }) {
   try {
@@ -16,21 +18,29 @@ export async function GET(request: Request, { params }: { params: Promise<{ user
     // Get all rooms for this user (created or joined)
     const roomDTOs = await roomModel.findUserRooms(userDTO.id);
 
-    if (!roomDTOs || roomDTOs.length === 0) {
-      return NextResponse.json(
-        { error: 'No rooms found for this user' },
-        { status: HTTP_STATUS.NOT_FOUND }
-      );
-    }
+    // Transform to expected format (빈 배열 포함)
+    const rooms = await Promise.all(
+      (roomDTOs || []).map(async (room) => {
+        const participants = await dao.participant.findByRoomId(room.id);
+        const participantCount = participants.length;
 
-    // Transform to expected format
-    const rooms = roomDTOs.map((room) => ({
-      id: room.id,
-      name: room.name,
-      creator_id: room.creator_id,
-      creator_username: room.creator_username,
-      created_at: room.created_at,
-    }));
+        const messages = await messageModel.findByRoomId(room.id);
+        const lastMessage = messages.length ? messages[messages.length - 1] : null;
+        const lastMessageAt = lastMessage ? lastMessage.created_at : null;
+        const lastMessagePreview = lastMessage ? '[encrypted]' : null; // 콘텐츠는 서버에 암호화되어 있음
+
+        return {
+          id: room.id,
+          name: room.name,
+          creator_id: room.creator_id,
+          creator_username: room.creator_username,
+          created_at: room.created_at,
+          participantCount,
+          lastMessageAt,
+          lastMessagePreview,
+        };
+      })
+    );
 
     return NextResponse.json({ rooms }, { status: HTTP_STATUS.OK });
   } catch (error) {

@@ -6,7 +6,7 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ nickname, onLogout }: DashboardHeaderProps) {
-  const { t, locale, setLocale } = useTranslation();
+  const { t } = useTranslation();
 
   return (
     <header
@@ -23,38 +23,6 @@ export function DashboardHeader({ nickname, onLogout }: DashboardHeaderProps) {
     >
       <h1 style={{ margin: 0, fontSize: 'clamp(1.5rem, 5vw, 2rem)' }}>{t.dashboard.title}</h1>
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
-        {/* Language Switcher */}
-        <div style={{ display: 'flex', gap: '5px' }}>
-          <button
-            onClick={() => setLocale('en')}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '4px',
-              border: '1px solid #555',
-              backgroundColor: locale === 'en' ? '#007acc' : 'transparent',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '12px',
-            }}
-          >
-            EN
-          </button>
-          <button
-            onClick={() => setLocale('ko')}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '4px',
-              border: '1px solid #555',
-              backgroundColor: locale === 'ko' ? '#007acc' : 'transparent',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '12px',
-            }}
-          >
-            KO
-          </button>
-        </div>
-
         <span style={{ fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}>
           {t.dashboard.hello}, <strong>{nickname}</strong>
         </span>

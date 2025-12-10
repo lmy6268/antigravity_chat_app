@@ -39,6 +39,7 @@ export const ko = {
     tabs: {
       rooms: '채팅방',
       friends: '친구',
+      settings: '설정',
     },
     rooms: {
       title: '내 채팅방',
@@ -85,6 +86,7 @@ export const ko = {
     send: '전송',
     placeholder: '메시지를 입력하세요...',
     settings: '방 설정',
+    shareLinkTitle: '초대 링크 공유',
     creator: '방장',
     participants: '참여자 목록',
     noParticipants: '참여자가 없습니다',
@@ -94,6 +96,12 @@ export const ko = {
     passwordPrompt: '메시지를 복호화하려면 비밀번호를 입력하세요.',
     joinButton: '방 입장',
     backButton: '대시보드로 돌아가기',
-    welcomeMessage: '{roomName}에 오신 것을 환영합니다, {nickname}님!',
+    welcomeMessage: '{nickname}님이 들어왔습니다.',
+    userJoined: '{nickname}님이 들어왔습니다.',
+    userLeft: '{nickname}님이 나갔습니다.',
+  },
+  settings: {
+    title: '사용자 설정',
+    language: '언어',
   },
 };

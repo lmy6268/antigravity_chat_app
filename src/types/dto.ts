@@ -53,6 +53,8 @@ export interface RoomDTO {
   salt?: string;
   encrypted_key?: string;
   created_at: string;
+  participantCount?: number;
+  lastMessageAt?: string | null;
 }
 
 export interface JoinRoomRequestDTO {

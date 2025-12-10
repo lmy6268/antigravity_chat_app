@@ -38,12 +38,14 @@ export function ChatMessage({ message, nickname, roomCreator }: ChatMessageProps
         alignItems: isMe ? 'flex-end' : 'flex-start',
       }}
     >
-      <span style={{ fontSize: '12px', color: '#aaa', marginBottom: '4px', marginLeft: '4px' }}>
-        {message.sender}
-        {roomCreator && message.sender === roomCreator && (
-          <span style={{ color: '#ffd700', marginLeft: '6px', fontWeight: 'bold' }}>(Creator)</span>
-        )}
-      </span>
+      {!isMe && (
+        <span style={{ fontSize: '12px', color: '#aaa', marginBottom: '4px', marginLeft: '4px' }}>
+          {message.sender}
+          {roomCreator && message.sender === roomCreator && (
+            <span style={{ color: '#ffd700', marginLeft: '6px', fontWeight: 'bold' }}>(Creator)</span>
+          )}
+        </span>
+      )}
       <div
         style={{
           backgroundColor: isMe ? '#007acc' : '#2d2d2d',

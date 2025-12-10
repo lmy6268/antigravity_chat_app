@@ -25,18 +25,33 @@ export function useRoomList(username: string) {
 
         // Convert DTO to UIModel
         const uiModels = roomDTOs.map((dto) => {
-          const uiModel = roomDTOToUIModel(dto);
+          const uiModel = roomDTOToUIModel(dto, undefined, {
+            participantCount: dto.participantCount,
+            lastMessageAt: dto.lastMessageAt,
+            lastMessagePreview: dto.lastMessagePreview,
+          });
           // Manually set isCreator since we only have username here
           uiModel.isCreator = dto.creator_username === username;
           return uiModel;
         });
 
         setMyRooms(uiModels);
-      } else if (res.status === 404) {
-        console.warn('User not found in DB. Clearing stale session.');
-        localStorage.removeItem(STORAGE_KEYS.USER);
-        dialogService.alert(t.common.sessionExpired);
-        router.push(routes.auth.login());
+        return;
+      }
+
+      if (res.status === 404) {
+        const data = await res.json().catch(() => ({}));
+        // 사용자 없을 때만 세션 정리, 방이 없을 때는 빈 배열로 처리
+        if (data?.error === 'User not found') {
+          console.warn('User not found in DB. Clearing stale session.');
+          localStorage.removeItem(STORAGE_KEYS.USER);
+          dialogService.alert(t.common.sessionExpired);
+          router.push(routes.auth.login());
+          return;
+        }
+
+        // 기타 404는 빈 목록으로 취급
+        setMyRooms([]);
         return;
       }
     } catch (error) {

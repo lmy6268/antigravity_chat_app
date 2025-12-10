@@ -23,13 +23,15 @@ export interface RoomUIModel {
   creatorName: string;
   createdAt: string; // 포맷된 날짜 (예: "2시간 전")
   isCreator: boolean; // 현재 사용자가 방장인지
+  participantCount?: number;
+  lastMessageAt?: string | null; // 상대 시각 포맷
+  lastMessagePreview?: string | null;
 }
 
 export interface RoomListItemUIModel {
   id: string;
   name: string;
   creatorName: string;
-  lastActivity: string; // "방금 전", "5분 전" 등
 }
 
 // ============================================================================

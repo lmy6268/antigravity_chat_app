@@ -55,13 +55,20 @@ export function userDTOToUIModel(dto: UserDTO): UserUIModel {
   };
 }
 
-export function roomDTOToUIModel(dto: RoomDTO, currentUserId?: string): RoomUIModel {
+export function roomDTOToUIModel(
+  dto: RoomDTO,
+  currentUserId?: string,
+  meta?: { participantCount?: number; lastMessageAt?: string | null; lastMessagePreview?: string | null }
+): RoomUIModel {
   return {
     id: dto.id,
     name: dto.name,
     creatorName: dto.creator_username,
     createdAt: formatRelativeTime(new Date(dto.created_at)),
     isCreator: currentUserId === dto.creator_id,
+    participantCount: meta?.participantCount,
+    lastMessageAt: meta?.lastMessageAt ? formatRelativeTime(new Date(meta.lastMessageAt)) : null,
+    lastMessagePreview: meta?.lastMessagePreview ?? null,
   };
 }
 

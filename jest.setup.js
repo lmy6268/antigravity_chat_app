@@ -1,6 +1,9 @@
 // Jest 전역 설정
 import '@testing-library/jest-dom';
+import { createRequire } from 'module';
 import { TextEncoder, TextDecoder } from 'util';
+
+const require = createRequire(import.meta.url);
 
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;

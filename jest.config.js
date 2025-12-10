@@ -1,4 +1,4 @@
-const nextJest = require('next/jest');
+import nextJest from 'next/jest.js';
 
 const createJestConfig = nextJest({
   // Next.js 앱의 경로 제공
@@ -46,4 +46,4 @@ const customJestConfig = {
 };
 
 // createJestConfig는 비동기로 Next.js 설정을 로드하므로 export
-module.exports = createJestConfig(customJestConfig);
+export default createJestConfig(customJestConfig);

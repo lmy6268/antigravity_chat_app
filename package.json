@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development tsx src/server/server.js",
+    "dev": "cross-env NODE_ENV=development tsx src/server/server.ts",
     "build": "next build",
-    "start": "cross-env NODE_ENV=production node src/server/server.js",
+    "start": "cross-env NODE_ENV=production tsx src/server/server.ts",
     "lint": "eslint .",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -24,6 +24,7 @@
     "react-dom": "19.2.1",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
+    "tsx": "^4.21.0",
     "ws": "^8.18.3"
   },
   "devDependencies": {
@@ -45,7 +46,7 @@
     "jest-environment-jsdom": "^30.2.0",
     "prettier": "^3.7.4",
     "ts-jest": "^29.4.5",
-    "tsx": "^4.21.0",
+    "ts-jest": "^29.4.5",
     "typescript": "^5"
   }
 }

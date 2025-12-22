@@ -55,10 +55,8 @@ gha-creds-*.json
 
 # certificates & keys
 src/server/certs/*
-!src/server/certs/.gitkeep
-src/server/certs/ssh-key.key
-src/server/certs/ssh-key.pub
-scripts/sync_config.jsonc
+.ssh/*
 
 # .vscode (Unignored to share workspace settings)
 !.vscode/
+sync_config.jsonc

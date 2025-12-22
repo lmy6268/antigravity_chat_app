@@ -15,27 +15,32 @@
 ## ✨ 주요 기능
 
 ### 1. 사용자 인증
+
 - 사용자 등록 및 로그인
 - bcrypt를 사용한 비밀번호 해싱
 - localStorage 기반 세션 관리
 
 ### 2. 채팅방 관리
+
 - 채팅방 생성 (비밀번호 보호)
 - 채팅방 목록 조회
 - 초대 링크 복사 기능
 - 방장 권한 관리 (방 삭제)
 
 ### 3. 실시간 메시징
+
 - Socket.io 기반 실시간 메시지 전송/수신
 - 메시지 히스토리 자동 로드
 - 참가자 목록 실시간 업데이트
 
 ### 4. 종단간 암호화 (E2EE)
+
 - AES-GCM 알고리즘을 사용한 메시지 암호화
 - PBKDF2를 통한 비밀번호 기반 키 유도
 - 서버는 암호화된 데이터만 처리하여 보안 강화
 
 ### 5. 모바일 지원
+
 - HTTPS 로컬 개발 서버 (mkcert)
 - 반응형 디자인
 - 같은 네트워크 내 모바일 기기 접속 지원
@@ -43,13 +48,15 @@
 ## 🛠 기술 스택
 
 ### Frontend
-- **Next.js 16.0.3** - React 기반 풀스택 프레임워크
-- **React 19.2.0** - UI 라이브러리
+
+- **Next.js 16.0.7** - React 기반 풀스택 프레임워크
+- **React 19.2.1** - UI 라이브러리
 - **TypeScript** - 타입 안정성
 - **Socket.io Client 4.8.1** - 실시간 통신
 - **Web Crypto API** - 브라우저 네이티브 암호화
 
 ### Backend
+
 - **Node.js** - 런타임 환경
 - **Custom Next.js Server** - 커스텀 서버 구현
 - **Socket.io 4.8.1** - 웹소켓 서버
@@ -57,6 +64,7 @@
 - **bcryptjs** - 비밀번호 해싱
 
 ### 개발 도구
+
 - **dotenv** - 환경 변수 관리
 - **mkcert** - 로컬 SSL 인증서 생성
 - **cross-env** - 크로스 플랫폼 환경 변수 설정
@@ -76,6 +84,7 @@
 ```
 
 ### 보안 특징
+
 - ✅ 서버는 평문 메시지에 접근 불가
 - ✅ 비밀번호는 PBKDF2로 키 유도 (100,000 iterations)
 - ✅ 각 메시지마다 랜덤 IV (Initialization Vector) 사용
@@ -85,24 +94,41 @@
 
 ### 1. 환경 설정
 
-```bash
+````bash
 # 저장소 클론
 git clone <repository-url>
 cd next-websocket-demo
 
 # 의존성 설치
-npm install
+yarn install
 
+```bash
 # 환경 변수 설정
 cp .env.example .env.local
 # .env.local 파일을 열어 Supabase 정보 입력
+````
+
+### 1-1. 원격 서버(Ubuntu) 설치 가이드
+
+원격 서버에서 "Usage Error"가 발생하거나 의존성 문제가 있을 경우 다음 명령어를 실행하세요.
+
+```bash
+# 프로젝트 디렉토리로 이동
+cd /home/ubuntu/next-websocket-demo
+
+# Yarn Berry PnP 파일 생성 및 의존성 설치
+yarn install
 ```
+
+> [!IMPORTANT]
+> 이 프로젝트는 **Yarn 4 (Berry) Plug'n'Play**를 사용합니다. `node_modules`가 생성되지 않으며, `.pnp.cjs` 파일이 의존성 로드를 담당합니다.
 
 ### 2. Supabase 설정
 
 `SUPABASE_SETUP.md` 파일을 참고하여 Supabase 프로젝트를 생성하고 스키마를 실행하세요.
 
 ### 3. CI/CD 및 AI 리뷰 설정
+
 GitHub Action을 통한 자동화된 Lint 검사 및 AI 코드 리뷰를 지원합니다.
 
 1.  **Secret 설정**: 저장소 설정(`Settings > Secrets > Actions`)에서 `GEMINI_API_KEY`를 추가해야 AI 리뷰가 작동합니다.
@@ -127,47 +153,53 @@ mkcert localhost 127.0.0.1 192.168.0.3 ::1
 ### 4. 개발 서버 실행
 
 ```bash
-npm run dev
+yarn dev
 ```
 
-- **맥북**: `https://localhost:3000` 또는 `http://localhost:3000`
-- **모바일**: `https://[맥북IP]:3000` (예: `https://192.168.0.3:3000`)
+- **맥북**: `https://localhost:8080` 또는 `http://localhost:8080`
+- **모바일**: `https://[맥북IP]:8080` (예: `https://192.168.0.3:8080`)
 
 ### 5. 프로덕션 빌드
 
 ```bash
-npm run build
-npm start
+yarn build
+yarn start
 ```
 
 ## 📚 배운 점
 
 ### 1. 환경 변수 관리
+
 - Next.js 커스텀 서버에서는 `dotenv`를 명시적으로 설정해야 함
 - `process.env`는 서버 측에서만 사용 가능
 - 클라이언트에 노출할 변수는 `NEXT_PUBLIC_` 접두사 필요
 
 ### 2. Web Crypto API 제약사항
+
 - **HTTPS 필수**: localhost가 아닌 환경에서는 HTTPS 강제
 - **브라우저 전용**: 서버 사이드 렌더링 시 체크 필요
 - **IP 주소 접속**: `0.0.0.0`은 안전한 컨텍스트로 인정되지 않음
 
 ### 3. Socket.io 메시지 흐름
+
 - `emit()`: 자신을 포함한 모든 클라이언트에게 전송
 - `broadcast.emit()`: 자신을 제외한 다른 클라이언트에게 전송
 - 메시지 중복 방지를 위해 송신자는 UI에 직접 추가하고, 서버는 broadcast만 사용
 
 ### 4. Next.js Import 경로
+
 - `@/*` 별칭은 `./src/*`를 가리킴
 - 프로젝트 루트의 파일(`lib/`)은 상대 경로 사용 필요
 - API Route에서는 경로 길이 주의 (`../../../../../lib/supabase`)
 
 ### 5. 로컬 네트워크 테스트
+
 - `mkcert`로 신뢰할 수 있는 로컬 SSL 인증서 생성 가능
 - 모바일 기기에서 로컬 IP로 접속하여 테스트 가능
 - 서버는 `0.0.0.0`으로 바인딩하되, 브라우저는 `localhost` 사용
 
 ### 6. 암호화 키 관리
+
 - 클라이언트에서 키를 생성하고 관리
 - 같은 비밀번호 = 같은 키 (PBKDF2의 salt 고정)
 - 실제 프로덕션에서는 사용자별 salt 권장
@@ -177,16 +209,20 @@ npm start
 ```
 next-websocket-demo/
 ├── src/
-│   ├── server/
-│   │   └── server.js        # 커스텀 Next.js + Socket.io 서버
-│   ├── app/                 # Next.js App Router
-│   ├── components/          # React 컴포넌트
-│   ├── dao/                 # Data Access Objects (Supabase)
-│   ├── hooks/               # 커스텀 훅
-│   ├── i18n/                # 다국어 지원
-│   ├── lib/                 # 유틸리티 및 상수
-│   ├── models/              # 도메인 모델
-│   └── types/               # 타입 정의
+│   ├── server/             # 커스텀 Next.js + Socket.io 서버
+│   ├── app/                # Next.js App Router (페이지 및 API)
+│   ├── components/         # React 컴포넌트
+│   ├── dao/                # Data Access Objects (Supabase)
+│   ├── hooks/              # 커스텀 훅 (ViewModel)
+│   ├── i18n/               # 다국어 지원 (i18next)
+│   ├── lib/                # 유틸리티 및 설정
+│   │   ├── constants/      # API 및 스토리지 상수
+│   │   ├── logger/         # 클라이언트/서버 로거
+│   │   ├── supabase/       # Supabase 클라이언트
+│   │   └── ...             # 기타 유틸리티
+│   ├── middleware/      # 미들웨어 (edge/ 및 server/ 로 구분)
+│   ├── models/             # 도메인 모델 (비즈니스 로직)
+│   └── types/              # TypeScript 타입 정의
 ├── daily/                   # 작업 일지
 ├── study/                   # 학습 자료
 └── .env.local               # 환경 변수 (gitignore)
@@ -214,8 +250,10 @@ MIT License
 ---
 
 **참고 문서:**
+
 - [Socket.io 학습 자료](./study/socketio-guide.md)
 - [종단간 암호화 상세 설명](./study/e2e-encryption-guide.md)
 - [Supabase 설정 가이드](./SUPABASE_SETUP.md)
 - [작업 일지](./daily/)
+
 # CI Workflow Test

@@ -1,0 +1,114 @@
+.container {
+  max-width: 1400px;
+}
+
+.title {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.subtitle {
+  margin: 0 0 1.5rem;
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+.loading {
+  padding: 2rem;
+  text-align: center;
+  color: #718096;
+}
+
+.tableContainer {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.table thead {
+  background: #f7fafc;
+}
+
+.table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #4a5568;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.table td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #2d3748;
+}
+
+.table tbody tr:hover {
+  background: #f7fafc;
+}
+
+.method {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.get {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.post {
+  background: #bee3f8;
+  color: #2c5282;
+}
+
+.put {
+  background: #feebc8;
+  color: #7c2d12;
+}
+
+.delete {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.path {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8125rem;
+}
+
+.status {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.success {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.error {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.ip {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8125rem;
+  color: #718096;
+}

@@ -6,7 +6,7 @@ import { RoomDTO } from '@/types/dto';
 import { roomDTOToUIModel } from '@/lib/converters';
 import { dialogService } from '@/lib/dialog';
 import { useTranslation } from '@/i18n/LanguageContext';
-import { STORAGE_KEYS } from '@/lib/storage-constants';
+import { STORAGE_KEYS } from '@/lib/constants/storage';
 
 export function useRoomList(username: string) {
   const router = useRouter();

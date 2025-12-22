@@ -1,11 +1,11 @@
 import { POST as registerPOST } from '../../src/app/api/auth/register/route';
 import { POST as loginPOST } from '../../src/app/api/auth/login/route';
-import { supabase } from '../../src/lib/supabase';
-import { HTTP_STATUS } from '../../src/lib/api-constants';
+import { supabase } from '../../src/lib/supabase/client';
+import { HTTP_STATUS } from '../../src/lib/constants/api';
 import bcrypt from 'bcryptjs';
 
 // Mock dependencies
-jest.mock('../../src/lib/supabase', () => ({
+jest.mock('../../src/lib/supabase/client', () => ({
   supabase: {
     from: jest.fn(),
   },

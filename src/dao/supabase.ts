@@ -3,13 +3,15 @@
  * Entity 타입을 사용하여 DB와 통신합니다.
  */
 
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase/client';
 import type {
   UserEntity,
   RoomEntity,
   MessageEntity,
   RoomParticipantEntity,
   FriendEntity,
+  AdminEntity,
+  ApiLogEntity,
 } from '../types/entities';
 import type {
   IUserDAO,
@@ -17,6 +19,8 @@ import type {
   IMessageDAO,
   IParticipantDAO,
   IFriendDAO,
+  IAdminDAO,
+  IApiLogDAO,
 } from './interfaces';
 
 // ============================================================================
@@ -246,6 +250,16 @@ export class FriendDAO implements IFriendDAO {
     return data;
   }
 
+  async findByFriendId(friendId: string): Promise<FriendEntity[]> {
+    const { data, error } = await supabase
+      .from('friends')
+      .select('*')
+      .eq('friend_id', friendId);
+
+    if (error) return [];
+    return data;
+  }
+
   async create(
     friend: Omit<FriendEntity, 'id' | 'created_at' | 'updated_at'>,
   ): Promise<FriendEntity> {
@@ -285,6 +299,99 @@ export class FriendDAO implements IFriendDAO {
 }
 
 // ============================================================================
+// Admin DAO
+// ============================================================================
+
+export class AdminDAO implements IAdminDAO {
+  async findByUsername(username: string): Promise<AdminEntity | null> {
+    const { data, error } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('username', username)
+      .single();
+
+    if (error) return null;
+    return data;
+  }
+
+  async create(
+    admin: Omit<AdminEntity, 'id' | 'created_at'>,
+  ): Promise<AdminEntity> {
+    const { data, error } = await supabase
+      .from('admins')
+      .insert([admin])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+}
+
+// ============================================================================
+// API Log DAO
+// ============================================================================
+
+export class ApiLogDAO implements IApiLogDAO {
+  async create(
+    log: Omit<ApiLogEntity, 'id' | 'created_at'>,
+  ): Promise<ApiLogEntity> {
+    const { data, error } = await supabase
+      .from('api_logs')
+      .insert([log])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async findRecent(limit: number): Promise<ApiLogEntity[]> {
+    const { data, error } = await supabase
+      .from('api_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) return [];
+    return data;
+  }
+
+  async findByPath(path: string, limit: number): Promise<ApiLogEntity[]> {
+    const { data, error } = await supabase
+      .from('api_logs')
+      .select('*')
+      .eq('path', path)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) return [];
+    return data;
+  }
+
+  async findByIp(ip: string, limit: number): Promise<ApiLogEntity[]> {
+    const { data, error } = await supabase
+      .from('api_logs')
+      .select('*')
+      .eq('ip_address', ip)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) return [];
+    return data;
+  }
+
+  async countTotal(): Promise<number> {
+    const { count, error } = await supabase
+      .from('api_logs')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) return 0;
+    return count || 0;
+  }
+}
+
+// ============================================================================
 // DAO Factory - 싱글톤 인스턴스
 // ============================================================================
 
@@ -294,4 +401,7 @@ export const dao = {
   message: new MessageDAO(),
   participant: new ParticipantDAO(),
   friend: new FriendDAO(),
+  admin: new AdminDAO(),
+  apiLog: new ApiLogDAO(),
 } as const;
+

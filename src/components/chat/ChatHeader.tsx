@@ -37,7 +37,7 @@ export function ChatHeader({
         }}
       >
         <img
-          src="https://cdn-icons-png.flaticon.com/128/6423/6423874.png"
+          src="/icons/back.png"
           alt="back"
           style={{
             width: 24,
@@ -76,7 +76,7 @@ export function ChatHeader({
           aria-label="Share room link"
         >
           <img
-            src="https://cdn-icons-png.flaticon.com/512/8828/8828334.png"
+            src="/icons/share.png"
             alt="share icon"
             style={{
               width: 24,
@@ -100,7 +100,7 @@ export function ChatHeader({
           }}
         >
           <img
-            src="https://cdn-icons-png.flaticon.com/512/1828/1828859.png"
+            src="/icons/menu.png"
             alt="menu"
             style={{
               width: 24,

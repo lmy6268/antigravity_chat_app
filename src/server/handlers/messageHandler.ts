@@ -2,7 +2,7 @@ import { Server } from 'socket.io';
 import { CustomSocket } from '../../types/socket';
 import { messageModel } from '../../models/MessageModel';
 import { SERVER_EVENTS, CLIENT_EVENTS } from '../../types/events';
-import { serverLogger } from '../../lib/server-logger';
+import { serverLogger } from '../../lib/logger/server';
 
 export const registerMessageHandlers = (io: Server, socket: CustomSocket) => {
   // 클라이언트가 준비되면 히스토리 요청

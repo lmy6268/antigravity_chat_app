@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { routes } from '@/lib/routes';
 import { useTranslation } from '@/i18n/LanguageContext';
-import { STORAGE_KEYS } from '@/lib/storage-constants';
+import { STORAGE_KEYS } from '@/lib/constants/storage';
 
 /**
  * useLogin Hook (ViewModel)

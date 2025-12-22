@@ -1,8 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { io } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 import { CLIENT_EVENTS, SERVER_EVENTS, SOCKET_LIFECYCLE } from '@/types/events';
+
+interface ErrorPayload {
+  message?: string;
+  [key: string]: any;
+}
 
 /**
  * useWebSocket Hook (ViewModel)
@@ -13,7 +18,7 @@ import { CLIENT_EVENTS, SERVER_EVENTS, SOCKET_LIFECYCLE } from '@/types/events';
  * - 연결 상태 관리
  */
 export function useWebSocket(roomId: string, username: string) {
-  const socketRef = useRef<any>(null);
+  const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const isConnectingRef = useRef(false);
 
@@ -50,7 +55,7 @@ export function useWebSocket(roomId: string, username: string) {
       isConnectingRef.current = false;
     });
 
-    socket.on(SERVER_EVENTS.ERROR, (error: any) => {
+    socket.on(SERVER_EVENTS.ERROR, (error: ErrorPayload) => {
       console.error('Socket error:', error);
       isConnectingRef.current = false;
     });

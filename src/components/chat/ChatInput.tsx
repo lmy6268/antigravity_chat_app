@@ -4,7 +4,7 @@ import { useTranslation } from '@/i18n/LanguageContext';
 interface ChatInputProps {
   inputMessage: string;
   setInputMessage: (value: string) => void;
-  sendMessage: (e: React.FormEvent) => void;
+  sendMessage: (e?: React.FormEvent) => void;
   isConnected: boolean;
 }
 
@@ -29,7 +29,7 @@ export function ChatInput({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (inputMessage.trim()) {
-        sendMessage(e as any);
+        sendMessage();
       }
     }
   };

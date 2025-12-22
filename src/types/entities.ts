@@ -49,3 +49,7 @@ export interface FriendEntity {
   created_at: string; // Supabase returns ISO string
   updated_at: string;
 }
+
+// Re-export admin entities
+export type { AdminEntity, ApiLogEntity } from './admin';
+

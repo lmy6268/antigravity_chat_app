@@ -8,7 +8,7 @@ import React, {
   ReactNode,
 } from 'react';
 import { en } from './locales/en';
-import { STORAGE_KEYS } from '@/lib/storage-constants';
+import { STORAGE_KEYS } from '@/lib/constants/storage';
 import { ko } from './locales/ko';
 
 type Locale = 'en' | 'ko';

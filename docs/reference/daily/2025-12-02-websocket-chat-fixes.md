@@ -8,10 +8,13 @@
 ## 🔧 해결한 주요 문제
 
 ### 1. 환경 변수 로딩 문제
+
 **문제**: 서버가 `.env.local` 파일을 찾지 못해 Supabase 환경 변수를 읽지 못함
+
 - 에러 메시지: `Missing Supabase environment variables!`
 
 **해결책**:
+
 - `dotenv` 패키지 설치
 - `server.js` 맨 위에 환경 변수 로딩 코드 추가:
   ```javascript
@@ -23,11 +26,14 @@
 ---
 
 ### 2. Import 경로 오류
+
 **문제**: 6개의 API 라우트에서 Supabase 클라이언트 import 경로가 잘못됨
+
 - 에러 메시지: `Module not found: Can't resolve '@/../../lib/supabase'`
 - 잘못된 경로: `@/../../lib/supabase`
 
 **영향받은 파일**:
+
 - `src/app/api/auth/register/route.ts`
 - `src/app/api/auth/login/route.ts`
 - `src/app/api/rooms/create/route.ts`
@@ -36,6 +42,7 @@
 - `src/app/api/users/[username]/rooms/route.ts`
 
 **해결책**:
+
 - 모든 파일의 import 경로를 올바른 상대 경로로 수정
 - 예: `import { supabase } from '../../../../../lib/supabase'`
 - `.next` 빌드 캐시 삭제 후 재시작
@@ -45,15 +52,20 @@
 ---
 
 ### 3. Web Crypto API 호환성 문제
+
 **문제**: 아이폰에서 맥북의 로컬 IP 주소로 접속 시 Web Crypto API 사용 불가
+
 - 에러 메시지: `Web Crypto API requires HTTPS or localhost`
 - 원인: `window.crypto.subtle`은 HTTPS 또는 localhost에서만 사용 가능
 
 **해결책**:
+
 1. **SSL 인증서 생성** (`mkcert` 사용):
+
    ```bash
    mkcert localhost 127.0.0.1 192.168.0.3 ::1
    ```
+
    - 생성된 파일: `localhost+3.pem`, `localhost+3-key.pem`
    - 유효기간: 2028년 3월 2일까지
 
@@ -67,31 +79,39 @@
    - 더 구체적인 에러 메시지 제공
 
 **접속 주소**:
-- 맥북에서: `https://localhost:3000`
-- 아이폰에서: `https://192.168.0.3:3000`
+
+- 맥북에서: `https://localhost:8080`
+- 아이폰에서: `https://192.168.0.3:8080`
 
 **결과**: ✅ 모바일 기기에서도 암호화 기능이 정상 작동
 
 ---
 
 ### 4. 메시지 중복 표시 문제
-**문제**: 
+
+**문제**:
+
 - 방장이 보낸 메시지가 화면에 두 번 나타남
 - 다른 참가자들이 메시지를 받지 못함
 
-**원인**: 
+**원인**:
+
 - 메시지 송신자가 자신의 UI에 메시지를 추가하지 않음
 - 서버의 broadcast만 의존했기 때문에 송신자 본인도 중복으로 받음
 
 **해결책**:
+
 - `sendMessage` 함수 수정: 메시지를 보낸 직후 송신자의 UI에 즉시 추가
   ```typescript
   // Add message to own UI immediately
-  setMessages((prev) => [...prev, { 
-    sender: nickname, 
-    text: inputMessage,
-    isSystem: false
-  }]);
+  setMessages((prev) => [
+    ...prev,
+    {
+      sender: nickname,
+      text: inputMessage,
+      isSystem: false,
+    },
+  ]);
   ```
 - 서버는 `socket.broadcast.to(roomId)`로 다른 사람들에게만 전송
 
@@ -102,6 +122,7 @@
 ## 📝 주요 코드 변경 사항
 
 ### `server.js`
+
 ```javascript
 // HTTPS 지원 추가
 const { createServer: createHttpsServer } = require('https');
@@ -109,7 +130,10 @@ const fs = require('fs');
 
 // SSL 인증서 자동 감지
 if (dev) {
-  if (fs.existsSync('./localhost+3-key.pem') && fs.existsSync('./localhost+3.pem')) {
+  if (
+    fs.existsSync('./localhost+3-key.pem') &&
+    fs.existsSync('./localhost+3.pem')
+  ) {
     useHttps = true;
     console.log('✅ SSL certificates found, starting HTTPS server');
   }
@@ -117,6 +141,7 @@ if (dev) {
 ```
 
 ### `src/app/chat/[roomId]/page.tsx`
+
 ```typescript
 // Web Crypto API 사용 전 환경 체크
 if (typeof window === 'undefined') {
@@ -135,12 +160,15 @@ if (!window.crypto.subtle) {
 ## 🔐 보안 고려사항
 
 ### 환경 변수 (`.env.local`)
+
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://***.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=eyJhbG***
 SUPABASE_SECRET_KEY=eyJhbG***
 ```
-⚠️ **주의**: 
+
+⚠️ **주의**:
+
 - `.env.local`은 절대 Git에 커밋하지 않음 (`.gitignore`에 포함됨)
 - `SUPABASE_SECRET_KEY`는 서버 사이드에서만 사용
 - SSL 인증서 파일(`*.pem`)도 `.gitignore`에 포함됨
@@ -150,6 +178,7 @@ SUPABASE_SECRET_KEY=eyJhbG***
 ## 🎯 테스트 결과
 
 ### ✅ 성공한 기능
+
 - 환경 변수 로딩 및 Supabase 연결
 - HTTPS 개발 서버 실행
 - 크로스 플랫폼 테스트 (맥북 + 아이폰)
@@ -158,8 +187,9 @@ SUPABASE_SECRET_KEY=eyJhbG***
 - 메시지 중복 방지
 
 ### 📱 지원 환경
-- **데스크톱**: `https://localhost:3000`
-- **모바일**: `https://[로컬IP]:3000`
+
+- **데스크톱**: `https://localhost:8080`
+- **모바일**: `https://[로컬IP]:8080`
 - **브라우저**: Chrome, Safari, Firefox (Web Crypto API 지원 필요)
 
 ---

@@ -22,12 +22,15 @@ jobs:
         with:
           node-version: '20'
           
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install Dependencies
-        run: npm install
+        run: yarn install --immutable
         
       - name: Run Lint
         id: lint
-        run: npm run lint
+        run: yarn lint
         
       - name: Post Lint Results to PR
         if: always() && github.event_name == 'pull_request' && steps.lint.outcome == 'failure'
@@ -52,7 +55,7 @@ jobs:
             
             **해결 방법**:
             \`\`\`bash
-            npm run lint -- --fix
+            yarn lint --fix
             git add -A
             git commit -m "style: lint 수정"
             git push

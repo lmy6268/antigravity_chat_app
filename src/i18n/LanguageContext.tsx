@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { en } from './locales/en';
 import { STORAGE_KEYS } from '@/lib/storage-constants';
 import { ko } from './locales/ko';
@@ -14,10 +20,15 @@ const dictionaries: Record<Locale, Dictionary> = {
 };
 
 // 번역을 위한 Deep readonly 타입
-type DeepReadonly<T> = T extends object ? { readonly [K in keyof T]: DeepReadonly<T[K]> } : T;
+type DeepReadonly<T> = T extends object
+  ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+  : T;
 
 // 번역 문자열의 파라미터를 교체하는 헬퍼
-export function withParams(template: string, params: Record<string, string>): string {
+export function withParams(
+  template: string,
+  params: Record<string, string>,
+): string {
   return template.replace(/{(\w+)}/g, (_, key) => params[key] || `{${key}}`);
 }
 
@@ -27,7 +38,9 @@ interface LanguageContextType {
   t: DeepReadonly<Dictionary>;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextType | undefined>(
+  undefined,
+);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, setLocale] = useState<Locale>('ko');

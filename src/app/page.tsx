@@ -30,7 +30,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'rooms' | 'friends'>('rooms');
 
   // Hooks
-  const { myRooms, joinRoom, deleteRoom, setMyRooms } = useRoomList(nickname);
+  const { myRooms, joinRoom, deleteRoom, setMyRooms, loading } =
+    useRoomList(nickname);
   const { createRoom, isCreating } = useRoomCreate(nickname, (newRoom) => {
     setMyRooms((prev) => [...prev, newRoom]);
     setShowCreateModal(false);
@@ -104,12 +105,17 @@ export default function Dashboard() {
     }
   };
 
-  const handleFriendAction = async (friendId: string, action: 'accept' | 'reject' | 'delete') => {
+  const handleFriendAction = async (
+    friendId: string,
+    action: 'accept' | 'reject' | 'delete',
+  ) => {
     try {
       const method = action === 'delete' ? 'DELETE' : 'PUT';
       const body =
         action !== 'delete'
-          ? JSON.stringify({ status: action === 'accept' ? 'accepted' : 'rejected' })
+          ? JSON.stringify({
+              status: action === 'accept' ? 'accepted' : 'rejected',
+            })
           : undefined;
 
       const res = await fetch(`/api/friends/${friendId}`, {
@@ -139,7 +145,12 @@ export default function Dashboard() {
 
   return (
     <div
-      style={{ minHeight: '100vh', backgroundColor: '#1e1e1e', color: '#f0f0f0', padding: '15px' }}
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#1e1e1e',
+        color: '#f0f0f0',
+        padding: '15px',
+      }}
     >
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <DashboardHeader nickname={nickname} onLogout={handleLogout} />
@@ -161,7 +172,8 @@ export default function Dashboard() {
               background: 'none',
               border: 'none',
               color: activeTab === 'rooms' ? '#007acc' : '#aaa',
-              borderBottom: activeTab === 'rooms' ? '2px solid #007acc' : 'none',
+              borderBottom:
+                activeTab === 'rooms' ? '2px solid #007acc' : 'none',
               cursor: 'pointer',
               fontSize: '16px',
             }}
@@ -175,7 +187,8 @@ export default function Dashboard() {
               background: 'none',
               border: 'none',
               color: activeTab === 'friends' ? '#007acc' : '#aaa',
-              borderBottom: activeTab === 'friends' ? '2px solid #007acc' : 'none',
+              borderBottom:
+                activeTab === 'friends' ? '2px solid #007acc' : 'none',
               cursor: 'pointer',
               fontSize: '16px',
             }}
@@ -190,12 +203,16 @@ export default function Dashboard() {
             onJoinRoom={joinRoom}
             onDeleteRoom={deleteRoom}
             onCreateClick={() => setShowCreateModal(true)}
+            loading={loading}
           />
         ) : (
           <>
             <div style={{ marginBottom: '30px' }}>
               <h3>{t.dashboard.friends.addTitle}</h3>
-              <form onSubmit={handleSendFriendRequest} style={{ display: 'flex', gap: '10px' }}>
+              <form
+                onSubmit={handleSendFriendRequest}
+                style={{ display: 'flex', gap: '10px' }}
+              >
                 <input
                   type="text"
                   placeholder={t.dashboard.friends.enterUsername}
@@ -226,10 +243,22 @@ export default function Dashboard() {
               </form>
             </div>
 
-            <div style={{ display: 'grid', gap: '20px', gridTemplateColumns: '1fr 1fr' }}>
+            <div
+              style={{
+                display: 'grid',
+                gap: '20px',
+                gridTemplateColumns: '1fr 1fr',
+              }}
+            >
               <div>
                 <h3>{t.dashboard.friends.listTitle}</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                  }}
+                >
                   {friends
                     .filter((f) => f.status === 'accepted')
                     .map((friend) => (
@@ -246,11 +275,15 @@ export default function Dashboard() {
                           gap: '10px',
                         }}
                       >
-                        <span style={{ fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}>
+                        <span
+                          style={{ fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}
+                        >
                           {friend.username}
                         </span>
                         <button
-                          onClick={() => handleFriendAction(friend.id, 'delete')}
+                          onClick={() =>
+                            handleFriendAction(friend.id, 'delete')
+                          }
                           style={{
                             padding: '5px 10px',
                             borderRadius: '4px',
@@ -265,7 +298,8 @@ export default function Dashboard() {
                         </button>
                       </div>
                     ))}
-                  {friends.filter((f) => f.status === 'accepted').length === 0 && (
+                  {friends.filter((f) => f.status === 'accepted').length ===
+                    0 && (
                     <div
                       style={{
                         color: '#aaa',
@@ -281,7 +315,13 @@ export default function Dashboard() {
 
               <div>
                 <h3>{t.dashboard.friends.requestsTitle}</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                  }}
+                >
                   {friends
                     .filter((f) => f.status === 'pending')
                     .map((friend) => (
@@ -296,7 +336,12 @@ export default function Dashboard() {
                           gap: '10px',
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                          }}
+                        >
                           <span>{friend.username}</span>
                           <span style={{ fontSize: '12px', color: '#aaa' }}>
                             {friend.isSender
@@ -307,7 +352,9 @@ export default function Dashboard() {
                         {!friend.isSender && (
                           <div style={{ display: 'flex', gap: '5px' }}>
                             <button
-                              onClick={() => handleFriendAction(friend.id, 'accept')}
+                              onClick={() =>
+                                handleFriendAction(friend.id, 'accept')
+                              }
                               style={{
                                 flex: 1,
                                 padding: '5px',
@@ -322,7 +369,9 @@ export default function Dashboard() {
                               {t.dashboard.friends.accept}
                             </button>
                             <button
-                              onClick={() => handleFriendAction(friend.id, 'reject')}
+                              onClick={() =>
+                                handleFriendAction(friend.id, 'reject')
+                              }
                               style={{
                                 flex: 1,
                                 padding: '5px',
@@ -340,7 +389,9 @@ export default function Dashboard() {
                         )}
                         {friend.isSender && (
                           <button
-                            onClick={() => handleFriendAction(friend.id, 'delete')}
+                            onClick={() =>
+                              handleFriendAction(friend.id, 'delete')
+                            }
                             style={{
                               width: '100%',
                               padding: '5px',
@@ -357,7 +408,8 @@ export default function Dashboard() {
                         )}
                       </div>
                     ))}
-                  {friends.filter((f) => f.status === 'pending').length === 0 && (
+                  {friends.filter((f) => f.status === 'pending').length ===
+                    0 && (
                     <div style={{ color: '#aaa', fontStyle: 'italic' }}>
                       {t.dashboard.friends.noRequests}
                     </div>
@@ -410,7 +462,13 @@ export default function Dashboard() {
               <h3 style={{ margin: 0, color: '#f0f0f0' }}>
                 {withParams(t.dashboard.qr.joinTitle, { roomName: qrRoomName })}
               </h3>
-              <div style={{ padding: '20px', backgroundColor: 'white', borderRadius: '8px' }}>
+              <div
+                style={{
+                  padding: '20px',
+                  backgroundColor: 'white',
+                  borderRadius: '8px',
+                }}
+              >
                 <QRCodeCanvas value={qrRoomUrl} size={200} />
               </div>
               <p

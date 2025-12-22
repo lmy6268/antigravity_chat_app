@@ -25,7 +25,11 @@ import { ChatShareModal } from '@/components/chat/ChatShareModal';
  * - Handle component composition
  * - Minimal business logic (event handlers only)
  */
-export default function ChatRoom({ params }: { params: Promise<{ roomId: string }> }) {
+export default function ChatRoom({
+  params,
+}: {
+  params: Promise<{ roomId: string }>;
+}) {
   // use()는 다른 hooks 전에 호출해야 함 (Rules of Hooks)
   const { roomId } = use(params);
 
@@ -50,19 +54,33 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     error,
   } = useRoomJoin(roomId, roomName);
 
-  const { socketRef, isConnected, connectSocket, disconnectSocket } = useWebSocket(
-    roomId,
-    nickname
-  );
+  const { socketRef, isConnected, connectSocket, disconnectSocket } =
+    useWebSocket(roomId, nickname);
 
-  const { messages, inputMessage, setInputMessage, chatContainerRef, sendMessage, initializeChat } =
-    useChat(roomId, roomInfo?.name || roomName, nickname, cryptoKey, socketRef, isConnected, t);
+  const {
+    messages,
+    inputMessage,
+    setInputMessage,
+    chatContainerRef,
+    sendMessage,
+    initializeChat,
+  } = useChat(
+    roomId,
+    roomInfo?.name || roomName,
+    nickname,
+    cryptoKey,
+    socketRef,
+    isConnected,
+    t,
+  );
 
   // Local state
   const [showSettings, setShowSettings] = useState(false);
   const [settingsClosing, setSettingsClosing] = useState(false);
   const [showShare, setShowShare] = useState(false);
-  const [slideState, setSlideState] = useState<'entering' | 'entered' | 'exiting'>('entering');
+  const [slideState, setSlideState] = useState<
+    'entering' | 'entered' | 'exiting'
+  >('entering');
   const hasInitializedRef = useRef(false);
 
   // Connect socket when joined AND cryptoKey is ready (한 번만 실행)
@@ -132,7 +150,8 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     const url = new URL(href);
 
     const isDev = process.env.NODE_ENV === 'development';
-    const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+    const isLocalhost =
+      url.hostname === 'localhost' || url.hostname === '127.0.0.1';
 
     if (isDev && isLocalhost) {
       try {

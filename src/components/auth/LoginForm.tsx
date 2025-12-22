@@ -11,8 +11,15 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
  * LoginForm Component (Pure View)
  */
 export default function LoginForm() {
-  const { username, password, error, isLoading, setUsername, setPassword, handleLogin } =
-    useLogin();
+  const {
+    username,
+    password,
+    error,
+    isLoading,
+    setUsername,
+    setPassword,
+    handleLogin,
+  } = useLogin();
   const { t } = useTranslation();
 
   return (
@@ -43,7 +50,11 @@ export default function LoginForm() {
           disabled={isLoading}
           className={`${styles.submitButton} ${styles.login}`}
         >
-          {isLoading ? <LoadingSpinner size={20} color="#ffffff" /> : t.auth.login}
+          {isLoading ? (
+            <LoadingSpinner size={20} color="#ffffff" />
+          ) : (
+            t.auth.login
+          )}
         </button>
       </form>
 

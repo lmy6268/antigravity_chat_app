@@ -85,7 +85,14 @@ export function ChatSettings({
       </h3>
 
       {roomInfo && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+            fontSize: '14px',
+          }}
+        >
           <div>
             <strong style={{ color: '#aaa' }}>{t.chat.participants}:</strong>
             <div
@@ -97,46 +104,56 @@ export function ChatSettings({
               }}
             >
               {roomInfo.participants && roomInfo.participants.length > 0 ? (
-                roomInfo.participants.map((participant: string, idx: number) => {
-                  const isCreator = participant === roomInfo.creator;
-                  const isMe = participant === currentUser;
-                  const dotColor = isMe && isConnected ? '#5cb85c' : '#888';
-                  return (
-                    <div
-                      key={idx}
-                      style={{
-                        padding: '4px 8px',
-                        backgroundColor: '#252526',
-                        borderRadius: '4px',
-                        fontWeight: 'normal',
-                        color: '#f0f0f0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                      }}
-                    >
-                      <span
+                roomInfo.participants.map(
+                  (participant: string, idx: number) => {
+                    const isCreator = participant === roomInfo.creator;
+                    const isMe = participant === currentUser;
+                    const dotColor = isMe && isConnected ? '#5cb85c' : '#888';
+                    return (
+                      <div
+                        key={idx}
                         style={{
-                          display: 'inline-block',
-                          width: '8px',
-                          height: '8px',
-                          borderRadius: '50%',
-                          backgroundColor: dotColor,
+                          padding: '4px 8px',
+                          backgroundColor: '#252526',
+                          borderRadius: '4px',
+                          fontWeight: 'normal',
+                          color: '#f0f0f0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
                         }}
-                      />
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {participant}
-                        {isCreator && (
-                          <span role="img" aria-label="creator">
-                            👑
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  );
-                })
+                      >
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            backgroundColor: dotColor,
+                          }}
+                        />
+                        <span
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                          }}
+                        >
+                          {participant}
+                          {isCreator && (
+                            <span role="img" aria-label="creator">
+                              👑
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    );
+                  },
+                )
               ) : (
-                <div style={{ color: '#888', fontStyle: 'italic' }}>{t.chat.noParticipants}</div>
+                <div style={{ color: '#888', fontStyle: 'italic' }}>
+                  {t.chat.noParticipants}
+                </div>
               )}
             </div>
           </div>

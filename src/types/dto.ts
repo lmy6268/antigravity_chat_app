@@ -55,6 +55,7 @@ export interface RoomDTO {
   created_at: string;
   participantCount?: number;
   lastMessageAt?: string | null;
+  lastMessagePreview?: string | null;
 }
 
 export interface JoinRoomRequestDTO {

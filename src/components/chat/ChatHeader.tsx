@@ -5,7 +5,12 @@ interface ChatHeaderProps {
   onShare: () => void;
 }
 
-export function ChatHeader({ roomName, onBack, onSettings, onShare }: ChatHeaderProps) {
+export function ChatHeader({
+  roomName,
+  onBack,
+  onSettings,
+  onShare,
+}: ChatHeaderProps) {
   return (
     <div
       style={{

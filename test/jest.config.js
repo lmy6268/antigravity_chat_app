@@ -7,8 +7,10 @@ const createJestConfig = nextJest({
 
 // Jest에 전달할 커스텀 설정
 const customJestConfig = {
+  rootDir: '../',
+
   // 각 테스트 전에 실행할 설정 파일
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/test/jest.setup.js'],
 
   // 테스트 환경 설정
   testEnvironment: 'jest-environment-jsdom',

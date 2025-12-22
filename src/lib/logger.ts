@@ -10,7 +10,8 @@
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isTest = process.env.NODE_ENV === 'test';
-const isDebug = process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true';
+const isDebug =
+  process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true';
 
 // Log Level 제어 가능하도록 (기본값: production이면 error만, 아니면 info 이상)
 const LOG_LEVEL = process.env.LOG_LEVEL || (isProduction ? 'error' : 'debug');
@@ -30,7 +31,10 @@ const shouldLog = (level: keyof typeof levels) => {
 export const logger = {
   debug: (message: string, ...args: any[]) => {
     if (shouldLog('debug') || isDebug) {
-      console.debug(`[DEBUG] ${new Date().toISOString()} - ${message}`, ...args);
+      console.debug(
+        `[DEBUG] ${new Date().toISOString()} - ${message}`,
+        ...args,
+      );
     }
   },
   info: (message: string, ...args: any[]) => {
@@ -45,7 +49,10 @@ export const logger = {
   },
   error: (message: string, ...args: any[]) => {
     if (shouldLog('error')) {
-      console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, ...args);
+      console.error(
+        `[ERROR] ${new Date().toISOString()} - ${message}`,
+        ...args,
+      );
     }
   },
 };

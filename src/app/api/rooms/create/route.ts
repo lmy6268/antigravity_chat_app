@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     if (!id || !name || !password || !creator || !salt || !encryptedKey) {
       return NextResponse.json(
         { error: 'Missing required fields' },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
@@ -20,7 +20,10 @@ export async function POST(request: Request) {
     const userDTO = await userModel.findByUsername(creator);
 
     if (!userDTO) {
-      return NextResponse.json({ error: 'User not found' }, { status: HTTP_STATUS.NOT_FOUND });
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: HTTP_STATUS.NOT_FOUND },
+      );
     }
 
     // 2. Create room (also adds creator as participant)
@@ -31,7 +34,7 @@ export async function POST(request: Request) {
       creator,
       password,
       salt,
-      encryptedKey
+      encryptedKey,
     );
 
     return NextResponse.json(
@@ -44,13 +47,13 @@ export async function POST(request: Request) {
           createdAt: roomDTO.created_at,
         },
       },
-      { status: HTTP_STATUS.CREATED }
+      { status: HTTP_STATUS.CREATED },
     );
   } catch (error) {
     console.error('Error creating room:', error);
     return NextResponse.json(
       { error: 'Failed to create room' },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }

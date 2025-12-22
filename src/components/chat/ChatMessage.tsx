@@ -6,7 +6,11 @@ interface ChatMessageProps {
   roomCreator?: string;
 }
 
-export function ChatMessage({ message, nickname, roomCreator }: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  nickname,
+  roomCreator,
+}: ChatMessageProps) {
   // isMine is available in MessageUIModel, but fallback to comparison just in case
   const isMe = message.isMine ?? message.sender === nickname;
   const isSystem = message.isSystem;
@@ -39,10 +43,23 @@ export function ChatMessage({ message, nickname, roomCreator }: ChatMessageProps
       }}
     >
       {!isMe && (
-        <span style={{ fontSize: '12px', color: '#aaa', marginBottom: '4px', marginLeft: '4px' }}>
+        <span
+          style={{
+            fontSize: '12px',
+            color: '#aaa',
+            marginBottom: '4px',
+            marginLeft: '4px',
+          }}
+        >
           {message.sender}
           {roomCreator && message.sender === roomCreator && (
-            <span style={{ color: '#ffd700', marginLeft: '6px', fontWeight: 'bold' }}>
+            <span
+              style={{
+                color: '#ffd700',
+                marginLeft: '6px',
+                fontWeight: 'bold',
+              }}
+            >
               (Creator)
             </span>
           )}
@@ -57,6 +74,7 @@ export function ChatMessage({ message, nickname, roomCreator }: ChatMessageProps
           borderTopLeftRadius: isMe ? '12px' : '2px',
           color: 'white',
           wordBreak: 'break-word',
+          whiteSpace: 'pre-wrap',
           position: 'relative',
         }}
       >

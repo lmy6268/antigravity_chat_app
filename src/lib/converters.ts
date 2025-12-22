@@ -5,7 +5,11 @@
 
 import type { UserEntity, RoomEntity, MessageEntity } from '../types/entities';
 import type { UserDTO, RoomDTO, MessageDTO } from '../types/dto';
-import type { UserUIModel, RoomUIModel, MessageUIModel } from '../types/uimodel';
+import type {
+  UserUIModel,
+  RoomUIModel,
+  MessageUIModel,
+} from '../types/uimodel';
 
 // ============================================================================
 // Entity → DTO Converters
@@ -62,7 +66,7 @@ export function roomDTOToUIModel(
     participantCount?: number;
     lastMessageAt?: string | null;
     lastMessagePreview?: string | null;
-  }
+  },
 ): RoomUIModel {
   return {
     id: dto.id,
@@ -71,7 +75,9 @@ export function roomDTOToUIModel(
     createdAt: formatRelativeTime(new Date(dto.created_at)),
     isCreator: currentUserId === dto.creator_id,
     participantCount: meta?.participantCount,
-    lastMessageAt: meta?.lastMessageAt ? formatRelativeTime(new Date(meta.lastMessageAt)) : null,
+    lastMessageAt: meta?.lastMessageAt
+      ? formatRelativeTime(new Date(meta.lastMessageAt))
+      : null,
     lastMessagePreview: meta?.lastMessagePreview ?? null,
   };
 }

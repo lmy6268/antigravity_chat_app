@@ -27,7 +27,12 @@ export function ChatMessageList({
       }}
     >
       {messages.map((msg) => (
-        <ChatMessage key={msg.id} message={msg} nickname={nickname} roomCreator={roomCreator} />
+        <ChatMessage
+          key={msg.id}
+          message={msg}
+          nickname={nickname}
+          roomCreator={roomCreator}
+        />
       ))}
     </div>
   );

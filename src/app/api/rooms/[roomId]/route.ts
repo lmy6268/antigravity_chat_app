@@ -3,14 +3,20 @@ import { HTTP_STATUS } from '@/lib/api-constants';
 import { roomModel } from '@/models/RoomModel';
 import { dao } from '@/dao/supabase';
 
-export async function GET(_request: Request, { params }: { params: Promise<{ roomId: string }> }) {
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ roomId: string }> },
+) {
   try {
     const { roomId } = await params;
 
     const roomDTO = await roomModel.findById(roomId);
 
     if (!roomDTO) {
-      return NextResponse.json({ error: 'Room not found' }, { status: HTTP_STATUS.NOT_FOUND });
+      return NextResponse.json(
+        { error: 'Room not found' },
+        { status: HTTP_STATUS.NOT_FOUND },
+      );
     }
 
     // Note: participants would need a separate DAO method
@@ -18,7 +24,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ roo
 
     // Fetch participants
     const participants = await dao.participant.findByRoomId(roomId);
-    const participantUsernames = participants.map((p) => p.username || p.user_id);
+    const participantUsernames = participants.map(
+      (p) => p.username || p.user_id,
+    );
 
     return NextResponse.json(
       {
@@ -33,20 +41,20 @@ export async function GET(_request: Request, { params }: { params: Promise<{ roo
           encryptedKey: roomDTO.encrypted_key,
         },
       },
-      { status: HTTP_STATUS.OK }
+      { status: HTTP_STATUS.OK },
     );
   } catch (error) {
     console.error('Error fetching room:', error);
     return NextResponse.json(
       { error: 'Failed to fetch room' },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ roomId: string }> }
+  { params }: { params: Promise<{ roomId: string }> },
 ) {
   try {
     const { roomId } = await params;
@@ -57,20 +65,23 @@ export async function DELETE(
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized: User ID required' },
-        { status: HTTP_STATUS.UNAUTHORIZED }
+        { status: HTTP_STATUS.UNAUTHORIZED },
       );
     }
 
     // Verify room ownership
     const room = await roomModel.findById(roomId);
     if (!room) {
-      return NextResponse.json({ error: 'Room not found' }, { status: HTTP_STATUS.NOT_FOUND });
+      return NextResponse.json(
+        { error: 'Room not found' },
+        { status: HTTP_STATUS.NOT_FOUND },
+      );
     }
 
     if (room.creator_id !== userId) {
       return NextResponse.json(
         { error: 'Forbidden: Only the creator can delete this room' },
-        { status: HTTP_STATUS.FORBIDDEN }
+        { status: HTTP_STATUS.FORBIDDEN },
       );
     }
 
@@ -80,8 +91,10 @@ export async function DELETE(
   } catch (error) {
     console.error('Error deleting room:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to delete room' },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      {
+        error: error instanceof Error ? error.message : 'Failed to delete room',
+      },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }

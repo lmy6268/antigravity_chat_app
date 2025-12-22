@@ -25,8 +25,10 @@ export const ko = {
     password: '비밀번호',
     welcome: '환영합니다',
     validation: {
-      username: '아이디는 영문 포함 6자리 이상이어야 합니다 (영문/숫자 혼합 가능).',
-      password: '비밀번호는 8자리 이상이어야 하며, 영문, 숫자, @ ! # $ 기호만 사용할 수 있습니다.',
+      username:
+        '아이디는 영문 포함 6자리 이상이어야 합니다 (영문/숫자 혼합 가능).',
+      password:
+        '비밀번호는 8자리 이상이어야 하며, 영문, 숫자, @ ! # $ 기호만 사용할 수 있습니다.',
       usernameHelp: '영문 포함 6자리 이상 (영문/숫자)',
       passwordHelp: '8자리 이상 (영문, 숫자, @ ! # $)',
     },
@@ -47,7 +49,8 @@ export const ko = {
       noRooms: '참여 중인 방이 없습니다. 새로운 방을 만들어보세요!',
       join: '입장',
       id: '방 ID',
-      deleteConfirm: '정말로 이 방을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+      deleteConfirm:
+        '정말로 이 방을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
     },
     friends: {
       addTitle: '친구 추가',

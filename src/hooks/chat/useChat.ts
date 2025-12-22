@@ -7,7 +7,9 @@ import { withParams } from '@/i18n/LanguageContext';
 import type { en } from '@/i18n/locales/en';
 import type { MessageUIModel } from '@/types/uimodel';
 
-type DeepReadonly<T> = T extends object ? { readonly [K in keyof T]: DeepReadonly<T[K]> } : T;
+type DeepReadonly<T> = T extends object
+  ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+  : T;
 
 /**
  * useChat Hook (ViewModel)
@@ -28,7 +30,7 @@ export function useChat(
   cryptoKey: CryptoKey | null,
   socketRef: React.MutableRefObject<any>,
   isConnected: boolean,
-  t: DeepReadonly<typeof en>
+  t: DeepReadonly<typeof en>,
 ) {
   const [messages, setMessages] = useState<MessageUIModel[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -43,7 +45,12 @@ export function useChat(
     console.log('[useChat] cryptoKey updated:', !!cryptoKey);
 
     // cryptoKey가 늦게 준비되었고 히스토리가 보류된 경우 다시 요청
-    if (cryptoKey && pendingHistoryRef.current && socketRef.current && isConnected) {
+    if (
+      cryptoKey &&
+      pendingHistoryRef.current &&
+      socketRef.current &&
+      isConnected
+    ) {
       pendingHistoryRef.current = false;
       historyRequestedRef.current = true;
       console.log('[useChat] 🔁 Re-requesting history after key ready');
@@ -59,7 +66,12 @@ export function useChat(
       isConnected,
     });
 
-    if (cryptoKey && socketRef.current && isConnected && !historyRequestedRef.current) {
+    if (
+      cryptoKey &&
+      socketRef.current &&
+      isConnected &&
+      !historyRequestedRef.current
+    ) {
       console.log('[useChat] ✅ Requesting history...');
       // roomId를 함께 보내서 서버에서 socket.roomId가 아직 설정되지 않았더라도 처리 가능하게 함
       socketRef.current.emit(CLIENT_EVENTS.REQUEST_HISTORY, roomId);
@@ -72,7 +84,8 @@ export function useChat(
   // 메시지 변경 시 자동으로 하단 스크롤
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -109,7 +122,7 @@ export function useChat(
           const decryptedString = await decryptMessage(
             payload.iv,
             payload.data,
-            cryptoKeyRef.current
+            cryptoKeyRef.current,
           );
           const messageData = JSON.parse(decryptedString);
 
@@ -121,7 +134,9 @@ export function useChat(
               id: payload.id || `msg-${Date.now()}-${Math.random()}`,
               sender: messageData.senderNickname,
               text: messageData.text,
-              timestamp: new Date(payload.timestamp || Date.now()).toLocaleTimeString(),
+              timestamp: new Date(
+                payload.timestamp || Date.now(),
+              ).toLocaleTimeString(),
               isMine: messageData.senderNickname === nickname,
               isSystem: false,
             },
@@ -136,7 +151,11 @@ export function useChat(
 
     // Handle batch history messages
     const handleHistory = async (payload: { messages: any[] }) => {
-      console.log('[useChat] History received:', payload.messages.length, 'messages');
+      console.log(
+        '[useChat] History received:',
+        payload.messages.length,
+        'messages',
+      );
 
       if (!cryptoKeyRef.current) {
         console.warn('[useChat] No cryptoKey - skipping history');
@@ -150,19 +169,28 @@ export function useChat(
         for (const msg of payload.messages) {
           if (msg.iv && msg.data) {
             try {
-              const decryptedString = await decryptMessage(msg.iv, msg.data, cryptoKeyRef.current!);
+              const decryptedString = await decryptMessage(
+                msg.iv,
+                msg.data,
+                cryptoKeyRef.current!,
+              );
               const messageData = JSON.parse(decryptedString);
 
               validMessages.push({
                 id: msg.id || `msg-${Date.now()}-${Math.random()}`,
                 sender: messageData.senderNickname,
                 text: messageData.text,
-                timestamp: new Date(msg.timestamp || Date.now()).toLocaleTimeString(),
+                timestamp: new Date(
+                  msg.timestamp || Date.now(),
+                ).toLocaleTimeString(),
                 isMine: messageData.senderNickname === nickname,
                 isSystem: false,
               });
             } catch (err) {
-              console.warn('[useChat] Failed to decrypt individual message:', err);
+              console.warn(
+                '[useChat] Failed to decrypt individual message:',
+                err,
+              );
             }
           }
         }
@@ -186,7 +214,13 @@ export function useChat(
   // 메시지 전송
   const sendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!inputMessage.trim() || !cryptoKey || !socketRef.current || !isConnected) return;
+    if (
+      !inputMessage.trim() ||
+      !cryptoKey ||
+      !socketRef.current ||
+      !isConnected
+    )
+      return;
 
     const messagePayload = JSON.stringify({
       text: inputMessage,

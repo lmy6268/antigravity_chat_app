@@ -1,11 +1,18 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { generateRoomKey, generateSalt, encryptRoomKeyWithPassword } from '@/lib/crypto';
+import {
+  generateRoomKey,
+  generateSalt,
+  encryptRoomKeyWithPassword,
+} from '@/lib/crypto';
 import { routes } from '@/lib/routes';
 import { useTranslation } from '@/i18n/LanguageContext';
 import type { RoomUIModel } from '@/types/uimodel';
 
-export function useRoomCreate(nickname: string, onRoomCreated: (room: RoomUIModel) => void) {
+export function useRoomCreate(
+  nickname: string,
+  onRoomCreated: (room: RoomUIModel) => void,
+) {
   const router = useRouter();
   const { t } = useTranslation();
   const [isCreating, setIsCreating] = useState(false);
@@ -26,7 +33,11 @@ export function useRoomCreate(nickname: string, onRoomCreated: (room: RoomUIMode
       const salt = generateSalt();
 
       // 3. 비밀번호로 룸 키 암호화
-      const encryptedKey = await encryptRoomKeyWithPassword(roomKey, password, salt);
+      const encryptedKey = await encryptRoomKeyWithPassword(
+        roomKey,
+        password,
+        salt,
+      );
 
       // 4. 서버에 룸 생성 API 호출
       const res = await fetch('/api/rooms/create', {

@@ -11,8 +11,15 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
  * RegisterForm Component (Pure View)
  */
 export default function RegisterForm() {
-  const { username, password, error, isLoading, setUsername, setPassword, register } =
-    useRegister();
+  const {
+    username,
+    password,
+    error,
+    isLoading,
+    setUsername,
+    setPassword,
+    register,
+  } = useRegister();
   const { t } = useTranslation();
 
   return (
@@ -31,7 +38,9 @@ export default function RegisterForm() {
             disabled={isLoading}
             className={styles.input}
           />
-          <span className={styles.helpText}>{t.auth.validation.usernameHelp}</span>
+          <span className={styles.helpText}>
+            {t.auth.validation.usernameHelp}
+          </span>
         </div>
 
         <div className={styles.inputGroup}>
@@ -43,14 +52,20 @@ export default function RegisterForm() {
             disabled={isLoading}
             className={styles.input}
           />
-          <span className={styles.helpText}>{t.auth.validation.passwordHelp}</span>
+          <span className={styles.helpText}>
+            {t.auth.validation.passwordHelp}
+          </span>
         </div>
         <button
           type="submit"
           disabled={isLoading}
           className={`${styles.submitButton} ${styles.register}`}
         >
-          {isLoading ? <LoadingSpinner size={20} color="#ffffff" /> : t.auth.register}
+          {isLoading ? (
+            <LoadingSpinner size={20} color="#ffffff" />
+          ) : (
+            t.auth.register
+          )}
         </button>
       </form>
 

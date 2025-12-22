@@ -17,7 +17,7 @@ import { applyRuntimeEnvHeader } from './middleware/runtimeEnv';
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = '0.0.0.0';
 const port = parseInt(process.env.PORT || '3000', 10);
-const app = next({ dev, hostname, port });
+const app = next({ dev, hostname, port, webpack: true } as any);
 const handle = app.getRequestHandler();
 
 // SSL 인증서 확인
@@ -25,14 +25,34 @@ let useHttps = false;
 let httpsOptions = {};
 
 if (dev) {
-  const certPath = process.env.SSL_CERT_PATH;
-  const keyPath = process.env.SSL_KEY_PATH;
+  let certPath = process.env.SSL_CERT_PATH;
+  let keyPath = process.env.SSL_KEY_PATH;
 
-  if (certPath && keyPath && (!fs.existsSync(certPath) || !fs.existsSync(keyPath))) {
+  // Fallback to src/server/certs/ directory if paths are missing from env or don't exist
+  if (
+    (!certPath || !fs.existsSync(certPath)) &&
+    fs.existsSync('./src/server/certs/localhost+3.pem')
+  ) {
+    certPath = './src/server/certs/localhost+3.pem';
+  }
+  if (
+    (!keyPath || !fs.existsSync(keyPath)) &&
+    fs.existsSync('./src/server/certs/localhost+3-key.pem')
+  ) {
+    keyPath = './src/server/certs/localhost+3-key.pem';
+  }
+
+  if (
+    certPath &&
+    keyPath &&
+    (!fs.existsSync(certPath) || !fs.existsSync(keyPath))
+  ) {
     serverLogger.error('🔴 SSL 인증서 파일을 찾을 수 없습니다!');
     serverLogger.error(`인증서 경로: ${certPath}`);
     serverLogger.error(`키 경로: ${keyPath}`);
-    serverLogger.error('\n파일이 존재하는지 확인하거나 mkcert로 새로 생성하세요.');
+    serverLogger.error(
+      '\n파일이 존재하는지 확인하거나 mkcert로 새로 생성하세요.',
+    );
     process.exit(1);
   }
 
@@ -61,12 +81,18 @@ app.prepare().then(() => {
   // Socket.io 핸드쉐이크/업그레이드를 직접 처리하여 Next로 안 넘김
   server.on('request', (req, res) => {
     if (req.url?.startsWith('/api/socket')) {
-      const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+      const urlObj = new URL(
+        req.url,
+        `http://${req.headers.host || 'localhost'}`,
+      );
       const query = Object.fromEntries(urlObj.searchParams.entries());
 
       // Fix for type error: IncomingMessage is not EngineRequest
       // Attach parsed query so engine can read EIO/transport params
-      (io.engine as any).handleRequest(Object.assign(req, { _query: query }), res);
+      (io.engine as any).handleRequest(
+        Object.assign(req, { _query: query }),
+        res,
+      );
       return;
     }
 
@@ -82,12 +108,17 @@ app.prepare().then(() => {
 
   server.on('upgrade', (req, socket, head) => {
     if (req.url?.startsWith('/api/socket')) {
-      const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+      const urlObj = new URL(
+        req.url,
+        `http://${req.headers.host || 'localhost'}`,
+      );
       const query = Object.fromEntries(urlObj.searchParams.entries());
 
-      // Fix for type error: IncomingMessage is not EngineRequest
-      // Attach parsed query so engine can read EIO/transport params
-      (io.engine as any).handleUpgrade(Object.assign(req, { _query: query }), socket, head);
+      (io.engine as any).handleUpgrade(
+        Object.assign(req, { _query: query }),
+        socket,
+        head,
+      );
       return;
     }
     // 나머지 업그레이드는 Next(HMR 등)에서 처리되도록 그대로 둔다.
@@ -114,7 +145,9 @@ app.prepare().then(() => {
   server.listen(port, hostname, async () => {
     const protocol = useHttps ? 'https' : 'http';
     serverLogger.info(`> Ready on ${protocol}://${hostname}:${port}`);
-    serverLogger.info(`> Access from your Mac: ${protocol}://localhost:${port}`);
+    serverLogger.info(
+      `> Access from your Mac: ${protocol}://localhost:${port}`,
+    );
     if (dev && useHttps) {
       // Get the local IP address
       const { networkInterfaces } = await import('os');
@@ -124,7 +157,9 @@ app.prepare().then(() => {
         if (!netArray) continue;
         for (const net of netArray) {
           if (net && net.family === 'IPv4' && !net.internal) {
-            serverLogger.info(`> Access from iPhone: ${protocol}://${net.address}:${port}`);
+            serverLogger.info(
+              `> Access from iPhone: ${protocol}://${net.address}:${port}`,
+            );
             break;
           }
         }

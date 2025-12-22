@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { dialogService } from '@/lib/dialog';
 
 interface ChatShareModalProps {
   onClose: () => void;
@@ -8,7 +9,11 @@ interface ChatShareModalProps {
   password?: string;
 }
 
-export function ChatShareModal({ onClose, buildLink, password }: ChatShareModalProps) {
+export function ChatShareModal({
+  onClose,
+  buildLink,
+  password,
+}: ChatShareModalProps) {
   const { t } = useTranslation();
   const [link, setLink] = useState<string>('');
 
@@ -21,6 +26,7 @@ export function ChatShareModal({ onClose, buildLink, password }: ChatShareModalP
   const copy = () => {
     if (!link) return;
     dialogService.alert(t.dashboard.alerts.linkCopied);
+  };
 
   return (
     <>
@@ -48,8 +54,16 @@ export function ChatShareModal({ onClose, buildLink, password }: ChatShareModalP
           color: '#f0f0f0',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ margin: 0 }}>{t.chat.shareLinkTitle ?? t.chat.copyLink}</h3>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <h3 style={{ margin: 0 }}>
+            {t.chat.shareLinkTitle ?? t.chat.copyLink}
+          </h3>
           <button
             onClick={onClose}
             style={{
@@ -68,13 +82,25 @@ export function ChatShareModal({ onClose, buildLink, password }: ChatShareModalP
             <img
               src="https://cdn-icons-png.flaticon.com/128/4013/4013407.png"
               alt="close"
-              style={{ width: 24, height: 24, filter: 'brightness(0) invert(1)' }}
+              style={{
+                width: 24,
+                height: 24,
+                filter: 'brightness(0) invert(1)',
+              }}
             />
           </button>
         </div>
 
-        <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
-          <div style={{ background: 'white', padding: '8px', borderRadius: '8px' }}>
+        <div
+          style={{
+            marginTop: '16px',
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            style={{ background: 'white', padding: '8px', borderRadius: '8px' }}
+          >
             {link ? (
               <QRCodeCanvas value={link} size={200} />
             ) : (
@@ -108,12 +134,21 @@ export function ChatShareModal({ onClose, buildLink, password }: ChatShareModalP
               border: '1px solid #3e3e3e',
             }}
           >
-            <strong style={{ color: '#aaa', marginRight: '6px' }}>{t.auth.password}:</strong>
+            <strong style={{ color: '#aaa', marginRight: '6px' }}>
+              {t.auth.password}:
+            </strong>
             <span style={{ fontFamily: 'monospace' }}>{password}</span>
           </div>
         )}
 
-        <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+        <div
+          style={{
+            marginTop: '12px',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: '8px',
+          }}
+        >
           <button
             onClick={copy}
             disabled={!link}

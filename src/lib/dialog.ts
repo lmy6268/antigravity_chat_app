@@ -25,7 +25,9 @@ class NativeDialogService implements IDialogService {
     if (typeof window !== 'undefined') {
       return window.confirm(message);
     }
-    console.log(`[DialogService] Confirm: ${message} (Defaulting to false in server context)`);
+    console.log(
+      `[DialogService] Confirm: ${message} (Defaulting to false in server context)`,
+    );
     return false;
   }
 }

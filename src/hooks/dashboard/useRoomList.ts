@@ -97,7 +97,7 @@ export function useRoomList(username: string) {
         dialogService.alert(t.common.error);
       }
     },
-    [t]
+    [t],
   );
 
   return { myRooms, loading, fetchRooms, joinRoom, deleteRoom, setMyRooms };

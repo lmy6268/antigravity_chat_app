@@ -1,7 +1,7 @@
 import { POST as registerPOST } from '../../src/app/api/auth/register/route';
 import { POST as loginPOST } from '../../src/app/api/auth/login/route';
 import { supabase } from '../../src/lib/supabase';
-import { HTTP_STATUS } from '../../src/lib/constants';
+import { HTTP_STATUS } from '../../src/lib/api-constants';
 import bcrypt from 'bcryptjs';
 
 // Mock dependencies
@@ -30,7 +30,9 @@ describe('Auth API', () => {
       });
 
       // Mock Supabase responses
-      const mockSingle = jest.fn().mockResolvedValue({ data: null, error: null }); // No existing user
+      const mockSingle = jest
+        .fn()
+        .mockResolvedValue({ data: null, error: null }); // No existing user
       const mockInsert = jest.fn().mockResolvedValue({ error: null });
 
       (supabase.from as jest.Mock).mockImplementation((table) => {
@@ -61,7 +63,10 @@ describe('Auth API', () => {
     it('should return 409 if username already exists', async () => {
       const req = new Request('http://localhost/api/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ username: 'existinguser', password: 'password123' }),
+        body: JSON.stringify({
+          username: 'existinguser',
+          password: 'password123',
+        }),
       });
 
       // Mock existing user
@@ -113,7 +118,11 @@ describe('Auth API', () => {
 
       // Mock user found
       const mockSingle = jest.fn().mockResolvedValue({
-        data: { id: 'user123', username: 'testuser', password: 'hashed_password' },
+        data: {
+          id: 'user123',
+          username: 'testuser',
+          password: 'hashed_password',
+        },
         error: null,
       });
 
@@ -148,7 +157,10 @@ describe('Auth API', () => {
     it('should return 401 for invalid credentials', async () => {
       const req = new Request('http://localhost/api/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ username: 'testuser', password: 'wrongpassword' }),
+        body: JSON.stringify({
+          username: 'testuser',
+          password: 'wrongpassword',
+        }),
       });
 
       // Mock user found
@@ -183,7 +195,10 @@ describe('Auth API', () => {
     it('should return 401 if user not found', async () => {
       const req = new Request('http://localhost/api/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ username: 'nonexistent', password: 'password123' }),
+        body: JSON.stringify({
+          username: 'nonexistent',
+          password: 'password123',
+        }),
       });
 
       // Mock user not found

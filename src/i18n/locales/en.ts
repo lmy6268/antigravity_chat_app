@@ -49,7 +49,8 @@ export const en = {
       noRooms: "You haven't joined any rooms yet. Create one to get started!",
       join: 'Join',
       id: 'ID',
-      deleteConfirm: 'Are you sure you want to delete this room? This action cannot be undone.',
+      deleteConfirm:
+        'Are you sure you want to delete this room? This action cannot be undone.',
     },
     friends: {
       addTitle: 'Add Friend',
@@ -80,7 +81,8 @@ export const en = {
       invalidPassword: 'Invalid room password',
       roomDeleted: 'The room has been deleted by the creator.',
       linkCopied: 'Invite link copied to clipboard!',
-      confirmDeleteRoom: 'If you leave, the room will be deleted. Are you sure?',
+      confirmDeleteRoom:
+        'If you leave, the room will be deleted. Are you sure?',
       roomNotFound: 'Room not found',
     },
   },

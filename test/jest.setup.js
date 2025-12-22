@@ -4,9 +4,12 @@ import { createRequire } from 'module';
 import { TextEncoder, TextDecoder } from 'util';
 
 const require = createRequire(import.meta.url);
+const { ReadableStream, WritableStream } = require('node:stream/web');
 
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
+global.ReadableStream = ReadableStream;
+global.WritableStream = WritableStream;
 
 // Fetch API Polyfills
 if (!global.Request) {
@@ -14,6 +17,24 @@ if (!global.Request) {
   global.Request = Request;
   global.Response = Response;
   global.Headers = Headers;
+}
+
+// Compression API Polyfills (Minimal mocks for testing)
+if (!global.CompressionStream) {
+  global.CompressionStream = class {
+    constructor() {
+      this.readable = new global.ReadableStream();
+      this.writable = new global.WritableStream();
+    }
+  };
+}
+if (!global.DecompressionStream) {
+  global.DecompressionStream = class {
+    constructor() {
+      this.readable = new global.ReadableStream();
+      this.writable = new global.WritableStream();
+    }
+  };
 }
 
 // Polyfill Response.json if missing (for NextResponse)

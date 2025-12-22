@@ -81,7 +81,11 @@ export function useRouteGuard() {
     }
 
     // Redirect if guest-only but authenticated
-    if (!metadata.requiresAuth && metadata.redirectIfAuthenticated && authenticated) {
+    if (
+      !metadata.requiresAuth &&
+      metadata.redirectIfAuthenticated &&
+      authenticated
+    ) {
       router.push(metadata.redirectIfAuthenticated);
     }
   }, [pathname, router]);
@@ -93,7 +97,9 @@ export function useRouteGuard() {
  * @param pattern - Route pattern with :param syntax
  */
 export function matchRoute(pathname: string, pattern: string): boolean {
-  const patternRegex = new RegExp('^' + pattern.replace(/:[^/]+/g, '[^/]+') + '$');
+  const patternRegex = new RegExp(
+    '^' + pattern.replace(/:[^/]+/g, '[^/]+') + '$',
+  );
   return patternRegex.test(pathname);
 }
 
@@ -106,7 +112,10 @@ export function matchRoute(pathname: string, pattern: string): boolean {
  * @example
  * extractParams('/chat/room123', '/chat/:roomId')
  */
-export function extractParams(pathname: string, pattern: string): Record<string, string> {
+export function extractParams(
+  pathname: string,
+  pattern: string,
+): Record<string, string> {
   const patternParts = pattern.split('/');
   const pathnameParts = pathname.split('/');
   const params: Record<string, string> = {};

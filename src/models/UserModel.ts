@@ -15,7 +15,10 @@ export class UserModel {
   /**
    * 사용자 인증
    */
-  async authenticate(username: string, password: string): Promise<AuthResponseDTO | null> {
+  async authenticate(
+    username: string,
+    password: string,
+  ): Promise<AuthResponseDTO | null> {
     const userEntity = await this.userDAO.findByUsername(username);
     if (!userEntity) return null;
 
@@ -30,7 +33,11 @@ export class UserModel {
   /**
    * 사용자 등록
    */
-  async register(username: string, password: string, publicKey?: string): Promise<AuthResponseDTO> {
+  async register(
+    username: string,
+    password: string,
+    publicKey?: string,
+  ): Promise<AuthResponseDTO> {
     // 중복 확인
     const existing = await this.userDAO.findByUsername(username);
     if (existing) {

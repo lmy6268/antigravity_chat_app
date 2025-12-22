@@ -11,7 +11,7 @@ import type { RoomDTO } from '../types/dto';
 export class RoomModel {
   constructor(
     private roomDAO: IRoomDAO = dao.room,
-    private participantDAO: IParticipantDAO = dao.participant
+    private participantDAO: IParticipantDAO = dao.participant,
   ) {}
 
   /**
@@ -24,7 +24,7 @@ export class RoomModel {
     creatorUsername: string,
     password: string,
     salt?: string,
-    encryptedKey?: string
+    encryptedKey?: string,
   ): Promise<RoomDTO> {
     const roomEntity = await this.roomDAO.create({
       id,
@@ -63,9 +63,10 @@ export class RoomModel {
     const createdRooms = await this.roomDAO.findByCreatorId(userId);
 
     // 참여한 방
-    const participantRoomIds = await this.participantDAO.findRoomIdsByUserId(userId);
+    const participantRoomIds =
+      await this.participantDAO.findRoomIdsByUserId(userId);
     const participantRooms = await Promise.all(
-      participantRoomIds.map((id) => this.roomDAO.findById(id))
+      participantRoomIds.map((id) => this.roomDAO.findById(id)),
     );
 
     // 중복 제거 및 DTO 변환
@@ -109,7 +110,11 @@ export class RoomModel {
   /**
    * 방에 참가자 추가
    */
-  async addParticipant(roomId: string, userId: string, username: string): Promise<void> {
+  async addParticipant(
+    roomId: string,
+    userId: string,
+    username: string,
+  ): Promise<void> {
     await this.participantDAO.upsert({
       room_id: roomId,
       user_id: userId,

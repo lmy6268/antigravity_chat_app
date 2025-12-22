@@ -7,11 +7,11 @@
     "dev": "cross-env NODE_ENV=development tsx src/server/server.ts",
     "build": "next build",
     "start": "cross-env NODE_ENV=production tsx src/server/server.ts",
-    "lint": "eslint .",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "prebuild": "npm test"
+    "lint": "eslint . --config configs/.eslintrc.json",
+    "test": "jest -c test/jest.config.js",
+    "test:watch": "jest -c test/jest.config.js --watch",
+    "test:coverage": "jest -c test/jest.config.js --coverage",
+    "prebuild": "yarn test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.86.0",
@@ -44,9 +44,22 @@
     "eslint-plugin-prettier": "^5.5.4",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
-    "prettier": "^3.7.4",
-    "ts-jest": "^29.4.5",
+    "jest-util": "^30.2.0",
+    "prettier": "3.7.4",
     "ts-jest": "^29.4.5",
     "typescript": "^5"
-  }
+  },
+  "dependenciesMeta": {
+    "next@16.0.7": {
+      "unplugged": true
+    },
+    "react@19.2.1": {
+      "unplugged": true
+    },
+    "react-dom@19.2.1": {
+      "unplugged": true
+    }
+  },
+  "packageManager": "yarn@4.12.0",
+  "prettier": "./configs/.prettierrc"
 }

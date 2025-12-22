@@ -1,14 +1,22 @@
 import { RoomUIModel } from '@/types/uimodel';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 interface RoomListProps {
   rooms: RoomUIModel[];
   onJoinRoom: (roomId: string, roomName: string) => void;
   onDeleteRoom: (roomId: string) => void;
   onCreateClick: () => void;
+  loading?: boolean;
 }
 
-export function RoomList({ rooms, onJoinRoom, onDeleteRoom, onCreateClick }: RoomListProps) {
+export function RoomList({
+  rooms,
+  onJoinRoom,
+  onDeleteRoom,
+  onCreateClick,
+  loading,
+}: RoomListProps) {
   const { t } = useTranslation();
 
   return (
@@ -38,7 +46,20 @@ export function RoomList({ rooms, onJoinRoom, onDeleteRoom, onCreateClick }: Roo
         </button>
       </div>
 
-      {rooms.length === 0 ? (
+      {loading ? (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '200px',
+            backgroundColor: '#252526',
+            borderRadius: '8px',
+          }}
+        >
+          <LoadingSpinner size={40} />
+        </div>
+      ) : rooms.length === 0 ? (
         <div
           style={{
             textAlign: 'center',
@@ -75,12 +96,20 @@ export function RoomList({ rooms, onJoinRoom, onDeleteRoom, onCreateClick }: Roo
               <h3 style={{ margin: '0 0 8px 0' }}>
                 {room.name}
                 {typeof room.participantCount === 'number' && (
-                  <span style={{ color: '#aaa', fontSize: '12px', marginLeft: '8px' }}>
+                  <span
+                    style={{
+                      color: '#aaa',
+                      fontSize: '12px',
+                      marginLeft: '8px',
+                    }}
+                  >
                     ({room.participantCount}명)
                   </span>
                 )}
               </h3>
-              <div style={{ fontSize: '12px', color: '#bbb', marginTop: '4px' }}>
+              <div
+                style={{ fontSize: '12px', color: '#bbb', marginTop: '4px' }}
+              >
                 최근 메시지 : {room.lastMessageAt ? room.lastMessageAt : '-'}
               </div>
             </div>

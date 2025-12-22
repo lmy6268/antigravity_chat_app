@@ -20,18 +20,26 @@ export const registerMessageHandlers = (io: Server, socket: CustomSocket) => {
       const messageDTOs = await messageModel.findByRoomId(targetRoomId);
 
       serverLogger.debug(
-        `[request_history] Sending ${messageDTOs.length} messages to ${socket.id} for room ${targetRoomId}`
+        `[request_history] Sending ${messageDTOs.length} messages to ${socket.id} for room ${targetRoomId}`,
       );
 
       // Send all messages in a single event for better performance
       socket.emit(SERVER_EVENTS.HISTORY_RECEIVED, {
         messages: messageDTOs.map((dto) => {
           // Supabase JSONB가 객체 형태로 올 수 있으므로 배열로 강제 변환
-          const ivRaw = Array.isArray(dto.iv) ? dto.iv : Object.values(dto.iv || {});
-          const dataRaw = Array.isArray(dto.data) ? dto.data : Object.values(dto.data || {});
+          const ivRaw = Array.isArray(dto.iv)
+            ? dto.iv
+            : Object.values(dto.iv || {});
+          const dataRaw = Array.isArray(dto.data)
+            ? dto.data
+            : Object.values(dto.data || {});
 
-          const iv = ivRaw.map((n) => Number(n)).filter((n) => Number.isFinite(n));
-          const data = dataRaw.map((n) => Number(n)).filter((n) => Number.isFinite(n));
+          const iv = ivRaw
+            .map((n) => Number(n))
+            .filter((n) => Number.isFinite(n));
+          const data = dataRaw
+            .map((n) => Number(n))
+            .filter((n) => Number.isFinite(n));
 
           return {
             iv,
@@ -55,7 +63,7 @@ export const registerMessageHandlers = (io: Server, socket: CustomSocket) => {
         const messageDTO = await messageModel.createMessage(
           messageData.roomId,
           messageData.iv,
-          messageData.data
+          messageData.data,
         );
 
         // 방의 다른 사용자들에게 암호화된 메시지 브로드캐스트
@@ -69,6 +77,6 @@ export const registerMessageHandlers = (io: Server, socket: CustomSocket) => {
         serverLogger.error('Error saving message:', err);
         socket.emit(SERVER_EVENTS.ERROR, { message: 'Failed to save message' });
       }
-    }
+    },
   );
 };

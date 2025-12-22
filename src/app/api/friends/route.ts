@@ -10,12 +10,18 @@ export async function GET(request: Request) {
     const username = searchParams.get('username');
 
     if (!username) {
-      return NextResponse.json({ error: 'Username required' }, { status: HTTP_STATUS.BAD_REQUEST });
+      return NextResponse.json(
+        { error: 'Username required' },
+        { status: HTTP_STATUS.BAD_REQUEST },
+      );
     }
 
     const userDTO = await userModel.findByUsername(username);
     if (!userDTO) {
-      return NextResponse.json({ error: 'User not found' }, { status: HTTP_STATUS.NOT_FOUND });
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: HTTP_STATUS.NOT_FOUND },
+      );
     }
 
     // Use DAO directly for friends
@@ -33,7 +39,7 @@ export async function GET(request: Request) {
           status: f.status,
           createdAt: f.created_at,
         };
-      })
+      }),
     );
 
     return NextResponse.json({ friends: formattedFriends });
@@ -41,7 +47,7 @@ export async function GET(request: Request) {
     console.error('Error fetching friends:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }
@@ -51,13 +57,16 @@ export async function POST(request: Request) {
     const { username, targetUsername } = await request.json();
 
     if (!username || !targetUsername) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: HTTP_STATUS.BAD_REQUEST });
+      return NextResponse.json(
+        { error: 'Missing fields' },
+        { status: HTTP_STATUS.BAD_REQUEST },
+      );
     }
 
     if (username === targetUsername) {
       return NextResponse.json(
         { error: 'Cannot add yourself' },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
@@ -66,7 +75,10 @@ export async function POST(request: Request) {
     const targetDTO = await userModel.findByUsername(targetUsername);
 
     if (!senderDTO || !targetDTO) {
-      return NextResponse.json({ error: 'User not found' }, { status: HTTP_STATUS.NOT_FOUND });
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: HTTP_STATUS.NOT_FOUND },
+      );
     }
 
     // Create friend request using DAO
@@ -81,7 +93,7 @@ export async function POST(request: Request) {
     console.error('Error sending friend request:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }

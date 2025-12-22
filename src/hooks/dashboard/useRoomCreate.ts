@@ -67,9 +67,11 @@ export function useRoomCreate(
 
       // 성공 시 해당 방으로 이동 (이름 파라미터 제거)
       router.push(routes.chat.room(newRoom.id));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating room:', error);
-      setError(error.message || t.common.failedToCreateRoom);
+      const errorMessage =
+        error instanceof Error ? error.message : t.common.failedToCreateRoom;
+      setError(errorMessage);
     } finally {
       setIsCreating(false);
     }

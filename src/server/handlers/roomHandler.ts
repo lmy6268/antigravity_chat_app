@@ -2,7 +2,7 @@ import { Server } from 'socket.io';
 import { CustomSocket } from '../../types/socket';
 import { dao } from '../../dao/supabase';
 import { SERVER_EVENTS, CLIENT_EVENTS } from '../../types/events';
-import { serverLogger } from '../../lib/server-logger';
+import { serverLogger } from '../../lib/logger/server';
 
 export const registerRoomHandlers = (io: Server, socket: CustomSocket) => {
   // 방 참가 처리

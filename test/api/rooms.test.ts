@@ -3,11 +3,11 @@ import {
   GET as getRoom,
   DELETE as deleteRoom,
 } from '../../src/app/api/rooms/[roomId]/route';
-import { supabase } from '../../src/lib/supabase';
-import { HTTP_STATUS } from '../../src/lib/api-constants';
+import { supabase } from '../../src/lib/supabase/client';
+import { HTTP_STATUS } from '../../src/lib/constants/api';
 
 // Mock dependencies
-jest.mock('../../src/lib/supabase', () => ({
+jest.mock('../../src/lib/supabase/client', () => ({
   supabase: {
     from: jest.fn(),
   },

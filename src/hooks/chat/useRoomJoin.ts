@@ -6,7 +6,7 @@ import { decryptRoomKeyWithPassword } from '@/lib/crypto';
 import { routes } from '@/lib/routes';
 
 import { useTranslation } from '@/i18n/LanguageContext';
-import { STORAGE_KEYS } from '@/lib/storage-constants';
+import { STORAGE_KEYS } from '@/lib/constants/storage';
 import { dialogService } from '@/lib/dialog';
 
 /**

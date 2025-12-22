@@ -7,18 +7,22 @@ Socket.io는 실시간 양방향 통신을 위한 JavaScript 라이브러리입�
 ## 🔍 WebSocket vs HTTP
 
 ### HTTP (전통적인 방식)
+
 ```
 클라이언트 → 요청 → 서버
 클라이언트 ← 응답 ← 서버
 ```
+
 - **단방향**: 클라이언트가 먼저 요청해야 함
 - **비연결성**: 요청/응답 후 연결 종료
 - **폴링 필요**: 실시간 업데이트를 위해 주기적으로 요청해야 함
 
 ### WebSocket (Socket.io)
+
 ```
 클라이언트 ←→ 양방향 연결 ←→ 서버
 ```
+
 - **양방향**: 서버도 클라이언트에게 먼저 데이터 전송 가능
 - **지속 연결**: 한번 연결되면 유지
 - **실시간**: 즉각적인 데이터 교환
@@ -31,24 +35,24 @@ Socket.io는 실시간 양방향 통신을 위한 JavaScript 라이브러리입�
 // Socket.io 서버 생성
 const io = new Server(server, {
   cors: {
-    origin: '*',  // CORS 허용
-    methods: ['GET', 'POST']
+    origin: '*', // CORS 허용
+    methods: ['GET', 'POST'],
   },
-  transports: ['websocket', 'polling'],  // 연결 방식
-  allowEIO3: true
+  transports: ['websocket', 'polling'], // 연결 방식
+  allowEIO3: true,
 });
 
 // 클라이언트 연결 이벤트
 io.on('connection', (socket) => {
   console.log('새 연결:', socket.id);
-  
+
   // 방 참가 이벤트 처리
   socket.on('join', async (data) => {
     const { roomId, username } = data;
-    socket.join(roomId);  // Socket.io 방에 참가
+    socket.join(roomId); // Socket.io 방에 참가
     // ... 사용자 DB 등록, 메시지 히스토리 전송
   });
-  
+
   // 메시지 이벤트 처리
   socket.on('message', async (data) => {
     const { roomId, payload } = data;
@@ -56,7 +60,7 @@ io.on('connection', (socket) => {
     // 발신자 제외 브로드캐스트
     socket.broadcast.to(roomId).emit('message', payload);
   });
-  
+
   // 연결 해제 이벤트
   socket.on('disconnect', () => {
     console.log('연결 해제:', socket.id);
@@ -73,9 +77,9 @@ import { io } from 'socket.io-client';
 // Socket.io 연결 생성
 const socket = io(window.location.origin, {
   transports: ['websocket', 'polling'],
-  reconnection: true,              // 자동 재연결
-  reconnectionDelay: 1000,          // 재연결 대기 시간
-  reconnectionAttempts: 5           // 최대 재연결 시도 횟수
+  reconnection: true, // 자동 재연결
+  reconnectionDelay: 1000, // 재연결 대기 시간
+  reconnectionAttempts: 5, // 최대 재연결 시도 횟수
 });
 
 // 연결 성공 이벤트
@@ -93,7 +97,7 @@ socket.on('message', (payload) => {
 // 메시지 전송
 socket.emit('message', {
   roomId,
-  payload: encryptedData
+  payload: encryptedData,
 });
 
 // 연결 해제
@@ -142,6 +146,7 @@ socket.broadcast.to(roomId).emit('message', data);
 ```
 
 **이 프로젝트의 선택**: `broadcast` 사용
+
 - 이유: 발신자는 이미 UI에 메시지를 추가했으므로, 다른 사람들에게만 전송
 - 효과: 메시지 중복 방지
 
@@ -169,22 +174,18 @@ socket.broadcast.to(roomId).emit('message', data);
 
 ```typescript
 // 송신
-const messageText = "안녕하세요";
+const messageText = '안녕하세요';
 const encrypted = await encryptMessage(messageText, cryptoKey);
 // encrypted = { iv: [...], data: [...] }
 
 socket.emit('message', {
   roomId,
-  payload: encrypted
+  payload: encrypted,
 });
 
 // 수신
 socket.on('message', async (payload) => {
-  const decrypted = await decryptMessage(
-    payload.iv, 
-    payload.data, 
-    cryptoKey
-  );
+  const decrypted = await decryptMessage(payload.iv, payload.data, cryptoKey);
   // decrypted = "안녕하세요"
 });
 ```
@@ -195,15 +196,15 @@ socket.on('message', async (payload) => {
 // 서버는 평문을 볼 수 없음
 socket.on('message', async (data) => {
   const { roomId, payload } = data;
-  
+
   // payload = { iv: [...], data: [...] }
   // 서버는 이대로 DB에 저장하고 전송
   await supabase.from('messages').insert({
     room_id: roomId,
     iv: payload.iv,
-    data: payload.data
+    data: payload.data,
   });
-  
+
   socket.broadcast.to(roomId).emit('message', payload);
 });
 ```
@@ -232,7 +233,7 @@ function sendMessage(msg) {
 ```typescript
 useEffect(() => {
   socket.on('message', handleMessage);
-  
+
   // 컴포넌트 언마운트 시 구독 해제
   return () => {
     socket.off('message', handleMessage);
@@ -258,9 +259,9 @@ socket.emit('data', buffer);
 // 서버에서 CORS 설정
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:3000',
-    methods: ['GET', 'POST']
-  }
+    origin: 'http://localhost:8080',
+    methods: ['GET', 'POST'],
+  },
 });
 ```
 

@@ -6,6 +6,12 @@ import { CLIENT_EVENTS, SERVER_EVENTS } from '@/types/events';
 import { withParams } from '@/i18n/LanguageContext';
 import type { en } from '@/i18n/locales/en';
 import type { MessageUIModel } from '@/types/uimodel';
+import { Socket } from 'socket.io-client';
+import {
+  EncryptedMessagePayload,
+  ChatHistoryPayload,
+  ChatMessage,
+} from '@/types/chat';
 
 type DeepReadonly<T> = T extends object
   ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
@@ -28,7 +34,7 @@ export function useChat(
   roomName: string,
   nickname: string,
   cryptoKey: CryptoKey | null,
-  socketRef: React.MutableRefObject<any>,
+  socketRef: React.MutableRefObject<Socket | null>,
   isConnected: boolean,
   t: DeepReadonly<typeof en>,
 ) {
@@ -108,7 +114,7 @@ export function useChat(
   useEffect(() => {
     if (!socketRef.current || !isConnected) return;
 
-    const handleMessage = async (payload: any) => {
+    const handleMessage = async (payload: EncryptedMessagePayload) => {
       console.log('[useChat] Message received:', payload);
       console.log('[useChat] cryptoKeyRef.current:', !!cryptoKeyRef.current);
 
@@ -150,7 +156,7 @@ export function useChat(
     socketRef.current.on(SERVER_EVENTS.MESSAGE_RECEIVED, handleMessage);
 
     // Handle batch history messages
-    const handleHistory = async (payload: { messages: any[] }) => {
+    const handleHistory = async (payload: ChatHistoryPayload) => {
       console.log(
         '[useChat] History received:',
         payload.messages.length,

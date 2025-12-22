@@ -9,6 +9,8 @@ import type {
   MessageEntity,
   RoomParticipantEntity,
   FriendEntity,
+  AdminEntity,
+  ApiLogEntity,
 } from '../types/entities';
 
 // ============================================================================
@@ -70,6 +72,7 @@ export interface IParticipantDAO {
 
 export interface IFriendDAO {
   findByUserId(userId: string): Promise<FriendEntity[]>;
+  findByFriendId(friendId: string): Promise<FriendEntity[]>;
   create(
     friend: Omit<FriendEntity, 'id' | 'created_at' | 'updated_at'>,
   ): Promise<FriendEntity>;
@@ -79,3 +82,29 @@ export interface IFriendDAO {
   ): Promise<FriendEntity>;
   delete(friendId: string): Promise<void>;
 }
+
+// ============================================================================
+// Admin DAO
+// ============================================================================
+
+export interface IAdminDAO {
+  findByUsername(username: string): Promise<AdminEntity | null>;
+  create(
+    admin: Omit<AdminEntity, 'id' | 'created_at'>,
+  ): Promise<AdminEntity>;
+}
+
+// ============================================================================
+// API Log DAO
+// ============================================================================
+
+export interface IApiLogDAO {
+  create(
+    log: Omit<ApiLogEntity, 'id' | 'created_at'>,
+  ): Promise<ApiLogEntity>;
+  findRecent(limit: number): Promise<ApiLogEntity[]>;
+  findByPath(path: string, limit: number): Promise<ApiLogEntity[]>;
+  findByIp(ip: string, limit: number): Promise<ApiLogEntity[]>;
+  countTotal(): Promise<number>;
+}
+

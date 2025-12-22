@@ -160,7 +160,7 @@ export default function ChatRoom({
           const data = await res.json();
           const host = data.host as string;
           if (host) {
-            const port = url.port || '3000';
+            const port = url.port || '8080';
             url.hostname = host;
             url.port = port;
           }

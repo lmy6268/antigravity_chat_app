@@ -77,7 +77,7 @@ export function ChatSettings({
           }}
         >
           <img
-            src="https://cdn-icons-png.flaticon.com/128/4013/4013407.png"
+            src="/icons/close.png"
             alt="close"
             style={{ width: 24, height: 24, filter: 'brightness(0) invert(1)' }}
           />

@@ -22,16 +22,13 @@
     "**/tsconfig.json": true,
     "**/next.config.*": true,
     "**/.env*": true,
-    "**/next-env.d.ts": true
+    "**/next-env.d.ts": true,
+    "**/.eslintrc.json": true,
+    "**/.prettierrc": true
   },
   // 3. Yarn PnP 환경 전용 라이브러리 인식 SDK 설정
   "eslint.nodePath": ".yarn/sdks",
   "prettier.prettierPath": ".yarn/sdks/prettier/index.cjs",
   "typescript.tsdk": ".yarn/sdks/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTSDK": true,
-  // 4. 경로 변경된 설정 파일 지정 (configs/ 폴더)
-  "eslint.options": {
-    "configFile": "configs/.eslintrc.json"
-  },
-  "prettier.configPath": "configs/.prettierrc"
+  "typescript.enablePromptUseWorkspaceTSDK": true
 }

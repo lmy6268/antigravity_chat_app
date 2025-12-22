@@ -7,7 +7,7 @@
     "dev": "cross-env NODE_ENV=development tsx src/server/server.ts",
     "build": "next build",
     "start": "cross-env NODE_ENV=production tsx src/server/server.ts",
-    "lint": "eslint . --config configs/.eslintrc.json",
+    "lint": "eslint .",
     "test": "jest -c test/jest.config.js",
     "test:watch": "jest -c test/jest.config.js --watch",
     "test:coverage": "jest -c test/jest.config.js --coverage",
@@ -60,6 +60,5 @@
       "unplugged": true
     }
   },
-  "packageManager": "yarn@4.12.0",
-  "prettier": "./configs/.prettierrc"
+  "packageManager": "yarn@4.12.0"
 }

@@ -1,15 +1,2 @@
 #!/bin/bash
-current=""
-while true; do
-	latest=`ec2-metadata --public-ipv4`
-	echo "public-ipv4=$latest"
-	if [ "$current" == "$latest" ]
-	then
-		echo "ip not changed"
-	else
-		echo "ip has changed - updating"
-		current=$latest
-		echo url="https://www.duckdns.org/update?domains=fr2ee-webchat&token=DUCKDNS_TOKEN_REMOVED&ip=" | curl -k -o ~/duckdns/duck.log -K -
-	fi
-	sleep 5m
-done
+echo url="https://www.duckdns.org/update?domains=fr2ee-webchat&token=DUCKDNS_TOKEN_REMOVED&ip=" | curl -k -o ./duck.log -K -

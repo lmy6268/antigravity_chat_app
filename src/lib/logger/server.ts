@@ -10,7 +10,6 @@ try {
   // server-only 패키지가 없는 환경에서는 단순히 패스
 }
 
-
 /**
  * Server-Only Logger
  *
@@ -20,8 +19,10 @@ try {
  * 서버 사이드 로직(DB 접근, API 핸들러 등)에서만 사용해야 합니다.
  */
 export const serverLogger = {
-  debug: (message: string, ...args: unknown[]) => logger.debug(message, ...args),
+  debug: (message: string, ...args: unknown[]) =>
+    logger.debug(message, ...args),
   info: (message: string, ...args: unknown[]) => logger.info(message, ...args),
   warn: (message: string, ...args: unknown[]) => logger.warn(message, ...args),
-  error: (message: string, ...args: unknown[]) => logger.error(message, ...args),
+  error: (message: string, ...args: unknown[]) =>
+    logger.error(message, ...args),
 };

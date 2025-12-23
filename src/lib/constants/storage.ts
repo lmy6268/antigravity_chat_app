@@ -3,4 +3,3 @@ export const STORAGE_KEYS = {
   LOCALE: 'app_locale',
   ADMIN: 'admin_session',
 } as const;
-

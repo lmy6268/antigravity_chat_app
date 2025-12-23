@@ -20,7 +20,7 @@ export class UserModel {
     password: string,
   ): Promise<AuthResponseDTO | null> {
     const userEntity = await this.userDAO.findByUsername(username);
-    if (!userEntity) return null;
+    if (!userEntity || !userEntity.password) return null;
 
     const isValid = await bcrypt.compare(password, userEntity.password);
     if (!isValid) return null;
@@ -74,6 +74,14 @@ export class UserModel {
     const userEntity = await this.userDAO.findById(id);
     if (!userEntity) return null;
     return userEntityToDTO(userEntity);
+  }
+
+  /**
+   * 사용자 검색 (부분 일치)
+   */
+  async searchUsers(query: string): Promise<UserDTO[]> {
+    const userEntities = await this.userDAO.searchByUsername(query);
+    return userEntities.map(userEntityToDTO);
   }
 }
 

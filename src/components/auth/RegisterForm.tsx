@@ -6,6 +6,7 @@ import { useTranslation } from '@/i18n/LanguageContext';
 import { routes } from '@/lib/routes';
 import styles from '@/styles/auth-form.module.css';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { LanguageToggle } from '@/components/common/LanguageToggle';
 
 /**
  * RegisterForm Component (Pure View)
@@ -37,6 +38,10 @@ export default function RegisterForm() {
             onChange={(e) => setUsername(e.target.value)}
             disabled={isLoading}
             className={styles.input}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            autoComplete="username"
           />
           <span className={styles.helpText}>
             {t.auth.validation.usernameHelp}
@@ -51,6 +56,10 @@ export default function RegisterForm() {
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
             className={styles.input}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            autoComplete="new-password"
           />
           <span className={styles.helpText}>
             {t.auth.validation.passwordHelp}
@@ -75,6 +84,7 @@ export default function RegisterForm() {
           {t.auth.login}
         </Link>
       </div>
+      <LanguageToggle />
     </div>
   );
 }

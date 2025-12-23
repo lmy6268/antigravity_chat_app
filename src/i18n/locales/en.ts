@@ -1,4 +1,8 @@
 export const en = {
+  meta: {
+    title: 'fr2eeChat',
+    description: 'fr2eeChat Application',
+  },
   common: {
     loading: 'Loading...',
     error: 'An error occurred',
@@ -34,6 +38,7 @@ export const en = {
     },
     alreadyHaveAccount: 'Already have an account?',
     dontHaveAccount: "Don't have an account?",
+    userAlreadyExists: 'User already exists',
   },
   dashboard: {
     title: 'Chat Dashboard',
@@ -56,6 +61,9 @@ export const en = {
       addTitle: 'Add Friend',
       enterUsername: 'Enter username',
       sendRequest: 'Send Request',
+      search: 'Search',
+      searchPlaceholder: 'Search users...',
+      noResults: 'No users found',
       listTitle: 'Friends',
       requestsTitle: 'Requests',
       noFriends: 'No friends yet',

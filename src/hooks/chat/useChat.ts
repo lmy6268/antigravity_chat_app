@@ -48,7 +48,6 @@ export function useChat(
   // cryptoKey ref 동기화
   useEffect(() => {
     cryptoKeyRef.current = cryptoKey;
-    console.log('[useChat] cryptoKey updated:', !!cryptoKey);
 
     // cryptoKey가 늦게 준비되었고 히스토리가 보류된 경우 다시 요청
     if (
@@ -59,18 +58,12 @@ export function useChat(
     ) {
       pendingHistoryRef.current = false;
       historyRequestedRef.current = true;
-      console.log('[useChat] 🔁 Re-requesting history after key ready');
       socketRef.current.emit(CLIENT_EVENTS.REQUEST_HISTORY, roomId);
     }
-  }, [cryptoKey]);
+  }, [cryptoKey, isConnected, roomId, socketRef]);
 
   // cryptoKey 준비되면 히스토리 요청
   useEffect(() => {
-    console.log('[useChat] History request check:', {
-      hasCryptoKey: !!cryptoKey,
-      hasSocket: !!socketRef.current,
-      isConnected,
-    });
 
     if (
       cryptoKey &&
@@ -78,12 +71,9 @@ export function useChat(
       isConnected &&
       !historyRequestedRef.current
     ) {
-      console.log('[useChat] ✅ Requesting history...');
       // roomId를 함께 보내서 서버에서 socket.roomId가 아직 설정되지 않았더라도 처리 가능하게 함
       socketRef.current.emit(CLIENT_EVENTS.REQUEST_HISTORY, roomId);
       historyRequestedRef.current = true;
-    } else {
-      console.log('[useChat] ❌ Cannot request history yet');
     }
   }, [cryptoKey, socketRef, isConnected, roomId]);
 
@@ -112,12 +102,10 @@ export function useChat(
 
   // 메시지 리스너 설정
   useEffect(() => {
-    if (!socketRef.current || !isConnected) return;
+    const socket = socketRef.current;
+    if (!socket || !isConnected) return;
 
     const handleMessage = async (payload: EncryptedMessagePayload) => {
-      console.log('[useChat] Message received:', payload);
-      console.log('[useChat] cryptoKeyRef.current:', !!cryptoKeyRef.current);
-
       if (!cryptoKeyRef.current) {
         console.warn('[useChat] No cryptoKey - skipping message');
         return;
@@ -131,8 +119,6 @@ export function useChat(
             cryptoKeyRef.current,
           );
           const messageData = JSON.parse(decryptedString);
-
-          console.log('[useChat] Decrypted message:', messageData);
 
           setMessages((prev) => [
             ...prev,
@@ -153,16 +139,10 @@ export function useChat(
       }
     };
 
-    socketRef.current.on(SERVER_EVENTS.MESSAGE_RECEIVED, handleMessage);
+    socket.on(SERVER_EVENTS.MESSAGE_RECEIVED, handleMessage);
 
     // Handle batch history messages
     const handleHistory = async (payload: ChatHistoryPayload) => {
-      console.log(
-        '[useChat] History received:',
-        payload.messages.length,
-        'messages',
-      );
-
       if (!cryptoKeyRef.current) {
         console.warn('[useChat] No cryptoKey - skipping history');
         pendingHistoryRef.current = true;
@@ -207,12 +187,12 @@ export function useChat(
       }
     };
 
-    socketRef.current.on(SERVER_EVENTS.HISTORY_RECEIVED, handleHistory);
+    socket.on(SERVER_EVENTS.HISTORY_RECEIVED, handleHistory);
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.off(SERVER_EVENTS.MESSAGE_RECEIVED, handleMessage);
-        socketRef.current.off(SERVER_EVENTS.HISTORY_RECEIVED, handleHistory);
+      if (socket) {
+        socket.off(SERVER_EVENTS.MESSAGE_RECEIVED, handleMessage);
+        socket.off(SERVER_EVENTS.HISTORY_RECEIVED, handleHistory);
       }
     };
   }, [socketRef, nickname, isConnected]);
@@ -282,9 +262,6 @@ export function useChat(
   // initializeChat을 부르므로 큰 문제는 없을 것으로 예상됨.
   // 다만 혹시 모르니 roomName 변경 로그만 남김.
   useEffect(() => {
-    if (roomName && roomName !== '...') {
-      console.log('[useChat] Room name updated:', roomName);
-    }
   }, [roomName]);
 
   return {

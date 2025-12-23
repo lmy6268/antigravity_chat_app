@@ -12,7 +12,7 @@ export class RoomModel {
   constructor(
     private roomDAO: IRoomDAO = dao.room,
     private participantDAO: IParticipantDAO = dao.participant,
-  ) {}
+  ) { }
 
   /**
    * 방 생성 및 참가자 등록
@@ -23,8 +23,9 @@ export class RoomModel {
     creatorId: string,
     creatorUsername: string,
     password: string,
-    salt?: string,
-    encryptedKey?: string,
+    salt: string,
+    encryptedKey: string,
+    participantEncryptedKey: string,
   ): Promise<RoomDTO> {
     const roomEntity = await this.roomDAO.create({
       id,
@@ -41,6 +42,7 @@ export class RoomModel {
       room_id: roomEntity.id,
       user_id: creatorId,
       username: creatorUsername,
+      encrypted_key: participantEncryptedKey,
     });
 
     return roomEntityToDTO(roomEntity);
@@ -114,11 +116,13 @@ export class RoomModel {
     roomId: string,
     userId: string,
     username: string,
+    encryptedKey: string,
   ): Promise<void> {
     await this.participantDAO.upsert({
       room_id: roomId,
       user_id: userId,
       username,
+      encrypted_key: encryptedKey,
     });
   }
 }

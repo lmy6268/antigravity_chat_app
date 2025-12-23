@@ -11,28 +11,28 @@ import { dao } from '@/dao/supabase';
  * - ip: 특정 IP 필터링 (선택)
  */
 export async function GET(request: Request) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const limit = parseInt(searchParams.get('limit') || '100', 10);
-        const path = searchParams.get('path');
-        const ip = searchParams.get('ip');
+  try {
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '100', 10);
+    const path = searchParams.get('path');
+    const ip = searchParams.get('ip');
 
-        let logs;
+    let logs;
 
-        if (path) {
-            logs = await dao.apiLog.findByPath(path, limit);
-        } else if (ip) {
-            logs = await dao.apiLog.findByIp(ip, limit);
-        } else {
-            logs = await dao.apiLog.findRecent(limit);
-        }
-
-        return NextResponse.json({ logs });
-    } catch (error) {
-        console.error('Error fetching API logs:', error);
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
-        );
+    if (path) {
+      logs = await dao.apiLog.findByPath(path, limit);
+    } else if (ip) {
+      logs = await dao.apiLog.findByIp(ip, limit);
+    } else {
+      logs = await dao.apiLog.findRecent(limit);
     }
+
+    return NextResponse.json({ logs });
+  } catch (error) {
+    console.error('Error fetching API logs:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
+    );
+  }
 }

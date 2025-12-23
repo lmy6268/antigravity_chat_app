@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { dialogService } from '@/lib/dialog';
+import Image from 'next/image';
 
 interface ChatShareModalProps {
   onClose: () => void;
@@ -79,12 +80,12 @@ export function ChatShareModal({
               justifyContent: 'center',
             }}
           >
-            <img
+            <Image
               src="/icons/close.png"
               alt="close"
+              width={24}
+              height={24}
               style={{
-                width: 24,
-                height: 24,
                 filter: 'brightness(0) invert(1)',
               }}
             />

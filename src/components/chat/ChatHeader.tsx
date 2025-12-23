@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 interface ChatHeaderProps {
   roomName: string;
   onBack: () => void;
@@ -36,12 +38,12 @@ export function ChatHeader({
           justifyContent: 'center',
         }}
       >
-        <img
+        <Image
           src="/icons/back.png"
           alt="back"
+          width={24}
+          height={24}
           style={{
-            width: 24,
-            height: 24,
             filter: 'brightness(0) invert(1)', // 테마에 맞춰 흰색
           }}
         />
@@ -75,12 +77,12 @@ export function ChatHeader({
           }}
           aria-label="Share room link"
         >
-          <img
+          <Image
             src="/icons/share.png"
             alt="share icon"
+            width={24}
+            height={24}
             style={{
-              width: 24,
-              height: 24,
               filter: 'brightness(0) invert(1)', // 테마에 맞춰 흰색
             }}
           />
@@ -99,12 +101,12 @@ export function ChatHeader({
             height: 32,
           }}
         >
-          <img
+          <Image
             src="/icons/menu.png"
             alt="menu"
+            width={24}
+            height={24}
             style={{
-              width: 24,
-              height: 24,
               filter: 'brightness(0) invert(1)', // 테마에 맞춰 흰색
             }}
           />

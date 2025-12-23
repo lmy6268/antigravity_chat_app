@@ -7,7 +7,7 @@
 export interface UserEntity {
   id: string;
   username: string;
-  password: string;
+  password?: string;
   public_key?: string;
   created_at: string; // Supabase returns ISO string
   updated_at: string;
@@ -52,4 +52,3 @@ export interface FriendEntity {
 
 // Re-export admin entities
 export type { AdminEntity, ApiLogEntity } from './admin';
-

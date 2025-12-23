@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development tsx src/server/server.ts",
-    "build": "next build",
-    "start": "cross-env NODE_ENV=production tsx src/server/server.ts",
-    "lint": "eslint .",
-    "test": "jest -c test/jest.config.js",
-    "test:watch": "jest -c test/jest.config.js --watch",
-    "test:coverage": "jest -c test/jest.config.js --coverage",
+    "dev": "cross-env NODE_ENV=development yarn tsx src/server/server.ts",
+    "build": "yarn next build",
+    "start": "cross-env NODE_ENV=production yarn tsx src/server/server.ts",
+    "lint": "yarn eslint .",
+    "test": "yarn jest -c test/jest.config.js",
+    "test:watch": "yarn jest -c test/jest.config.js --watch",
+    "test:coverage": "yarn jest -c test/jest.config.js --coverage",
     "prebuild": "yarn test"
   },
   "dependencies": {

@@ -1,4 +1,8 @@
 export const ko = {
+  meta: {
+    title: 'fr2eeChat',
+    description: 'fr2eeChat 애플리케이션',
+  },
   common: {
     loading: '로딩 중...',
     error: '오류가 발생했습니다',
@@ -34,6 +38,7 @@ export const ko = {
     },
     alreadyHaveAccount: '이미 계정이 있으신가요?',
     dontHaveAccount: '계정이 없으신가요?',
+    userAlreadyExists: '이미 존재하는 사용자입니다',
   },
   dashboard: {
     title: '채팅 대시보드',
@@ -56,6 +61,9 @@ export const ko = {
       addTitle: '친구 추가',
       enterUsername: '사용자명 입력',
       sendRequest: '요청 보내기',
+      search: '검색',
+      searchPlaceholder: '사용자 검색...',
+      noResults: '검색 결과가 없습니다',
       listTitle: '친구 목록',
       requestsTitle: '받은 요청',
       noFriends: '아직 친구가 없습니다',

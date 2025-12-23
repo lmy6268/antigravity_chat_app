@@ -4,11 +4,11 @@
  */
 
 export interface Friend {
-    id: string;
-    friendId: string;
-    username: string;
-    publicKey?: string;
-    status: 'pending' | 'accepted';
-    createdAt: string;
-    isSender: boolean
+  id: string;
+  friendId: string;
+  username: string;
+  publicKey?: string;
+  status: 'pending' | 'accepted';
+  createdAt: string;
+  isSender: boolean;
 }

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { generateKeyPair, exportKey } from '@/lib/crypto';
-import { savePrivateKey } from '@/lib/key-storage';
+import { generateKeyPair, exportKey, importKey } from '@/lib/crypto';
+import { savePrivateKey, saveUserProfile, loadUserProfile, deleteOldDatabase } from '@/lib/key-storage';
 import { routes } from '@/lib/routes';
 
 import { useTranslation } from '@/i18n/LanguageContext';
@@ -32,15 +32,21 @@ export function useRegister() {
 
   // 효과 - 이미 로그인된 경우 자동 리다이렉트
   useEffect(() => {
-    const storedUser = localStorage.getItem('chat_user');
-    if (storedUser) {
-      const redirectUrl = searchParams.get('redirect');
-      if (redirectUrl) {
-        router.push(decodeURIComponent(redirectUrl));
-      } else {
-        router.push(routes.dashboard());
+    const checkUser = async () => {
+      // Clear legacy storage and old IndexedDB
+      await deleteOldDatabase();
+
+      const storedUser = await loadUserProfile();
+      if (storedUser) {
+        const redirectUrl = searchParams.get('redirect');
+        if (redirectUrl) {
+          router.push(decodeURIComponent(redirectUrl));
+        } else {
+          router.push(routes.dashboard());
+        }
       }
-    }
+    };
+    checkUser();
   }, [router, searchParams]);
 
   // 액션
@@ -71,8 +77,15 @@ export function useRegister() {
       const publicKeyJwk = await exportKey(keyPair.publicKey);
       const publicKeyString = JSON.stringify(publicKeyJwk);
 
-      // 3. Private Key를 IndexedDB에 저장
-      await savePrivateKey(keyPair.privateKey);
+      // 3. identity private key를 '추출 불가능(non-extractable)'하게 다시 가져와서 저장 (보안 강화)
+      const privateKeyJwk = await exportKey(keyPair.privateKey);
+      const hardenedPrivateKey = await importKey(
+        privateKeyJwk,
+        { name: 'RSA-OAEP', hash: 'SHA-256' },
+        ['decrypt', 'unwrapKey'],
+        false, // extractable: false 설정
+      );
+      await savePrivateKey(hardenedPrivateKey);
 
       // 4. username, password, public key로 회원가입
       const res = await fetch('/api/auth/register', {
@@ -87,7 +100,9 @@ export function useRegister() {
 
       if (res.ok) {
         const data = await res.json();
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+        // 5. User Profile을 IndexedDB에 저장
+        await saveUserProfile(data.user);
+
         const redirectUrl = searchParams.get('redirect');
         if (redirectUrl) {
           router.push(decodeURIComponent(redirectUrl));
@@ -96,7 +111,12 @@ export function useRegister() {
         }
       } else {
         const data = await res.json();
-        setError(data.error || t.common.registrationFailed);
+        if (data.error === 'User already exists') {
+          // Fallback to literal if key is missing
+          setError(t.auth.userAlreadyExists || '이미 존재하는 사용자입니다');
+        } else {
+          setError(data.error || t.common.registrationFailed);
+        }
       }
     } catch (err) {
       console.error(err);

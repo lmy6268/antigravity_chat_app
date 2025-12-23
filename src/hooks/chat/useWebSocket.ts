@@ -24,14 +24,12 @@ export function useWebSocket(roomId: string, username: string) {
 
   const connectSocket = useCallback(() => {
     if (isConnectingRef.current || socketRef.current?.connected) {
-      console.log('Socket already connecting or connected, skipping...');
       return;
     }
 
     if (!roomId || !username) return;
 
     isConnectingRef.current = true;
-    console.log('Initializing socket connection...');
 
     const socket = io({
       path: '/api/socket',
@@ -41,7 +39,6 @@ export function useWebSocket(roomId: string, username: string) {
     socketRef.current = socket;
 
     socket.on(SOCKET_LIFECYCLE.CONNECT, () => {
-      console.log('Socket connected:', socket.id);
       setIsConnected(true);
       isConnectingRef.current = false;
 
@@ -50,7 +47,6 @@ export function useWebSocket(roomId: string, username: string) {
     });
 
     socket.on(SOCKET_LIFECYCLE.DISCONNECT, () => {
-      console.log('Socket disconnected');
       setIsConnected(false);
       isConnectingRef.current = false;
     });
@@ -63,7 +59,6 @@ export function useWebSocket(roomId: string, username: string) {
 
   const disconnectSocket = useCallback(() => {
     if (socketRef.current) {
-      console.log('Disconnecting socket...');
       socketRef.current.disconnect();
       socketRef.current = null;
       setIsConnected(false);

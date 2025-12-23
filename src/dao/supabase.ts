@@ -4,6 +4,8 @@
  */
 
 import { supabase } from '../lib/supabase/client';
+import type { PostgrestError } from '@supabase/supabase-js';
+import { hashPassword } from '../lib/crypto';
 import type {
   UserEntity,
   RoomEntity,
@@ -47,6 +49,19 @@ export class UserDAO implements IUserDAO {
       .single();
 
     if (error) return null;
+    return data;
+  }
+
+  async searchByUsername(query: string): Promise<UserEntity[]> {
+    if (!query || query.trim().length === 0) return [];
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, username, public_key, created_at, updated_at')
+      .ilike('username', `%${query}%`)
+      .limit(10);
+
+    if (error) return [];
     return data;
   }
 
@@ -103,16 +118,23 @@ export class RoomDAO implements IRoomDAO {
     return data;
   }
 
-  async create(
-    room: Omit<RoomEntity, 'created_at' | 'updated_at'>,
-  ): Promise<RoomEntity> {
+  async create(room: RoomEntity): Promise<RoomEntity> {
+    // 비밀번호 해싱 (평문 저장 방지)
+    let hashedPassword = room.password;
+    if (room.password && room.salt) {
+      hashedPassword = await hashPassword(room.password, room.salt);
+    }
+
     const { data, error } = await supabase
       .from('rooms')
-      .insert([room])
+      .insert({ ...room, password: hashedPassword })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating room in DAO:', error);
+      throw error;
+    }
     return data;
   }
 
@@ -404,4 +426,3 @@ export const dao = {
   admin: new AdminDAO(),
   apiLog: new ApiLogDAO(),
 } as const;
-

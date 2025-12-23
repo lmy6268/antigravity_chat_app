@@ -10,7 +10,9 @@ import React, {
 import { en } from './locales/en';
 import { STORAGE_KEYS } from '@/lib/constants/storage';
 import { ko } from './locales/ko';
+import { loadLocale, saveLocale } from '@/lib/key-storage';
 
+// Basic types
 type Locale = 'en' | 'ko';
 type Dictionary = typeof en;
 
@@ -47,27 +49,32 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-
-    // 먼저 local storage 확인
-    const storedLocale = localStorage.getItem(STORAGE_KEYS.LOCALE) as Locale;
-    if (storedLocale && (storedLocale === 'en' || storedLocale === 'ko')) {
-      setLocale(storedLocale);
-    } else {
-      // 선호도가 없다면 브라우저 언어 확인
-      const browserLang = navigator.language.split('-')[0];
-      if (browserLang === 'en') {
-        setLocale('en');
+    const initLocale = async () => {
+      const storedLocale = (await loadLocale()) as Locale;
+      if (storedLocale && (storedLocale === 'en' || storedLocale === 'ko')) {
+        setLocale(storedLocale);
+      } else {
+        // 선호도가 없다면 브라우저 언어 확인
+        const browserLang = navigator.language.split('-')[0];
+        if (browserLang === 'en') {
+          setLocale('en');
+        }
       }
-    }
+      setIsMounted(true);
+    };
+    initLocale();
   }, []);
 
-  const changeLocale = (newLocale: Locale) => {
+  const changeLocale = async (newLocale: Locale) => {
     setLocale(newLocale);
-    localStorage.setItem('app_locale', newLocale);
+    await saveLocale(newLocale);
   };
 
   const t = dictionaries[locale] as DeepReadonly<Dictionary>;
+
+  if (!isMounted) {
+    return null; // or a loading spinner
+  }
 
   return (
     <LanguageContext.Provider value={{ locale, setLocale: changeLocale, t }}>

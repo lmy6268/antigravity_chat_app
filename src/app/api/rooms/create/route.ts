@@ -7,9 +7,9 @@ import type { CreateRoomRequestDTO } from '@/types/dto';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { id, name, password, creator, salt, encryptedKey } = body;
+    const { id, name, password, creator, salt, encrypted_key, participantEncryptedKey } = body;
 
-    if (!id || !name || !password || !creator || !salt || !encryptedKey) {
+    if (!id || !name || !password || !creator || !salt || !encrypted_key || !participantEncryptedKey) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: HTTP_STATUS.BAD_REQUEST },
@@ -34,7 +34,8 @@ export async function POST(request: Request) {
       creator,
       password,
       salt,
-      encryptedKey,
+      encrypted_key,
+      participantEncryptedKey,
     );
 
     return NextResponse.json(

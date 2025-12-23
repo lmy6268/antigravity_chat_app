@@ -65,8 +65,8 @@ export const routeMetadata = {
 type ExtractRoutes<T> = T extends (...args: unknown[]) => infer R
   ? R
   : T extends object
-  ? { [K in keyof T]: ExtractRoutes<T[K]> }[keyof T]
-  : never;
+    ? { [K in keyof T]: ExtractRoutes<T[K]> }[keyof T]
+    : never;
 
 export type RoutePath = ExtractRoutes<typeof routes>;
 

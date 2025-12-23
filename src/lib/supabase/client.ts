@@ -16,9 +16,13 @@ if (!supabaseUrl || !supabaseServiceKey) {
   }
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseServiceKey || '', {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
+export const supabase = createClient(
+  supabaseUrl || '',
+  supabaseServiceKey || '',
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
   },
-});
+);

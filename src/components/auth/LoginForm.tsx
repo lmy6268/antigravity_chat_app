@@ -6,6 +6,7 @@ import { useTranslation } from '@/i18n/LanguageContext';
 import { routes } from '@/lib/routes';
 import styles from '@/styles/auth-form.module.css';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { LanguageToggle } from '@/components/common/LanguageToggle';
 
 /**
  * LoginForm Component (Pure View)
@@ -36,6 +37,10 @@ export default function LoginForm() {
           onChange={(e) => setUsername(e.target.value)}
           disabled={isLoading}
           className={styles.input}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          autoComplete="username"
         />
         <input
           type="password"
@@ -44,6 +49,10 @@ export default function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           disabled={isLoading}
           className={styles.input}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          autoComplete="current-password"
         />
         <button
           type="submit"
@@ -64,6 +73,7 @@ export default function LoginForm() {
           {t.auth.register}
         </Link>
       </div>
+      <LanguageToggle />
     </div>
   );
 }

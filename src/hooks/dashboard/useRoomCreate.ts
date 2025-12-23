@@ -4,9 +4,13 @@ import {
   generateRoomKey,
   generateSalt,
   encryptRoomKeyWithPassword,
+  wrapKey,
+  importKey,
 } from '@/lib/crypto';
 import { routes } from '@/lib/routes';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { loadUserProfile } from '@/lib/key-storage';
+import { STORAGE_KEYS } from '@/lib/constants/storage';
 import type { RoomUIModel } from '@/types/uimodel';
 
 export function useRoomCreate(
@@ -39,6 +43,21 @@ export function useRoomCreate(
         salt,
       );
 
+      // 3.1 자신의 Identity Public Key로 마스터 키를 다시 래핑 (E2EE)
+      const user = await loadUserProfile();
+      if (!user) throw new Error('User session not found');
+
+      if (!user.public_key) throw new Error('Identity public key missing');
+
+      const publicKeyJwk = JSON.parse(user.public_key);
+      const identityPublicKey = await importKey(
+        publicKeyJwk,
+        { name: 'RSA-OAEP', hash: 'SHA-256' },
+        ['wrapKey'],
+      );
+
+      const wrappedKeyForMe = await wrapKey(roomKey, identityPublicKey);
+
       // 4. 서버에 룸 생성 API 호출
       const res = await fetch('/api/rooms/create', {
         method: 'POST',
@@ -49,7 +68,8 @@ export function useRoomCreate(
           password: password,
           creator: nickname,
           salt: salt,
-          encryptedKey: encryptedKey,
+          encrypted_key: encryptedKey,
+          participantEncryptedKey: wrappedKeyForMe,
         }),
       });
 

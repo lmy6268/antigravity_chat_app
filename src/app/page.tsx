@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { loadUserProfile, clearUserSession } from '@/lib/key-storage';
 import { STORAGE_KEYS } from '@/lib/constants/storage';
 import { routes } from '@/lib/routes';
 import { useRoomList } from '@/hooks/dashboard/useRoomList';
 import { useRoomCreate } from '@/hooks/dashboard/useRoomCreate';
 import { useFriends } from '@/hooks/dashboard/useFriends';
+import { DASHBOARD_TABS, DashboardTab } from '@/lib/constants/dashboard';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DashboardTabs } from '@/components/dashboard/DashboardTabs';
 import { RoomList } from '@/components/dashboard/RoomList';
@@ -14,23 +16,30 @@ import { CreateRoomModal } from '@/components/dashboard/CreateRoomModal';
 import { UserSettings } from '@/components/dashboard/UserSettings';
 import { FriendsTab } from '@/components/dashboard/friends/FriendsTab';
 import { QRCodeModal } from '@/components/dashboard/QRCodeModal';
-import { UserEntity } from '@/types/entities';
+import { buildFullUrl } from '@/lib/utils/url';
+import type { UserUIModel, RoomUIModel } from '@/types/uimodel';
+import type { UserEntity } from '@/types/entities';
 
 export default function Dashboard() {
   const router = useRouter();
 
   // User State
   const [nickname, setNickname] = useState('');
+  const [userId, setUserId] = useState('');
   const [isProfileSet, setIsProfileSet] = useState(false);
-  const [activeTab, setActiveTab] = useState<'rooms' | 'friends'>('rooms');
+  const [activeTab, setActiveTab] = useState<DashboardTab>(
+    DASHBOARD_TABS.ROOMS,
+  );
 
   // Hooks
-  const { myRooms, joinRoom, deleteRoom, setMyRooms, loading } = useRoomList(nickname);
-  const { createRoom, isCreating } = useRoomCreate(nickname, (newRoom) => {
-    setMyRooms((prev) => [...prev, newRoom]);
+  const { myRooms, joinRoom, deleteRoom, setMyRooms, loading } =
+    useRoomList(nickname);
+  const { createRoom, isCreating } = useRoomCreate(nickname, (newRoom: RoomUIModel) => {
+    setMyRooms((prev: RoomUIModel[]) => [...prev, newRoom]);
     setShowCreateModal(false);
   });
-  const { friends, sendFriendRequest, handleFriendAction, fetchFriends } = useFriends(nickname);
+  const { friends, sendFriendRequest, handleFriendAction, fetchFriends } =
+    useFriends(nickname);
 
   // UI State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -40,27 +49,23 @@ export default function Dashboard() {
 
   // Load user on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
-    if (!storedUser) {
-      router.push(routes.auth.login());
-      return;
-    }
+    const initDashboard = async () => {
+      const user = await loadUserProfile();
+      if (!user) {
+        router.push(routes.auth.login());
+        return;
+      }
 
-    try {
-      const user = JSON.parse(storedUser) as UserEntity;
       setNickname(user.username);
+      setUserId(user.id);
       setIsProfileSet(true);
       fetchFriends(user.username);
-    } catch (e) {
-      console.error('Failed to parse user info', e);
-      localStorage.removeItem(STORAGE_KEYS.USER);
-      router.push(routes.auth.login());
-    }
+    };
+    initDashboard();
   }, [router, fetchFriends]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('chat_user');
-    localStorage.removeItem('chat_nickname');
+  const handleLogout = async () => {
+    await clearUserSession();
     setIsProfileSet(false);
     setNickname('');
     router.push(routes.auth.login());
@@ -79,10 +84,9 @@ export default function Dashboard() {
     >
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <DashboardHeader nickname={nickname} onLogout={handleLogout} />
-        <UserSettings />
         <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {activeTab === 'rooms' ? (
+        {activeTab === DASHBOARD_TABS.ROOMS && (
           <RoomList
             rooms={myRooms}
             onJoinRoom={joinRoom}
@@ -90,16 +94,22 @@ export default function Dashboard() {
             onCreateClick={() => setShowCreateModal(true)}
             loading={loading}
           />
-        ) : (
+        )}
+
+        {activeTab === DASHBOARD_TABS.FRIENDS && (
           <FriendsTab
             friends={friends}
-            onSendRequest={(targetUsername) => sendFriendRequest(nickname, targetUsername)}
-            onAccept={(friendId) => handleFriendAction(friendId, 'accept')}
-            onReject={(friendId) => handleFriendAction(friendId, 'reject')}
-            onRemove={(friendId) => handleFriendAction(friendId, 'delete')}
-            onCancel={(friendId) => handleFriendAction(friendId, 'delete')}
+            onSendRequest={(targetUsername: string) =>
+              sendFriendRequest(nickname, targetUsername)
+            }
+            onAccept={(friendId: string) => handleFriendAction(friendId, 'accept')}
+            onReject={(friendId: string) => handleFriendAction(friendId, 'reject')}
+            onRemove={(friendId: string) => handleFriendAction(friendId, 'delete')}
+            onCancel={(friendId: string) => handleFriendAction(friendId, 'delete')}
           />
         )}
+
+        {activeTab === DASHBOARD_TABS.SETTINGS && <UserSettings />}
 
         {showCreateModal && (
           <CreateRoomModal

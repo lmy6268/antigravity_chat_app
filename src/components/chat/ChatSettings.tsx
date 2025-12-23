@@ -1,4 +1,5 @@
 import { useTranslation } from '@/i18n/LanguageContext';
+import Image from 'next/image';
 
 interface RoomInfo {
   creator: string;
@@ -76,10 +77,12 @@ export function ChatSettings({
             justifyContent: 'center',
           }}
         >
-          <img
+          <Image
             src="/icons/close.png"
             alt="close"
-            style={{ width: 24, height: 24, filter: 'brightness(0) invert(1)' }}
+            width={24}
+            height={24}
+            style={{ filter: 'brightness(0) invert(1)' }}
           />
         </button>
       </h3>

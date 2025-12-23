@@ -33,7 +33,16 @@ describe('Auth API', () => {
       const mockSingle = jest
         .fn()
         .mockResolvedValue({ data: null, error: null }); // No existing user
-      const mockInsert = jest.fn().mockResolvedValue({ error: null });
+      const mockInsert = jest.fn().mockResolvedValue({
+        data: {
+          id: 'user123',
+          username: 'testuser',
+          public_key: 'key123',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        error: null,
+      });
 
       (supabase.from as jest.Mock).mockImplementation((table) => {
         if (table === 'users') {
@@ -43,7 +52,11 @@ describe('Auth API', () => {
                 single: mockSingle,
               }),
             }),
-            insert: mockInsert,
+            insert: jest.fn().mockReturnValue({
+              select: jest.fn().mockReturnValue({
+                single: mockInsert,
+              }),
+            }),
           };
         }
         return {};
@@ -56,7 +69,14 @@ describe('Auth API', () => {
       const body = await res.json();
 
       expect(res.status).toBe(HTTP_STATUS.OK);
-      expect(body).toEqual({ message: 'User registered successfully' });
+      expect(body).toEqual({
+        message: 'User registered successfully',
+        user: {
+          id: 'user123',
+          username: 'testuser',
+          public_key: 'key123',
+        },
+      });
       expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
     });
 

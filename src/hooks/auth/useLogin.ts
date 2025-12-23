@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { routes } from '@/lib/routes';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { saveUserProfile, loadUserProfile, deleteOldDatabase } from '@/lib/key-storage';
 import { STORAGE_KEYS } from '@/lib/constants/storage';
 
 /**
@@ -30,15 +31,21 @@ export function useLogin() {
 
   // 효과 - 이미 로그인된 경우 자동 리다이렉트
   useEffect(() => {
-    const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
-    if (storedUser) {
-      const redirectUrl = searchParams.get('redirect');
-      if (redirectUrl) {
-        router.push(decodeURIComponent(redirectUrl));
-      } else {
-        router.push(routes.dashboard());
+    const checkUser = async () => {
+      // Clear old IndexedDB
+      await deleteOldDatabase();
+
+      const storedUser = await loadUserProfile();
+      if (storedUser) {
+        const redirectUrl = searchParams.get('redirect');
+        if (redirectUrl) {
+          router.push(decodeURIComponent(redirectUrl));
+        } else {
+          router.push(routes.dashboard());
+        }
       }
-    }
+    };
+    checkUser();
   }, [router, searchParams]);
 
   // 액션
@@ -57,7 +64,8 @@ export function useLogin() {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
+        // Save to IndexedDB
+        await saveUserProfile(data.user);
 
         // 리다이렉트 URL이 있으면 거기로, 없으면 대시보드로
         const redirectUrl = searchParams.get('redirect');

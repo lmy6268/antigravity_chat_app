@@ -7,12 +7,18 @@ import { roomDTOToUIModel } from '@/lib/converters';
 import { dialogService } from '@/lib/dialog';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { STORAGE_KEYS } from '@/lib/constants/storage';
+import { clearUserSession, loadUserProfile } from '@/lib/key-storage';
 
 export function useRoomList(username: string) {
   const router = useRouter();
   const { t } = useTranslation();
   const [myRooms, setMyRooms] = useState<RoomUIModel[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Initialize from Storage
+  useEffect(() => {
+    // Initial user status is checked via props or subsequent fetch
+  }, []);
 
   const fetchRooms = useCallback(async () => {
     if (!username) return;
@@ -44,7 +50,7 @@ export function useRoomList(username: string) {
         // 사용자 없을 때만 세션 정리, 방이 없을 때는 빈 배열로 처리
         if (data?.error === 'User not found') {
           console.warn('User not found in DB. Clearing stale session.');
-          localStorage.removeItem(STORAGE_KEYS.USER);
+          await clearUserSession();
           dialogService.alert(t.common.sessionExpired);
           router.push(routes.auth.login());
           return;
@@ -74,10 +80,8 @@ export function useRoomList(username: string) {
       if (!dialogService.confirm(t.dashboard.rooms.deleteConfirm)) return;
 
       try {
-        const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
-        if (!storedUser) return;
-
-        const user = JSON.parse(storedUser);
+        const user = await loadUserProfile();
+        if (!user) return;
 
         const res = await fetch(`/api/rooms/${roomId}`, {
           method: 'DELETE',

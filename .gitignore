@@ -2,8 +2,10 @@
 
 # dependencies
 node_modules/
-.pnp.*
+# ✅ Zero-Install 사용 
+
 .yarn/*
+!.yarn/cache
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases

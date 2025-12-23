@@ -1,15 +1,15 @@
 export interface EncryptedMessagePayload {
-    iv: number[];
-    data: number[];
-    id?: string;
-    timestamp?: string | number;
+  iv: number[];
+  data: number[];
+  id?: string;
+  timestamp?: string | number;
 }
 
 export interface ChatHistoryPayload {
-    messages: EncryptedMessagePayload[];
+  messages: EncryptedMessagePayload[];
 }
 
 export interface ChatMessage {
-    text: string;
-    senderNickname: string;
+  text: string;
+  senderNickname: string;
 }

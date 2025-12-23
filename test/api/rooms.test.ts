@@ -27,6 +27,9 @@ describe('Rooms API', () => {
           name: 'Test Room',
           password: 'password',
           creator: 'user1',
+          salt: 'salt123',
+          encrypted_key: 'encryptedKey123',
+          participantEncryptedKey: 'participantEncryptedKey123',
         }),
       });
 
@@ -45,8 +48,34 @@ describe('Rooms API', () => {
         }),
       });
 
-      (supabase.from as jest.Mock).mockReturnValue({
-        insert: mockInsert,
+      (supabase.from as jest.Mock).mockImplementation((table) => {
+        if (table === 'users') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: { id: 'user123', username: 'user1' },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'room_participants') {
+          return {
+            upsert: jest.fn().mockReturnValue({
+              select: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({
+                  data: { room_id: 'room123', user_id: 'user123' },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        return {
+          insert: mockInsert,
+        };
       });
 
       const res = await createRoom(req);
@@ -90,8 +119,23 @@ describe('Rooms API', () => {
         }),
       });
 
-      (supabase.from as jest.Mock).mockReturnValue({
-        select: mockSelect,
+      (supabase.from as jest.Mock).mockImplementation((table) => {
+        if (table === 'rooms') {
+          return {
+            select: mockSelect,
+          };
+        }
+        if (table === 'room_participants') {
+          return {
+            select: jest.fn().mockReturnValue({
+              eq: jest.fn().mockResolvedValue({
+                data: [],
+                error: null,
+              }),
+            }),
+          };
+        }
+        return {};
       });
 
       const res = await getRoom(req, { params });
@@ -128,6 +172,9 @@ describe('Rooms API', () => {
     it('should delete room successfully', async () => {
       const req = new Request('http://localhost/api/rooms/room123', {
         method: 'DELETE',
+        headers: {
+          'x-user-id': 'user123',
+        },
       });
       const params = Promise.resolve({ roomId: 'room123' });
 
@@ -135,8 +182,25 @@ describe('Rooms API', () => {
         eq: jest.fn().mockResolvedValue({ error: null }),
       });
 
-      (supabase.from as jest.Mock).mockReturnValue({
-        delete: mockDelete,
+      (supabase.from as jest.Mock).mockImplementation((table) => {
+        const chain = {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({
+                data: {
+                  id: 'room123',
+                  creator_id: 'user123',
+                  creator_username: 'user1',
+                },
+                error: null,
+              }),
+            }),
+          }),
+          delete: jest.fn().mockReturnValue({
+            eq: jest.fn().mockResolvedValue({ error: null }),
+          }),
+        };
+        return chain;
       });
 
       const res = await deleteRoom(req, { params });

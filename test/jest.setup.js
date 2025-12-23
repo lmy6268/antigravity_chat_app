@@ -37,6 +37,20 @@ if (!global.DecompressionStream) {
   };
 }
 
+// Polyfill Blob.stream (missing in some node environments during tests)
+if (typeof Blob !== 'undefined' && !Blob.prototype.stream) {
+  Blob.prototype.stream = function () {
+    const blob = this;
+    return new global.ReadableStream({
+      async start(controller) {
+        const buffer = await blob.arrayBuffer();
+        controller.enqueue(new Uint8Array(buffer));
+        controller.close();
+      },
+    });
+  };
+}
+
 // Polyfill Response.json if missing (for NextResponse)
 if (!global.Response.json) {
   global.Response.json = (data, init) => {
@@ -64,6 +78,7 @@ if (typeof window !== 'undefined') {
         deriveKey: jest.fn(),
         encrypt: jest.fn(),
         decrypt: jest.fn(),
+        digest: jest.fn().mockResolvedValue(new ArrayBuffer(32)),
       },
     },
   });

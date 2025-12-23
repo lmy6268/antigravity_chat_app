@@ -20,6 +20,7 @@ import type {
 export interface IUserDAO {
   findByUsername(username: string): Promise<UserEntity | null>;
   findById(id: string): Promise<UserEntity | null>;
+  searchByUsername(query: string): Promise<UserEntity[]>;
   create(
     user: Omit<UserEntity, 'id' | 'created_at' | 'updated_at'>,
   ): Promise<UserEntity>;
@@ -89,9 +90,7 @@ export interface IFriendDAO {
 
 export interface IAdminDAO {
   findByUsername(username: string): Promise<AdminEntity | null>;
-  create(
-    admin: Omit<AdminEntity, 'id' | 'created_at'>,
-  ): Promise<AdminEntity>;
+  create(admin: Omit<AdminEntity, 'id' | 'created_at'>): Promise<AdminEntity>;
 }
 
 // ============================================================================
@@ -99,12 +98,9 @@ export interface IAdminDAO {
 // ============================================================================
 
 export interface IApiLogDAO {
-  create(
-    log: Omit<ApiLogEntity, 'id' | 'created_at'>,
-  ): Promise<ApiLogEntity>;
+  create(log: Omit<ApiLogEntity, 'id' | 'created_at'>): Promise<ApiLogEntity>;
   findRecent(limit: number): Promise<ApiLogEntity[]>;
   findByPath(path: string, limit: number): Promise<ApiLogEntity[]>;
   findByIp(ip: string, limit: number): Promise<ApiLogEntity[]>;
   countTotal(): Promise<number>;
 }
-

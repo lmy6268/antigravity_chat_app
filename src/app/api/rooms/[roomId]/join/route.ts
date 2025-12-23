@@ -44,9 +44,9 @@ export async function POST(
     const { roomId } = await params;
     const { username, encryptedKey } = await request.json();
 
-    if (!username) {
+    if (!username || !encryptedKey) {
       return NextResponse.json(
-        { error: 'Missing username' },
+        { error: 'Missing username or encryptedKey' },
         { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
@@ -69,8 +69,8 @@ export async function POST(
       );
     }
 
-    // Add user to participants
-    await roomModel.addParticipant(roomId, userDTO.id, username);
+    // Add user to participants with their encrypted key
+    await roomModel.addParticipant(roomId, userDTO.id, username, encryptedKey);
 
     return NextResponse.json({ success: true }, { status: HTTP_STATUS.OK });
   } catch (error) {

@@ -38,10 +38,13 @@ export interface UserDTO {
 // ============================================================================
 
 export interface CreateRoomRequestDTO {
+  id?: string;
   name: string;
   password: string;
-  salt?: string;
-  encrypted_key?: string;
+  creator: string;
+  salt: string;
+  encrypted_key: string; // Key wrapped with room password
+  participantEncryptedKey: string; // Key wrapped with creator's identity public key
 }
 
 export interface RoomDTO {
@@ -59,7 +62,9 @@ export interface RoomDTO {
 }
 
 export interface JoinRoomRequestDTO {
-  password: string;
+  username: string;
+  password?: string;
+  encryptedKey: string; // Key wrapped with participant's identity public key
 }
 
 // ============================================================================

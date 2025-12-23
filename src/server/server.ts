@@ -1,5 +1,7 @@
 // Load environment variables first (now handled by config.ts)
 
+import { config, getHttpsOptions } from './config';
+
 import { createServer, IncomingMessage } from 'http';
 import { createServer as createHttpsServer } from 'https';
 import { parse } from 'url';
@@ -13,15 +15,14 @@ import { applyRuntimeEnvHeader } from '../middleware/server/runtimeEnv';
 import { applySecurityHeaders } from '../middleware/server/security';
 import { CustomSocket } from '../types/socket';
 
-import { config, getHttpsOptions } from './config';
-
 const { dev, hostname, port } = config;
 
 const app = next({
   dev,
   hostname,
   port,
-  dir: '.',
+  // Force Webpack to avoid Turbopack PnP issues
+  webpack: true,
 });
 const handle = app.getRequestHandler();
 
@@ -101,11 +102,11 @@ app.prepare().then(() => {
   // --- Socket.io middleware 파이프라인 ---
   const registerHandlersMiddleware =
     (ioInstance: Server) =>
-      (socket: CustomSocket, next: (err?: Error) => void) => {
-        registerRoomHandlers(ioInstance, socket);
-        registerMessageHandlers(ioInstance, socket);
-        next();
-      };
+    (socket: CustomSocket, next: (err?: Error) => void) => {
+      registerRoomHandlers(ioInstance, socket);
+      registerMessageHandlers(ioInstance, socket);
+      next();
+    };
 
   io.use(registerHandlersMiddleware(io));
 

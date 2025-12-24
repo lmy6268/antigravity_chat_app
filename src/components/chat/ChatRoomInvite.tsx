@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@/i18n/LanguageContext';
 import type { UserDTO } from '@/types/dto';
+import type { Friend } from '@/types/friend';
 
 interface SearchResult {
   id: string;
@@ -11,47 +12,82 @@ interface SearchResult {
 interface ChatRoomInviteProps {
   onInvite: (user: UserDTO) => Promise<boolean>;
   currentParticipants: string[];
+  currentUser: string;
 }
 
 export function ChatRoomInvite({
   onInvite,
   currentParticipants,
+  currentUser,
 }: ChatRoomInviteProps) {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [invitingUser, setInvitingUser] = useState<string | null>(null);
+  const [friends, setFriends] = useState<Friend[]>([]);
 
-  // Debounced search
+  // 친구 목록 로드
+  useEffect(() => {
+    const loadFriends = async () => {
+      try {
+        const res = await fetch(`/api/friends?username=${currentUser}`);
+        if (res.ok) {
+          const data = await res.json();
+          // status가 'accepted'인 친구만 필터링
+          const acceptedFriends = (data.friends || []).filter(
+            (f: Friend) => f.status === 'accepted',
+          );
+          setFriends(acceptedFriends);
+        } else {
+          console.error('Failed to load friends:', res.status, await res.text());
+        }
+      } catch (error) {
+        console.error('Error loading friends:', error);
+      }
+    };
+    void loadFriends();
+  }, [currentUser]);
+
+  // Debounced search - 친구 목록에서만 검색
   useEffect(() => {
     if (searchQuery.trim().length === 0) {
       setSearchResults([]);
       return;
     }
 
-    const timer = setTimeout(async () => {
+    const timer = setTimeout(() => {
       setIsSearching(true);
       try {
-        const res = await fetch(
-          `/api/users/search?q=${encodeURIComponent(searchQuery)}`,
-        );
-        const data = await res.json();
-        // Filter out existing participants
-        const users = (data.users || []).filter(
-          (u: SearchResult) => !currentParticipants.includes(u.username),
-        );
-        setSearchResults(users);
+        // 친구 목록에서 검색어로 필터링
+        const filtered = friends
+          .filter((friend) =>
+            friend.username
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase().trim()),
+          )
+          .map((friend) => ({
+            id: friend.friendId,
+            username: friend.username,
+            public_key: friend.publicKey,
+          }))
+          .filter(
+            (u) =>
+              !currentParticipants.includes(u.username) &&
+              u.username !== currentUser,
+          );
+
+        setSearchResults(filtered);
       } catch (error) {
         console.error('Search error:', error);
         setSearchResults([]);
       } finally {
         setIsSearching(false);
       }
-    }, 1500);
+    }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, currentParticipants]);
+  }, [searchQuery, currentParticipants, friends, currentUser]);
 
   const handleInvite = useCallback(
     async (user: SearchResult) => {

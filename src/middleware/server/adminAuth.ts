@@ -20,7 +20,7 @@ export interface AdminAuthResult {
 /**
  * 요청에서 관리자 인증 정보를 추출하고 검증
  * Authorization 헤더에서 관리자 ID를 받아 검증합니다.
- * 
+ *
  * 보안 강화를 위해 향후 JWT 토큰 기반 인증으로 업그레이드 권장
  */
 export async function verifyAdminAuth(
@@ -29,7 +29,7 @@ export async function verifyAdminAuth(
   try {
     // Authorization 헤더에서 관리자 ID 추출
     const authHeader = request.headers.get('authorization');
-    
+
     if (!authHeader) {
       return {
         success: false,
@@ -55,7 +55,7 @@ export async function verifyAdminAuth(
     // 관리자 존재 여부 확인
     // Note: 현재는 ID만 확인하지만, 향후 JWT 토큰 검증으로 업그레이드 필요
     const admin = await dao.admin.findById(adminId);
-    
+
     if (!admin) {
       return {
         success: false,
@@ -104,4 +104,3 @@ export async function withAdminAuth<T>(
     );
   }
 }
-

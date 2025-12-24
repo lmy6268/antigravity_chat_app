@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { HTTP_STATUS } from '@/lib/constants/api';
 import { dao } from '@/dao/supabase';
-import { signAdminToken } from '@/lib/auth/adminToken';
 import bcrypt from 'bcryptjs';
 
 /**
@@ -37,14 +36,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // JWT 발급 (관리자 세션 토큰)
-    const token = signAdminToken(admin);
-
     // 비밀번호를 제외한 정보 반환
     const { password: _, ...adminData } = admin;
 
     return NextResponse.json({
-      admin: { ...adminData, token },
+      admin: adminData,
       message: 'Login successful',
     });
   } catch (error) {

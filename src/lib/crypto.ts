@@ -38,10 +38,11 @@ export async function hashPassword(
   password: string,
   salt: string,
 ): Promise<string> {
-  const enc = new TextEncoder();
-  const data = enc.encode(password + salt);
-  const hashBuffer = await globalThis.crypto.subtle.digest('SHA-256', data);
-  return arrayBufferToBase64(hashBuffer);
+  // PBKDF2를 사용하여 키를 파생시키고, 이를 Base64로 인코딩하여 반환합니다.
+  // 이 방법은 단순 해싱보다 훨씬 안전합니다.
+  const key = await deriveKeyFromPassword(password, salt);
+  const rawKey = await globalThis.crypto.subtle.exportKey('raw', key);
+  return arrayBufferToBase64(rawKey);
 }
 
 /**

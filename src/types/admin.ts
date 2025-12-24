@@ -13,11 +13,6 @@ export interface AdminDTO {
   id: string;
   username: string;
   created_at: string;
-  /**
-   * Optional admin session token (JWT)
-   * - 클라이언트에서 관리자 API 호출 시 Authorization 헤더에 사용
-   */
-  token?: string;
 }
 
 export interface ApiLogEntity {

@@ -34,4 +34,4 @@ fi
 UPDATE_URL=$(printf "https://www.duckdns.org/update?domains=%s&token=%s&ip=" "$DUCKDNS_DOMAIN" "$DUCKDNS_TOKEN")
 
 # SSL 인증서를 검증하며 요청을 전송 (-k/--insecure 사용 금지)
-echo url="$UPDATE_URL" | curl -o ./duck.log -K -
+echo url="$UPDATE_URL" | curl -o "$SCRIPT_DIR/duck.log" -K -

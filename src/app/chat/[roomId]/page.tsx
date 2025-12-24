@@ -17,7 +17,6 @@ import { ChatSettings } from '@/components/chat/ChatSettings';
 import { ChatMessageList } from '@/components/chat/ChatMessageList';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatShareModal } from '@/components/chat/ChatShareModal';
-<<<<<<< HEAD
 import { buildFullUrl } from '@/lib/utils/url';
 import { routes } from '@/lib/routes';
 
@@ -44,8 +43,6 @@ const ChatTransitions = () => (
     }
   `}</style>
 );
-=======
->>>>>>> origin/develop
 
 /**
  * ChatRoom Component (Orchestrator)
@@ -87,7 +84,6 @@ export default function ChatRoom({
 
   const { inviteUser } = useRoomInvite(roomId, cryptoKey);
 
-<<<<<<< HEAD
   const { socketRef, isConnected, connectSocket, disconnectSocket } =
     useWebSocket(roomId, nickname);
 
@@ -107,22 +103,14 @@ export default function ChatRoom({
     isConnected,
     t,
   );
-=======
-  const { messages, inputMessage, setInputMessage, chatContainerRef, sendMessage, initializeChat } =
-    useChat(roomId, roomInfo?.name || roomName, nickname, cryptoKey, socketRef, isConnected, t);
->>>>>>> origin/develop
 
   // Local state
   const [showSettings, setShowSettings] = useState(false);
   const [settingsClosing, setSettingsClosing] = useState(false);
   const [showShare, setShowShare] = useState(false);
-<<<<<<< HEAD
   const [slideState, setSlideState] = useState<
     'entering' | 'entered' | 'exiting'
   >('entering');
-=======
-  const [slideState, setSlideState] = useState<'entering' | 'entered' | 'exiting'>('entering');
->>>>>>> origin/develop
   const hasInitializedRef = useRef(false);
 
   // Connect socket when joined AND cryptoKey is ready (한 번만 실행)
@@ -185,34 +173,7 @@ export default function ChatRoom({
   };
 
   const buildInviteLink = async () => {
-<<<<<<< HEAD
     return buildFullUrl(routes.chat.room(roomId));
-=======
-    const href = window.location.href;
-    const url = new URL(href);
-
-    const isDev = process.env.NODE_ENV === 'development';
-    const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
-
-    if (isDev && isLocalhost) {
-      try {
-        const res = await fetch('/api/dev/host');
-        if (res.ok) {
-          const data = await res.json();
-          const host = data.host as string;
-          if (host) {
-            const port = url.port || '3000';
-            url.hostname = host;
-            url.port = port;
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to resolve dev host, fallback to localhost', e);
-      }
-    }
-
-    return url.toString();
->>>>>>> origin/develop
   };
 
   const copyInviteLink = async () => {
@@ -323,10 +284,7 @@ export default function ChatRoom({
             currentUser={nickname}
             isConnected={isConnected}
             isClosing={settingsClosing}
-<<<<<<< HEAD
             onInvite={inviteUser}
-=======
->>>>>>> origin/develop
           />
         )}
 
@@ -334,36 +292,11 @@ export default function ChatRoom({
           <ChatShareModal
             onClose={() => setShowShare(false)}
             buildLink={buildInviteLink}
-<<<<<<< HEAD
             password={password}
           />
         )}
 
         <ChatTransitions />
-=======
-            password={roomInfo?.password}
-          />
-        )}
-
-        <style jsx global>{`
-          @keyframes fadeIn {
-            from {
-              opacity: 0;
-            }
-            to {
-              opacity: 1;
-            }
-          }
-          @keyframes fadeOut {
-            from {
-              opacity: 1;
-            }
-            to {
-              opacity: 0;
-            }
-          }
-        `}</style>
->>>>>>> origin/develop
 
         <ChatMessageList
           messages={messages}

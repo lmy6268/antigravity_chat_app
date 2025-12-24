@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type ChangeEvent } from 'react';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { loadUserProfile } from '@/lib/key-storage';
 
 interface SearchResult {
   id: string;
@@ -16,6 +17,16 @@ export function AddFriendForm({ onSubmit }: AddFriendFormProps) {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [sendingTo, setSendingTo] = useState<string | null>(null);
+  const [currentUsername, setCurrentUsername] = useState<string | null>(null);
+
+  // 현재 로그인한 사용자 정보 로드 (자기 자신을 검색 결과에서 제외하기 위함)
+  useEffect(() => {
+    const initCurrentUser = async () => {
+      const user = await loadUserProfile();
+      setCurrentUsername(user?.username ?? null);
+    };
+    void initCurrentUser();
+  }, []);
 
   // Debounced search
   useEffect(() => {
@@ -31,20 +42,31 @@ export function AddFriendForm({ onSubmit }: AddFriendFormProps) {
           `/api/users/search?q=${encodeURIComponent(searchQuery)}`,
         );
         const data = await res.json();
-        setSearchResults(data.users || []);
+        const users: SearchResult[] = data.users || [];
+
+        // 본인(username === currentUsername)은 검색 결과에서 제외
+        const filtered =
+          currentUsername != null
+            ? users.filter((u) => u.username !== currentUsername)
+            : users;
+
+        setSearchResults(filtered);
       } catch (error) {
         console.error('Search error:', error);
         setSearchResults([]);
       } finally {
         setIsSearching(false);
       }
-    }, 300);
+    }, 1500);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, currentUsername]);
 
   const handleSendRequest = useCallback(
     async (username: string) => {
+      // 이미 전송 중이면 추가 클릭 무시
+      if (sendingTo !== null) return;
+
       try {
         setSendingTo(username);
         await onSubmit(username);
@@ -59,7 +81,7 @@ export function AddFriendForm({ onSubmit }: AddFriendFormProps) {
         setSendingTo(null);
       }
     },
-    [onSubmit, t],
+    [onSubmit, t, sendingTo],
   );
 
   return (
@@ -70,7 +92,9 @@ export function AddFriendForm({ onSubmit }: AddFriendFormProps) {
           type="text"
           placeholder={t.dashboard.friends.searchPlaceholder}
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setSearchQuery(e.target.value)
+          }
           style={{
             width: '100%',
             padding: '10px',
@@ -116,7 +140,7 @@ export function AddFriendForm({ onSubmit }: AddFriendFormProps) {
             )}
 
             {!isSearching &&
-              searchResults.map((user) => (
+              searchResults.map((user: SearchResult) => (
                 <div
                   key={user.id}
                   style={{

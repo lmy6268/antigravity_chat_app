@@ -103,6 +103,7 @@ export function ChatSettings({
           <ChatRoomInvite
             onInvite={onInvite}
             currentParticipants={roomInfo.participants || []}
+            currentUser={currentUser}
           />
 
           <div>

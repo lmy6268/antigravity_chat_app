@@ -45,7 +45,7 @@ fi
 # 임시 파일에 프롬프트 작성
 TEMP_PROMPT=$(mktemp)
 trap 'rm -f "$TEMP_PROMPT"' EXIT
-cat > "$TEMP_PROMPT" <<EOF
+cat > "$TEMP_PROMPT" <<'EOF'
 다음 코드 변경사항을 분석해서 Pull Request 제목과 설명을 작성해줘.
 
 **중요: 반드시 아래 형식을 정확히 따라야 함**
@@ -70,23 +70,41 @@ cat > "$TEMP_PROMPT" <<EOF
 - 구체적이고 명확하게 작성
 
 **PR 템플릿 구조**:
-\`\`\`markdown
-$PR_TEMPLATE
-\`\`\`
+```markdown
+EOF
+
+# 템플릿 내용 추가
+echo "$PR_TEMPLATE" >> "$TEMP_PROMPT"
+
+# 나머지 프롬프트 추가
+cat >> "$TEMP_PROMPT" <<'EOF'
+```
 
 **분석할 변경사항**:
 
 커밋 목록:
-$COMMITS
+EOF
+
+echo "$COMMITS" >> "$TEMP_PROMPT"
+
+cat >> "$TEMP_PROMPT" <<'EOF'
 
 변경 파일 통계:
-$DIFF_STATS
+EOF
+
+echo "$DIFF_STATS" >> "$TEMP_PROMPT"
+
+cat >> "$TEMP_PROMPT" <<'EOF'
 
 상세 변경 내용:
-$DIFF_CONTENT
+EOF
+
+echo "$DIFF_CONTENT" >> "$TEMP_PROMPT"
+
+cat >> "$TEMP_PROMPT" <<'EOF'
 
 **작성 예시**:
-\`\`\`
+```
 TITLE: [Feature] 사용자 인증 기능 추가
 ---
 
@@ -123,10 +141,10 @@ TITLE: [Feature] 사용자 인증 기능 추가
 
 ## 체크리스트
 
-- [x] PR 제목이 \`[타입] 제목\` 형식을 따름
+- [x] PR 제목이 `[타입] 제목` 형식을 따름
 - [x] 코드 스타일 가이드를 준수함
 - [x] 커밋 메시지가 컨벤션을 따름
-\`\`\`
+```
 
 이 예시처럼 템플릿 구조를 따라 작성하되, 실제 커밋 내용을 분석하여 구체적으로 작성해주세요.
 EOF

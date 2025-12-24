@@ -122,6 +122,7 @@ jobs:
             --base ${{ env.TARGET_BRANCH }} \
             --head ${{ steps.branch.outputs.name }} \
             --title "${{ steps.generate-pr.outputs.title }}" \
+            --assignee @me \
             --body "${{ steps.prepare-body.outputs.final_body }}
 
           ---

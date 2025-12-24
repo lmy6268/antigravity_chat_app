@@ -57,7 +57,7 @@ export function AddFriendForm({ onSubmit }: AddFriendFormProps) {
       } finally {
         setIsSearching(false);
       }
-    }, 1500);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [searchQuery, currentUsername]);

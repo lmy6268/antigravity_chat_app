@@ -14,10 +14,7 @@ export const CRYPTO = {
  * @returns CryptoKeyPair (publicKey, privateKey)
  */
 export async function generateKeyPair(): Promise<CryptoKeyPair> {
-  if (
-    typeof globalThis.crypto === 'undefined' ||
-    !globalThis.crypto.subtle
-  ) {
+  if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
     throw new Error('Web Crypto API not available');
   }
 
@@ -52,10 +49,7 @@ export async function hashPassword(
  * @returns CryptoKey
  */
 export async function generateRoomKey(): Promise<CryptoKey> {
-  if (
-    typeof globalThis.crypto === 'undefined' ||
-    !globalThis.crypto.subtle
-  ) {
+  if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
     throw new Error('Web Crypto API not available');
   }
 
@@ -92,7 +86,7 @@ export async function importKey(
   usage: KeyUsage[],
   extractable: boolean = true,
 ): Promise<CryptoKey> {
-  // JWK의 key_ops가 있으면 요청된 usage와 충돌할 수 있으므로, 
+  // JWK의 key_ops가 있으면 요청된 usage와 충돌할 수 있으므로,
   // usage 매개변수가 우선하도록 key_ops를 제거하거나 무시합니다.
   const { key_ops, ...jwkWithoutOps } = jwk;
   return globalThis.crypto.subtle.importKey(
@@ -149,8 +143,8 @@ export async function unwrapKey(
  * 암호화된 메시지 형식
  */
 export interface EncryptedMessage {
-  iv: number[];
-  data: number[];
+  iv: string; // Base64
+  data: string; // Base64
 }
 
 /**
@@ -189,10 +183,7 @@ export async function encryptMessage(
   text: string,
   key: CryptoKey,
 ): Promise<EncryptedMessage> {
-  if (
-    typeof globalThis.crypto === 'undefined' ||
-    !globalThis.crypto.subtle
-  ) {
+  if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
     throw new Error('Web Crypto API not available');
   }
 
@@ -211,7 +202,9 @@ export async function encryptMessage(
   payload[0] = flag;
   payload.set(dataToEncrypt, 1);
 
-  const iv = globalThis.crypto.getRandomValues(new Uint8Array(CRYPTO.IV_LENGTH));
+  const iv = globalThis.crypto.getRandomValues(
+    new Uint8Array(CRYPTO.IV_LENGTH),
+  );
   const encrypted = await globalThis.crypto.subtle.encrypt(
     { name: CRYPTO.ALGORITHM, iv: iv } as AesGcmParams,
     key,
@@ -219,8 +212,8 @@ export async function encryptMessage(
   );
 
   return {
-    iv: Array.from(iv),
-    data: Array.from(new Uint8Array(encrypted)),
+    iv: arrayBufferToBase64(iv.buffer),
+    data: arrayBufferToBase64(encrypted),
   };
 }
 
@@ -229,19 +222,16 @@ export async function encryptMessage(
  * 복호화 후 첫 바이트 플래그를 확인하여 압축을 해제합니다.
  */
 export async function decryptMessage(
-  ivArr: number[],
-  dataArr: number[],
+  ivBase64: string,
+  dataBase64: string,
   key: CryptoKey,
 ): Promise<string> {
-  if (
-    typeof globalThis.crypto === 'undefined' ||
-    !globalThis.crypto.subtle
-  ) {
+  if (typeof globalThis.crypto === 'undefined' || !globalThis.crypto.subtle) {
     throw new Error('Web Crypto API not available');
   }
 
-  const iv = new Uint8Array(ivArr);
-  const data = new Uint8Array(dataArr);
+  const iv = new Uint8Array(base64ToArrayBuffer(ivBase64));
+  const data = new Uint8Array(base64ToArrayBuffer(dataBase64));
   const decrypted = await globalThis.crypto.subtle.decrypt(
     { name: CRYPTO.ALGORITHM, iv: iv } as AesGcmParams,
     key,
@@ -372,10 +362,13 @@ export async function decryptRoomKeyWithPassword(
     data,
   );
 
-  return globalThis.crypto.subtle.importKey('raw', decryptedRaw, 'AES-GCM', true, [
-    'encrypt',
-    'decrypt',
-  ]);
+  return globalThis.crypto.subtle.importKey(
+    'raw',
+    decryptedRaw,
+    'AES-GCM',
+    true,
+    ['encrypt', 'decrypt'],
+  );
 }
 
 // 유틸리티 함수
@@ -397,4 +390,121 @@ export function base64ToArrayBuffer(base64: string): ArrayBuffer {
     bytes[i] = binary_string.charCodeAt(i);
   }
   return bytes.buffer;
+}
+
+/**
+ * Private Key Exporter (for Backup)
+ */
+export async function exportPrivateKeyToString(
+  key: CryptoKey,
+): Promise<string> {
+  const jwk = await globalThis.crypto.subtle.exportKey('jwk', key);
+  return JSON.stringify(jwk);
+}
+
+/**
+ * Generic Data Encryption with Password (for Private Key Backup)
+ * Returns Base64 string containing salt(if needed) + iv + data
+ * For simplicity here, we assume salt is provided externally and returned separately or managed by caller.
+ * Actually, to match useRoomCreate logic, let's keep it consistent: IV + Data combined.
+ */
+export async function encryptDataWithPassword(
+  data: string,
+  password: string,
+  salt: string,
+): Promise<string> {
+  const kek = await deriveKeyFromPassword(password, salt);
+
+  const enc = new TextEncoder();
+  const encodedData = enc.encode(data);
+
+  const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await globalThis.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    kek,
+    encodedData,
+  );
+
+  // Combine IV + Data
+  const combined = new Uint8Array(iv.length + new Uint8Array(encrypted).length);
+  combined.set(iv);
+  combined.set(new Uint8Array(encrypted), iv.length);
+
+  return arrayBufferToBase64(combined.buffer);
+}
+
+/**
+ * Generic Data Decryption with Password (for Private Key Restore)
+ */
+export async function decryptDataWithPassword(
+  encryptedBase64: string,
+  password: string,
+  salt: string,
+): Promise<string> {
+  const kek = await deriveKeyFromPassword(password, salt);
+  const combined = base64ToArrayBuffer(encryptedBase64);
+  const combinedArray = new Uint8Array(combined);
+
+  // Extract IV and Data
+  const iv = combinedArray.slice(0, 12);
+  const data = combinedArray.slice(12);
+
+  const decryptedRaw = await globalThis.crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    kek,
+    data,
+  );
+
+  const dec = new TextDecoder();
+  return dec.decode(decryptedRaw);
+}
+
+/**
+ * Encrypt Room Password with Room Master Key (Shared Vault)
+ * This allows any participant with the Master Key to view the original password.
+ */
+export async function encryptRoomPassword(
+  password: string,
+  roomMasterKey: CryptoKey,
+): Promise<string> {
+  const enc = new TextEncoder();
+  const encodedPassword = enc.encode(password);
+
+  const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await globalThis.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    roomMasterKey,
+    encodedPassword,
+  );
+
+  // Combine IV + Data
+  const combined = new Uint8Array(iv.length + new Uint8Array(encrypted).length);
+  combined.set(iv);
+  combined.set(new Uint8Array(encrypted), iv.length);
+
+  return arrayBufferToBase64(combined.buffer);
+}
+
+/**
+ * Decrypt Room Password with Room Master Key (Shared Vault)
+ */
+export async function decryptRoomPassword(
+  encryptedPasswordBase64: string,
+  roomMasterKey: CryptoKey,
+): Promise<string> {
+  const combined = base64ToArrayBuffer(encryptedPasswordBase64);
+  const combinedArray = new Uint8Array(combined);
+
+  // Extract IV and Data
+  const iv = combinedArray.slice(0, 12);
+  const data = combinedArray.slice(12);
+
+  const decryptedRaw = await globalThis.crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    roomMasterKey,
+    data,
+  );
+
+  const dec = new TextDecoder();
+  return dec.decode(decryptedRaw);
 }

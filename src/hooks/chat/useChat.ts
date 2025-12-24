@@ -64,7 +64,6 @@ export function useChat(
 
   // cryptoKey 준비되면 히스토리 요청
   useEffect(() => {
-
     if (
       cryptoKey &&
       socketRef.current &&
@@ -261,8 +260,7 @@ export function useChat(
   // 복잡도를 낮추기 위해, page.tsx에서 cryptoKey와 nickname이 준비된 시점에(이미 roomInfo 로드됨)
   // initializeChat을 부르므로 큰 문제는 없을 것으로 예상됨.
   // 다만 혹시 모르니 roomName 변경 로그만 남김.
-  useEffect(() => {
-  }, [roomName]);
+  useEffect(() => {}, [roomName]);
 
   return {
     messages,

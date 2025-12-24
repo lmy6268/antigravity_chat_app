@@ -37,6 +37,7 @@ export class UserModel {
     username: string,
     password: string,
     publicKey?: string,
+    encryptedPrivateKey?: string,
   ): Promise<AuthResponseDTO> {
     // 중복 확인
     const existing = await this.userDAO.findByUsername(username);
@@ -51,6 +52,7 @@ export class UserModel {
       username,
       password: hashedPassword,
       public_key: publicKey,
+      encrypted_private_key: encryptedPrivateKey,
     });
 
     return {

@@ -26,6 +26,7 @@ export function ChatShareModal({
 
   const copy = () => {
     if (!link) return;
+    navigator.clipboard.writeText(link);
     dialogService.alert(t.dashboard.alerts.linkCopied);
   };
 
@@ -124,23 +125,64 @@ export function ChatShareModal({
           {link || t.chat.passwordPrompt}
         </div>
 
-        {password && (
-          <div
-            style={{
-              marginTop: '8px',
-              fontSize: '12px',
-              backgroundColor: '#1e1e1e',
-              padding: '8px',
-              borderRadius: '6px',
-              border: '1px solid #3e3e3e',
-            }}
-          >
-            <strong style={{ color: '#aaa', marginRight: '6px' }}>
-              {t.auth.password}:
-            </strong>
-            <span style={{ fontFamily: 'monospace' }}>{password}</span>
-          </div>
-        )}
+        {/* Password Display / Explanation Section */}
+        <div
+          style={{
+            marginTop: '12px',
+            fontSize: '12px',
+            backgroundColor: '#252526',
+            padding: '10px',
+            borderRadius: '6px',
+            border: '1px solid #3e3e3e',
+            color: '#ccc',
+            lineHeight: '1.4',
+          }}
+        >
+          {password ? (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <span style={{ color: '#aaa' }}>{t.auth.password}:</span>
+              <span
+                style={{
+                  fontFamily: 'monospace',
+                  color: '#fff',
+                  fontWeight: 'bold',
+                }}
+              >
+                {password}
+              </span>
+            </div>
+          ) : (
+            <div>
+              <strong style={{ color: '#4caf50' }}>
+                ✅ No Password Needed for Invitees!
+              </strong>
+              <div
+                style={{ marginTop: '4px', fontSize: '11px', color: '#999' }}
+              >
+                Use <strong>Settings {'>'} Invite</strong> to give specific
+                users access. They can then click this link to join instantly.
+              </div>
+              <div
+                style={{
+                  marginTop: '8px',
+                  borderTop: '1px solid #444',
+                  paddingTop: '4px',
+                  fontSize: '10px',
+                  color: '#666',
+                }}
+              >
+                * To share a general password, please re-login manually to
+                reveal it.
+              </div>
+            </div>
+          )}
+        </div>
 
         <div
           style={{

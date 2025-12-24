@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
   public_key TEXT, -- RSA Public Key (PEM format or JWK string)
+  encrypted_private_key TEXT, -- Client-side encrypted RSA private key (Layer 2 Encryption by User Password)
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS rooms (
   password TEXT NOT NULL, -- Used to derive KEK
   salt TEXT, -- Random salt for KDF
   encrypted_key TEXT, -- Room Key encrypted with KEK (derived from password + salt)
+  encrypted_password TEXT, -- Room Password encrypted with Room Master Key (Shared Vault)
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

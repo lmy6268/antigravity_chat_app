@@ -9,7 +9,10 @@ export async function GET(
 ) {
   try {
     const { roomId } = await params;
-    const userIdHeader = request.headers.get('x-user-id') || request.headers.get('X-User-ID') || request.headers.get('X-USER-ID');
+    const userIdHeader =
+      request.headers.get('x-user-id') ||
+      request.headers.get('X-User-ID') ||
+      request.headers.get('X-USER-ID');
     const userId = userIdHeader ? userIdHeader.trim().toLowerCase() : null;
 
     const roomDTO = await roomModel.findById(roomId);
@@ -45,7 +48,8 @@ export async function GET(
       }
     }
 
-    const isCreator = roomDTO.creator_id?.toLowerCase().trim() === userId ||
+    const isCreator =
+      roomDTO.creator_id?.toLowerCase().trim() === userId ||
       roomDTO.creator_username?.toLowerCase().trim() === userId;
 
     const debugInfo = {
@@ -54,9 +58,17 @@ export async function GET(
       isParticipantMatch: !!MatchedParticipant,
       isCreatorMatch: isCreator,
       hasEncryptedKey: !!participantEncryptedKey,
-      matchedAs: MatchedParticipant ? (MatchedParticipant.user_id?.toLowerCase() === userId ? 'user_id' : 'username') : 'none',
-      availableIds: participants.map(p => (p.user_id || '').trim().toLowerCase()),
-      availableUsernames: participants.map(p => (p.username || '').trim().toLowerCase())
+      matchedAs: MatchedParticipant
+        ? MatchedParticipant.user_id?.toLowerCase() === userId
+          ? 'user_id'
+          : 'username'
+        : 'none',
+      availableIds: participants.map((p) =>
+        (p.user_id || '').trim().toLowerCase(),
+      ),
+      availableUsernames: participants.map((p) =>
+        (p.username || '').trim().toLowerCase(),
+      ),
     };
 
     return NextResponse.json(
@@ -70,6 +82,7 @@ export async function GET(
           createdAt: roomDTO.created_at,
           salt: roomDTO.salt,
           encryptedKey: roomDTO.encrypted_key,
+          encrypted_password: roomDTO.encrypted_password,
           participantEncryptedKey: participantEncryptedKey,
           isCreator: isCreator,
           debugInfo: debugInfo,

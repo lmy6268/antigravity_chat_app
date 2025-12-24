@@ -20,6 +20,7 @@ export function userEntityToDTO(entity: UserEntity): UserDTO {
     id: entity.id,
     username: entity.username,
     public_key: entity.public_key,
+    encrypted_private_key: entity.encrypted_private_key,
     // password는 제외 (보안)
   };
 }
@@ -33,6 +34,7 @@ export function roomEntityToDTO(entity: RoomEntity): RoomDTO {
     password: entity.password,
     salt: entity.salt,
     encrypted_key: entity.encrypted_key,
+    encrypted_password: entity.encrypted_password,
     created_at: entity.created_at, // Already a string from Supabase
   };
 }
@@ -41,9 +43,9 @@ export function messageEntityToDTO(entity: MessageEntity): MessageDTO {
   return {
     id: entity.id,
     room_id: entity.room_id,
-    iv: entity.iv,
-    data: entity.data,
-    created_at: entity.created_at, // Already a string from Supabase
+    iv: entity.iv, // Base64 string
+    data: entity.data, // Base64 string
+    created_at: entity.created_at,
   };
 }
 

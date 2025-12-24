@@ -34,10 +34,13 @@ export default function Dashboard() {
   // Hooks
   const { myRooms, joinRoom, deleteRoom, setMyRooms, loading } =
     useRoomList(nickname);
-  const { createRoom, isCreating } = useRoomCreate(nickname, (newRoom: RoomUIModel) => {
-    setMyRooms((prev: RoomUIModel[]) => [...prev, newRoom]);
-    setShowCreateModal(false);
-  });
+  const { createRoom, isCreating } = useRoomCreate(
+    nickname,
+    (newRoom: RoomUIModel) => {
+      setMyRooms((prev: RoomUIModel[]) => [...prev, newRoom]);
+      setShowCreateModal(false);
+    },
+  );
   const { friends, sendFriendRequest, handleFriendAction, fetchFriends } =
     useFriends(nickname);
 
@@ -102,10 +105,18 @@ export default function Dashboard() {
             onSendRequest={(targetUsername: string) =>
               sendFriendRequest(nickname, targetUsername)
             }
-            onAccept={(friendId: string) => handleFriendAction(friendId, 'accept')}
-            onReject={(friendId: string) => handleFriendAction(friendId, 'reject')}
-            onRemove={(friendId: string) => handleFriendAction(friendId, 'delete')}
-            onCancel={(friendId: string) => handleFriendAction(friendId, 'delete')}
+            onAccept={(friendId: string) =>
+              handleFriendAction(friendId, 'accept')
+            }
+            onReject={(friendId: string) =>
+              handleFriendAction(friendId, 'reject')
+            }
+            onRemove={(friendId: string) =>
+              handleFriendAction(friendId, 'delete')
+            }
+            onCancel={(friendId: string) =>
+              handleFriendAction(friendId, 'delete')
+            }
           />
         )}
 

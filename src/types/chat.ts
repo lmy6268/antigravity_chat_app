@@ -1,6 +1,6 @@
 export interface EncryptedMessagePayload {
-  iv: number[];
-  data: number[];
+  iv: string;
+  data: string;
   id?: string;
   timestamp?: string | number;
 }

@@ -4,6 +4,7 @@ import {
   generateRoomKey,
   generateSalt,
   encryptRoomKeyWithPassword,
+  encryptRoomPassword,
   wrapKey,
   importKey,
 } from '@/lib/crypto';
@@ -58,7 +59,10 @@ export function useRoomCreate(
 
       const wrappedKeyForMe = await wrapKey(roomKey, identityPublicKey);
 
-      // 4. 서버에 룸 생성 API 호출
+      // 5. [NEW] Encrypt password with Room Master Key (Shared Vault)
+      const encryptedPassword = await encryptRoomPassword(password, roomKey);
+
+      // 6. 서버에 룸 생성 API 호출
       const res = await fetch('/api/rooms/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -70,6 +74,7 @@ export function useRoomCreate(
           salt: salt,
           encrypted_key: encryptedKey,
           participantEncryptedKey: wrappedKeyForMe,
+          encryptedPassword: encryptedPassword,
         }),
       });
 

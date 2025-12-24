@@ -1,5 +1,7 @@
 import { useTranslation } from '@/i18n/LanguageContext';
 import Image from 'next/image';
+import { ChatRoomInvite } from './ChatRoomInvite';
+import type { UserDTO } from '@/types/dto';
 
 interface RoomInfo {
   creator: string;
@@ -25,7 +27,8 @@ export function ChatSettings({
   currentUser,
   isConnected,
   isClosing = false,
-}: ChatSettingsProps) {
+  onInvite,
+}: ChatSettingsProps & { onInvite: (user: UserDTO) => Promise<boolean> }) {
   const { t } = useTranslation();
 
   return (
@@ -96,6 +99,12 @@ export function ChatSettings({
             fontSize: '14px',
           }}
         >
+          {/* Invite Section */}
+          <ChatRoomInvite
+            onInvite={onInvite}
+            currentParticipants={roomInfo.participants || []}
+          />
+
           <div>
             <strong style={{ color: '#aaa' }}>{t.chat.participants}:</strong>
             <div

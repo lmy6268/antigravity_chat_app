@@ -24,8 +24,8 @@ export class MessageModel {
    */
   async createMessage(
     roomId: string,
-    iv: number[],
-    data: number[],
+    iv: string,
+    data: string,
   ): Promise<MessageDTO> {
     const entity = await this.messageDAO.create({
       room_id: roomId,

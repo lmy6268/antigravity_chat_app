@@ -2,8 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { generateKeyPair, exportKey, importKey } from '@/lib/crypto';
-import { savePrivateKey, saveUserProfile, loadUserProfile, deleteOldDatabase } from '@/lib/key-storage';
+import {
+  generateKeyPair,
+  exportKey,
+  importKey,
+  generateSalt,
+  encryptDataWithPassword,
+  exportPrivateKeyToString,
+} from '@/lib/crypto';
+import {
+  savePrivateKey,
+  saveUserProfile,
+  loadUserProfile,
+  deleteOldDatabase,
+} from '@/lib/key-storage';
 import { routes } from '@/lib/routes';
 
 import { useTranslation } from '@/i18n/LanguageContext';
@@ -87,7 +99,20 @@ export function useRegister() {
       );
       await savePrivateKey(hardenedPrivateKey);
 
-      // 4. username, password, public key로 회원가입
+      // 4. [NEW] Private Key Backup (Encrypt with Password)
+      // Format: "SALT_BASE64:IV_CIPHERTEXT_BASE64"
+      const backupSalt = generateSalt();
+      const privateKeyString = await exportPrivateKeyToString(
+        keyPair.privateKey,
+      );
+      const encryptedBackup = await encryptDataWithPassword(
+        privateKeyString,
+        password,
+        backupSalt,
+      );
+      const encryptedPrivateKeyPayload = `${backupSalt}:${encryptedBackup}`;
+
+      // 5. username, password, public key로 회원가입
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -95,12 +120,13 @@ export function useRegister() {
           username,
           password,
           publicKey: publicKeyString,
+          encryptedPrivateKey: encryptedPrivateKeyPayload,
         }),
       });
 
       if (res.ok) {
         const data = await res.json();
-        // 5. User Profile을 IndexedDB에 저장
+        // 6. User Profile을 IndexedDB에 저장
         await saveUserProfile(data.user);
 
         const redirectUrl = searchParams.get('redirect');

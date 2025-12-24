@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     const sanitizedUsers = users.map((user) => ({
       id: user.id,
       username: user.username,
-      publicKey: user.publicKey,
+      public_key: user.public_key,
     }));
 
     return NextResponse.json({ users: sanitizedUsers });

@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   decryptRoomKeyWithPassword,
+  decryptRoomPassword,
   unwrapKey,
   wrapKey,
   importKey,
@@ -40,13 +41,17 @@ export function useRoomJoin(roomId: string, roomName: string) {
   const [error, setError] = useState('');
 
   const autoJoinAttemptedRef = useRef(false);
+  const debugTrace = useRef<string[]>([]);
+  const addTrace = (msg: string) => debugTrace.current.push(msg);
 
   // Load User from Storage
   useEffect(() => {
     const loadUser = async () => {
       const storedUser = await loadUserProfile();
       if (!storedUser) {
-        console.warn('[useRoomJoin] No user session found. Redirecting to login.');
+        console.warn(
+          '[useRoomJoin] No user session found. Redirecting to login.',
+        );
         const returnUrl = encodeURIComponent(routes.chat.room(roomId));
         router.push(routes.auth.login() + `?redirect=${returnUrl}`);
         return;
@@ -90,52 +95,84 @@ export function useRoomJoin(roomId: string, roomName: string) {
   useEffect(() => {
     const attemptAutoJoin = async () => {
       // 이미 시도했거나 필요한 정보가 없으면 스킵
-      if (autoJoinAttemptedRef.current || !roomInfo || !nickname || !userId) return;
+      if (autoJoinAttemptedRef.current || !roomInfo || !nickname || !userId)
+        return;
+
+      addTrace(`Start: userId=${userId} roomInfo=${!!roomInfo}`);
 
       // 1. 서버가 이미 매칭한 키가 있는지 확인 (가장 확실한 방법)
       const hasServerMatchKey = !!roomInfo.participantEncryptedKey;
-
-      // 2. 클라이언트 사이드 보조 체크 (ID 기준)
-      const isCreator = roomInfo.isCreator || (roomInfo.creatorId || roomInfo.creator_id)?.toLowerCase().trim() === userId.toLowerCase().trim();
-      const isParticipant = hasServerMatchKey || isCreator || roomInfo.participants?.some((p: string) => p.toLowerCase().trim() === nickname.toLowerCase().trim());
+      addTrace(`hasServerMatchKey=${hasServerMatchKey}`);
 
       console.log('[useRoomJoin] Auto-join check:', {
         hasServerMatchKey,
-        isCreator,
-        isParticipant,
         userId,
-        creatorId: roomInfo.creatorId || roomInfo.creator_id,
-        participantCount: roomInfo.participants?.length,
-        hasEncryptedKey: !!roomInfo.participantEncryptedKey
+        hasEncryptedKey: !!roomInfo.participantEncryptedKey,
+        isCreator: roomInfo.isCreator,
       });
 
-      if (isParticipant) {
+      // 서버에 내 키가 있으면 바로 시도
+      if (hasServerMatchKey) {
         autoJoinAttemptedRef.current = true;
+        addTrace('Entering hasServerMatchKey block');
 
-        // 1. E2EE Identity Key 기반 자동 입장 시도
-        if (roomInfo.participantEncryptedKey) {
-          try {
-            const privateKey = await loadPrivateKey();
-            if (privateKey) {
-              const decryptedMK = await unwrapKey(
-                roomInfo.participantEncryptedKey,
-                privateKey,
-              );
-              console.log('[useRoomJoin] ✅ Auto-join success with private key');
-              setCryptoKey(decryptedMK);
-              setIsJoined(true);
-              setIsLoading(false);
-              return;
-            } else {
-              console.warn('[useRoomJoin] ❌ Private key NOT found in storage.');
+        try {
+          const privateKey = await loadPrivateKey();
+          addTrace(`PrivateKey loaded: ${!!privateKey}`);
+
+          if (privateKey) {
+            addTrace('Attempting unwrap');
+            const decryptedMK = await unwrapKey(
+              roomInfo.participantEncryptedKey,
+              privateKey,
+            );
+            addTrace('Unwrap success');
+            console.log('[useRoomJoin] ✅ Auto-join success with private key');
+            setCryptoKey(decryptedMK);
+
+            // [NEW] Decrypt room password if available
+            if (roomInfo.encrypted_password) {
+              try {
+                const decryptedPassword = await decryptRoomPassword(
+                  roomInfo.encrypted_password,
+                  decryptedMK,
+                );
+                setPassword(decryptedPassword);
+                console.log(
+                  '[useRoomJoin] ✅ Password restored from shared vault',
+                );
+              } catch (e) {
+                console.warn('[useRoomJoin] Failed to decrypt password:', e);
+              }
             }
-          } catch (err) {
-            console.error('[useRoomJoin] ❌ Identity-based auto-join error:', err);
+
+            setIsJoined(true);
+            setIsLoading(false);
+            return;
+          } else {
+            addTrace('PrivateKey missing');
+            console.warn('[useRoomJoin] ❌ Private key NOT found in storage.');
+            setError('Private Key Missing in Storage');
           }
+        } catch (err) {
+          addTrace(`Error: ${String(err)}`);
+          console.error(
+            '[useRoomJoin] ❌ Identity-based auto-join error:',
+            err,
+          );
+          setError(
+            `Auto-join failed: ${err instanceof Error ? err.message : String(err)}`,
+          );
         }
+      } else if (roomInfo.isCreator) {
+        addTrace('Creator but no key');
+        // Creator but no key?
+        setError('Creator but no encrypted key on server');
       }
 
+      addTrace('Fell through');
       // 권한이 없거나 자동 입장 실패 시 (비밀번호 화면 표시)
+      // 단, participant인데 키가 없는 경우도 여기로 떨어짐 (비밀번호 필요)
       setIsLoading(false);
     };
 
@@ -159,6 +196,22 @@ export function useRoomJoin(roomId: string, roomName: string) {
       );
 
       setCryptoKey(masterKey);
+
+      // [NEW] Decrypt room password if available
+      if (roomInfo.encrypted_password) {
+        try {
+          const decryptedPassword = await decryptRoomPassword(
+            roomInfo.encrypted_password,
+            masterKey,
+          );
+          setPassword(decryptedPassword);
+          console.log(
+            '[useRoomJoin] ✅ Password restored from shared vault (manual join)',
+          );
+        } catch (e) {
+          console.warn('[useRoomJoin] Failed to decrypt password:', e);
+        }
+      }
 
       // 2. 자신의 Identity Public Key로 마스터 키를 다시 래핑 (E2EE)
       if (!user.public_key) throw new Error('Identity public key missing');
@@ -229,5 +282,16 @@ export function useRoomJoin(roomId: string, roomName: string) {
     quitRoom,
     goBack,
     error,
+    debugInfo: roomInfo
+      ? {
+          ...roomInfo.debugInfo,
+          clientError:
+            error ||
+            (autoJoinAttemptedRef.current && !isJoined && !isLoading
+              ? 'Auto-join fell through'
+              : null),
+          executionTrace: debugTrace.current,
+        }
+      : null,
   };
 }

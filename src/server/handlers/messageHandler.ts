@@ -25,29 +25,12 @@ export const registerMessageHandlers = (io: Server, socket: CustomSocket) => {
 
       // Send all messages in a single event for better performance
       socket.emit(SERVER_EVENTS.HISTORY_RECEIVED, {
-        messages: messageDTOs.map((dto) => {
-          // Supabase JSONB가 객체 형태로 올 수 있으므로 배열로 강제 변환
-          const ivRaw = Array.isArray(dto.iv)
-            ? dto.iv
-            : Object.values(dto.iv || {});
-          const dataRaw = Array.isArray(dto.data)
-            ? dto.data
-            : Object.values(dto.data || {});
-
-          const iv = ivRaw
-            .map((n) => Number(n))
-            .filter((n) => Number.isFinite(n));
-          const data = dataRaw
-            .map((n) => Number(n))
-            .filter((n) => Number.isFinite(n));
-
-          return {
-            iv,
-            data,
-            timestamp: dto.created_at,
-            id: dto.id,
-          };
-        }),
+        messages: messageDTOs.map((dto) => ({
+          iv: dto.iv,
+          data: dto.data,
+          timestamp: dto.created_at,
+          id: dto.id,
+        })),
       });
     } catch (e) {
       serverLogger.error('Error in request_history:', e);
@@ -57,7 +40,7 @@ export const registerMessageHandlers = (io: Server, socket: CustomSocket) => {
   // 새 메시지 저장 및 브로드캐스트
   socket.on(
     CLIENT_EVENTS.SEND_MESSAGE,
-    async (messageData: { roomId: string; iv: number[]; data: number[] }) => {
+    async (messageData: { roomId: string; iv: string; data: string }) => {
       try {
         // MessageModel 사용
         const messageDTO = await messageModel.createMessage(

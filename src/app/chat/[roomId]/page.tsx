@@ -3,6 +3,7 @@
 import { useEffect, useState, use, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRoomJoin } from '@/hooks/chat/useRoomJoin';
+import { useRoomInvite } from '@/hooks/chat/useRoomInvite';
 import { useWebSocket } from '@/hooks/chat/useWebSocket';
 import { dialogService } from '@/lib/dialog';
 import { useChat } from '@/hooks/chat/useChat';
@@ -25,12 +26,20 @@ import { routes } from '@/lib/routes';
 const ChatTransitions = () => (
   <style jsx global>{`
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
     }
     @keyframes fadeOut {
-      from { opacity: 1; }
-      to { opacity: 0; }
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
     }
   `}</style>
 );
@@ -70,7 +79,10 @@ export default function ChatRoom({
     quitRoom,
     goBack,
     error,
+    debugInfo,
   } = useRoomJoin(roomId, roomName);
+
+  const { inviteUser } = useRoomInvite(roomId, cryptoKey);
 
   const { socketRef, isConnected, connectSocket, disconnectSocket } =
     useWebSocket(roomId, nickname);
@@ -219,6 +231,7 @@ export default function ChatRoom({
         onJoin={joinRoom}
         onBack={goBack}
         error={error}
+        debugInfo={debugInfo}
       />
     );
   }
@@ -271,6 +284,7 @@ export default function ChatRoom({
             currentUser={nickname}
             isConnected={isConnected}
             isClosing={settingsClosing}
+            onInvite={inviteUser}
           />
         )}
 
@@ -278,7 +292,7 @@ export default function ChatRoom({
           <ChatShareModal
             onClose={() => setShowShare(false)}
             buildLink={buildInviteLink}
-            password={roomInfo?.password}
+            password={password}
           />
         )}
 

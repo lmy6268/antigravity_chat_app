@@ -17,6 +17,7 @@ export interface RegisterRequestDTO {
   username: string;
   password: string;
   publicKey?: string;
+  encryptedPrivateKey?: string; // Backup for cross-device sync
 }
 
 export interface AuthResponseDTO {
@@ -31,6 +32,7 @@ export interface UserDTO {
   id: string;
   username: string;
   public_key?: string;
+  encrypted_private_key?: string; // Backup for cross-device sync
 }
 
 // ============================================================================
@@ -45,6 +47,7 @@ export interface CreateRoomRequestDTO {
   salt: string;
   encrypted_key: string; // Key wrapped with room password
   participantEncryptedKey: string; // Key wrapped with creator's identity public key
+  encryptedPassword?: string; // Password encrypted with Room Master Key (Shared Vault)
 }
 
 export interface RoomDTO {
@@ -55,6 +58,7 @@ export interface RoomDTO {
   password: string; // 필요시 클라이언트에서 암호화 키 복호화에 사용
   salt?: string;
   encrypted_key?: string;
+  encrypted_password?: string; // Password encrypted with Room Master Key
   created_at: string;
   participantCount?: number;
   lastMessageAt?: string | null;
@@ -74,15 +78,15 @@ export interface JoinRoomRequestDTO {
 export interface MessageDTO {
   id: number;
   room_id: string;
-  iv: number[];
-  data: number[];
+  iv: string; // Base64
+  data: string; // Base64
   created_at: string;
 }
 
 export interface SendMessageRequestDTO {
   roomId: string;
-  iv: number[];
-  data: number[];
+  iv: string; // Base64
+  data: string; // Base64
 }
 
 // ============================================================================

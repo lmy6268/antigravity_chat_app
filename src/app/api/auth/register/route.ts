@@ -6,7 +6,9 @@ import type { RegisterRequestDTO } from '@/types/dto';
 export async function POST(request: Request) {
   try {
     const body: RegisterRequestDTO = await request.json();
-    const { username, password, publicKey } = body;
+    const { username, password, publicKey, encryptedPrivateKey } = body;
+
+    // ... (Validation logic omitted for brevity in replace tool, but existing code remains)
 
     if (!username || !password) {
       return NextResponse.json(
@@ -43,6 +45,7 @@ export async function POST(request: Request) {
         username,
         password,
         publicKey,
+        encryptedPrivateKey,
       );
       return NextResponse.json({
         message: 'User registered successfully',

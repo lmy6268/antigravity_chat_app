@@ -92,12 +92,16 @@ export const en = {
       confirmDeleteRoom:
         'If you leave, the room will be deleted. Are you sure?',
       roomNotFound: 'Room not found',
+      noPublicKey: 'Target user has no public key for E2EE',
+      inviteSuccess: 'User invited successfully!',
+      inviteFailed: 'Failed to invite user',
     },
   },
   chat: {
     send: 'Send',
     placeholder: 'Type a message...',
     settings: 'Room Settings',
+    invite: 'Invite User',
     shareLinkTitle: 'Share Invite Link',
     creator: 'Creator',
     participants: 'Active Participants',

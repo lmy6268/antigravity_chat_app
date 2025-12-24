@@ -1,6 +1,6 @@
 /**
  * Persistent & Secure Storage Management
- * 
+ *
  * - localStorage: Persistent non-sensitive data (User Profile, Locale, Admin Session)
  * - IndexedDB: Persistent sensitive data (E2EE Private Key)
  *   - Security Note: Keys are stored with `extractable: false` to prevent raw key theft.
@@ -17,9 +17,14 @@ const PRIVATE_KEY_SESSION_ID = 'identity_private_key_jwk';
 // Core Storage Helpers (Synchronous)
 // ============================================================================
 
-function saveData(key: string, data: any, storage: Storage = localStorage): void {
+function saveData(
+  key: string,
+  data: any,
+  storage: Storage = localStorage,
+): void {
   try {
-    const serializedData = typeof data === 'string' ? data : JSON.stringify(data);
+    const serializedData =
+      typeof data === 'string' ? data : JSON.stringify(data);
     storage.setItem(key, serializedData);
   } catch (error) {
     console.error(`Error saving to storage (${key}):`, error);
@@ -113,9 +118,14 @@ export async function loadPrivateKey(): Promise<CryptoKey | null> {
     }
 
     // --- MIGRATION LOGIC ---
-    const legacyJwk = loadData<JsonWebKey>(PRIVATE_KEY_SESSION_ID, sessionStorage);
+    const legacyJwk = loadData<JsonWebKey>(
+      PRIVATE_KEY_SESSION_ID,
+      sessionStorage,
+    );
     if (legacyJwk) {
-      console.log('[Storage] Migrating legacy key from sessionStorage to IndexedDB...');
+      console.log(
+        '[Storage] Migrating legacy key from sessionStorage to IndexedDB...',
+      );
       try {
         const migratedKey = await importKey(
           legacyJwk,
@@ -130,7 +140,9 @@ export async function loadPrivateKey(): Promise<CryptoKey | null> {
       }
     }
 
-    console.warn('[Storage] No private key found in IndexedDB or sessionStorage');
+    console.warn(
+      '[Storage] No private key found in IndexedDB or sessionStorage',
+    );
     return null;
   } catch (error) {
     console.error('Error loading private key from IndexedDB:', error);

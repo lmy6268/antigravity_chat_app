@@ -6,13 +6,21 @@ import { useTranslation } from '@/i18n/LanguageContext';
 import { routes } from '@/lib/routes';
 import styles from '@/styles/auth-form.module.css';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { LanguageToggle } from '@/components/common/LanguageToggle';
 
 /**
  * LoginForm Component (Pure View)
  */
 export default function LoginForm() {
-  const { username, password, error, isLoading, setUsername, setPassword, handleLogin } =
-    useLogin();
+  const {
+    username,
+    password,
+    error,
+    isLoading,
+    setUsername,
+    setPassword,
+    handleLogin,
+  } = useLogin();
   const { t } = useTranslation();
 
   return (
@@ -29,6 +37,10 @@ export default function LoginForm() {
           onChange={(e) => setUsername(e.target.value)}
           disabled={isLoading}
           className={styles.input}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          autoComplete="username"
         />
         <input
           type="password"
@@ -37,13 +49,21 @@ export default function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           disabled={isLoading}
           className={styles.input}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          autoComplete="current-password"
         />
         <button
           type="submit"
           disabled={isLoading}
           className={`${styles.submitButton} ${styles.login}`}
         >
-          {isLoading ? <LoadingSpinner size={20} color="#ffffff" /> : t.auth.login}
+          {isLoading ? (
+            <LoadingSpinner size={20} color="#ffffff" />
+          ) : (
+            t.auth.login
+          )}
         </button>
       </form>
 
@@ -53,6 +73,7 @@ export default function LoginForm() {
           {t.auth.register}
         </Link>
       </div>
+      <LanguageToggle />
     </div>
   );
 }

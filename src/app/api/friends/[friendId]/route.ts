@@ -1,14 +1,20 @@
 import { NextResponse } from 'next/server';
-import { HTTP_STATUS } from '@/lib/api-constants';
+import { HTTP_STATUS } from '@/lib/constants/api';
 import { dao } from '@/dao/supabase';
 
-export async function PUT(request: Request, { params }: { params: Promise<{ friendId: string }> }) {
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ friendId: string }> },
+) {
   try {
     const { friendId } = await params; // friendship ID (row ID in friends table)
     const { status } = await request.json();
 
     if (!['accepted', 'rejected'].includes(status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: HTTP_STATUS.BAD_REQUEST });
+      return NextResponse.json(
+        { error: 'Invalid status' },
+        { status: HTTP_STATUS.BAD_REQUEST },
+      );
     }
 
     if (status === 'rejected') {
@@ -25,14 +31,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ frie
     console.error('Error updating friend request:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ friendId: string }> }
+  { params }: { params: Promise<{ friendId: string }> },
 ) {
   try {
     const { friendId } = await params;
@@ -44,7 +50,7 @@ export async function DELETE(
     console.error('Error removing friend:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }

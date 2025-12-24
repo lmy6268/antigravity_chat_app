@@ -9,6 +9,7 @@ interface RoomJoinFormProps {
   onJoin: (e: React.FormEvent) => void;
   onBack: () => void;
   error?: string;
+  debugInfo?: any;
 }
 
 export function RoomJoinForm({
@@ -20,6 +21,7 @@ export function RoomJoinForm({
   onJoin,
   onBack,
   error,
+  debugInfo,
 }: RoomJoinFormProps) {
   const { t } = useTranslation();
 
@@ -153,6 +155,27 @@ export function RoomJoinForm({
         >
           {t.chat.backButton}
         </button>
+
+        {debugInfo && (
+          <div
+            style={{
+              marginTop: '20px',
+              padding: '10px',
+              backgroundColor: '#000',
+              borderRadius: '6px',
+              fontSize: '10px',
+              color: '#0f0',
+              fontFamily: 'monospace',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all',
+              maxHeight: '200px',
+              overflowY: 'auto',
+            }}
+          >
+            <strong>DEBUG INFO (Auto-Join Failed):</strong>
+            {JSON.stringify(debugInfo, null, 2)}
+          </div>
+        )}
       </div>
     </div>
   );

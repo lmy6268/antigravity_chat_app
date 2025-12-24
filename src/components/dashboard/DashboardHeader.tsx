@@ -21,8 +21,17 @@ export function DashboardHeader({ nickname, onLogout }: DashboardHeaderProps) {
         gap: '10px',
       }}
     >
-      <h1 style={{ margin: 0, fontSize: 'clamp(1.5rem, 5vw, 2rem)' }}>{t.dashboard.title}</h1>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+      <h1 style={{ margin: 0, fontSize: 'clamp(1.5rem, 5vw, 2rem)' }}>
+        {t.dashboard.title}
+      </h1>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '15px',
+          flexWrap: 'wrap',
+        }}
+      >
         <span style={{ fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}>
           {t.dashboard.hello}, <strong>{nickname}</strong>
         </span>

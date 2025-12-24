@@ -1,4 +1,8 @@
 export const ko = {
+  meta: {
+    title: 'fr2eeChat',
+    description: 'fr2eeChat 애플리케이션',
+  },
   common: {
     loading: '로딩 중...',
     error: '오류가 발생했습니다',
@@ -25,13 +29,16 @@ export const ko = {
     password: '비밀번호',
     welcome: '환영합니다',
     validation: {
-      username: '아이디는 영문 포함 6자리 이상이어야 합니다 (영문/숫자 혼합 가능).',
-      password: '비밀번호는 8자리 이상이어야 하며, 영문, 숫자, @ ! # $ 기호만 사용할 수 있습니다.',
+      username:
+        '아이디는 영문 포함 6자리 이상이어야 합니다 (영문/숫자 혼합 가능).',
+      password:
+        '비밀번호는 8자리 이상이어야 하며, 영문, 숫자, @ ! # $ 기호만 사용할 수 있습니다.',
       usernameHelp: '영문 포함 6자리 이상 (영문/숫자)',
       passwordHelp: '8자리 이상 (영문, 숫자, @ ! # $)',
     },
     alreadyHaveAccount: '이미 계정이 있으신가요?',
     dontHaveAccount: '계정이 없으신가요?',
+    userAlreadyExists: '이미 존재하는 사용자입니다',
   },
   dashboard: {
     title: '채팅 대시보드',
@@ -47,12 +54,16 @@ export const ko = {
       noRooms: '참여 중인 방이 없습니다. 새로운 방을 만들어보세요!',
       join: '입장',
       id: '방 ID',
-      deleteConfirm: '정말로 이 방을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+      deleteConfirm:
+        '정말로 이 방을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
     },
     friends: {
       addTitle: '친구 추가',
       enterUsername: '사용자명 입력',
       sendRequest: '요청 보내기',
+      search: '검색',
+      searchPlaceholder: '사용자 검색...',
+      noResults: '검색 결과가 없습니다',
       listTitle: '친구 목록',
       requestsTitle: '받은 요청',
       noFriends: '아직 친구가 없습니다',
@@ -80,12 +91,16 @@ export const ko = {
       linkCopied: '초대 링크가 클립보드에 복사되었습니다!',
       confirmDeleteRoom: '방을 나가면 방이 삭제됩니다. 정말 나가시겠습니까?',
       roomNotFound: '방을 찾을 수 없습니다',
+      noPublicKey: '대상 사용자에게 E2EE용 공개키가 없습니다',
+      inviteSuccess: '사용자를 성공적으로 초대했습니다!',
+      inviteFailed: '사용자 초대에 실패했습니다',
     },
   },
   chat: {
     send: '전송',
     placeholder: '메시지를 입력하세요...',
     settings: '방 설정',
+    invite: '사용자 초대',
     shareLinkTitle: '초대 링크 공유',
     creator: '방장',
     participants: '참여자 목록',

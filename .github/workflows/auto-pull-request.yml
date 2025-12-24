@@ -1,0 +1,140 @@
+name: 자동 PR 생성
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'hotfix/**'
+
+env:
+  TARGET_BRANCH: develop
+
+jobs:
+  ci:
+    name: CI 및 자동 PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Corepack 활성화
+        run: corepack enable
+
+      - name: 의존성 설치
+        run: yarn install --immutable
+
+      - name: Lint 실행
+        id: lint
+        # 린트 에러가 나도 PR 생성을 위해 작업을 계속함
+        run: |
+          yarn lint > lint-results.txt 2>&1 || echo "LINT_FAILED=true" >> $GITHUB_ENV
+
+      - name: 현재 브랜치 이름 가져오기
+        id: branch
+        run: |
+          echo "name=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+
+      - name: 기존 PR 확인
+        id: check-pr
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        run: |
+          existing_pr=$(gh pr list --head ${{ steps.branch.outputs.name }} --base ${{ env.TARGET_BRANCH }} --json number,state --jq '.[0]')
+          if [ -n "$existing_pr" ] && [ "$existing_pr" != "null" ]; then
+            pr_number=$(echo "$existing_pr" | jq -r '.number')
+            pr_state=$(echo "$existing_pr" | jq -r '.state')
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "number=$pr_number" >> $GITHUB_OUTPUT
+            echo "state=$pr_state" >> $GITHUB_OUTPUT
+            echo "✅ 기존 PR 발견: #$pr_number (상태: $pr_state)"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "📝 새로운 PR 생성 필요"
+          fi
+
+      - name: Gemini CLI 설정
+        if: steps.check-pr.outputs.exists == 'false'
+        uses: google-github-actions/run-gemini-cli@v0.1.16
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: PR 제목 및 설명 생성
+        if: steps.check-pr.outputs.exists == 'false'
+        id: generate-pr
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          bash .github/scripts/generate-pr-description.sh \
+            ${{ env.TARGET_BRANCH }} \
+            ${{ steps.branch.outputs.name }}
+
+      - name: Lint 결과와 함께 PR 본문 준비
+        if: steps.check-pr.outputs.exists == 'false'
+        id: prepare-body
+        run: |
+          # 임시 파일에 본문 작성
+          TEMP_BODY=$(mktemp)
+
+          # PR 본문 추가
+          echo "${{ steps.generate-pr.outputs.body }}" > "$TEMP_BODY"
+
+          # Lint 결과 추가
+          if [ "$LINT_FAILED" = "true" ]; then
+            echo "" >> "$TEMP_BODY"
+            echo "---" >> "$TEMP_BODY"
+            echo "" >> "$TEMP_BODY"
+            echo "### 🔴 Lint 오류 발견" >> "$TEMP_BODY"
+            echo "" >> "$TEMP_BODY"
+            echo "CI 검사 중 다음 오류가 발견되었습니다. 다음 커밋에서 수정을 권장합니다:" >> "$TEMP_BODY"
+            echo "" >> "$TEMP_BODY"
+            echo '```' >> "$TEMP_BODY"
+            cat lint-results.txt | tail -n 50 >> "$TEMP_BODY"
+            echo '```' >> "$TEMP_BODY"
+          else
+            echo "" >> "$TEMP_BODY"
+            echo "---" >> "$TEMP_BODY"
+            echo "" >> "$TEMP_BODY"
+            echo "### ✅ Lint 검사 통과" >> "$TEMP_BODY"
+          fi
+
+          # GitHub Output에 저장
+          echo "final_body<<EOF" >> $GITHUB_OUTPUT
+          cat "$TEMP_BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # 임시 파일 삭제
+          rm -f "$TEMP_BODY"
+
+      - name: Pull Request 생성
+        if: steps.check-pr.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          TZ: Asia/Seoul
+        run: |
+          gh pr create \
+            --base ${{ env.TARGET_BRANCH }} \
+            --head ${{ steps.branch.outputs.name }} \
+            --title "${{ steps.generate-pr.outputs.title }}" \
+            --assignee @me \
+            --body "${{ steps.prepare-body.outputs.final_body }}
+
+          ---
+          _🤖 AI로 자동 생성된 PR_
+          _생성 시간: $(date +'%Y-%m-%d %H:%M:%S KST')_"
+
+      - name: 기존 PR에 새 커밋 요약 추가
+        if: steps.check-pr.outputs.exists == 'true' && steps.check-pr.outputs.state == 'OPEN'
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          bash .github/scripts/update-pr-comment.sh \
+            ${{ steps.check-pr.outputs.number }} \
+            ${{ steps.branch.outputs.name }}

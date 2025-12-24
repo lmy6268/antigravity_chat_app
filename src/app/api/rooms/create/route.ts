@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { HTTP_STATUS } from '@/lib/api-constants';
+import { HTTP_STATUS } from '@/lib/constants/api';
 import { roomModel } from '@/models/RoomModel';
 import { userModel } from '@/models/UserModel';
 import type { CreateRoomRequestDTO } from '@/types/dto';
@@ -7,12 +7,29 @@ import type { CreateRoomRequestDTO } from '@/types/dto';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { id, name, password, creator, salt, encryptedKey } = body;
+    const {
+      id,
+      name,
+      password,
+      creator,
+      salt,
+      encrypted_key,
+      participantEncryptedKey,
+      encryptedPassword,
+    } = body;
 
-    if (!id || !name || !password || !creator || !salt || !encryptedKey) {
+    if (
+      !id ||
+      !name ||
+      !password ||
+      !creator ||
+      !salt ||
+      !encrypted_key ||
+      !participantEncryptedKey
+    ) {
       return NextResponse.json(
         { error: 'Missing required fields' },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
@@ -20,7 +37,10 @@ export async function POST(request: Request) {
     const userDTO = await userModel.findByUsername(creator);
 
     if (!userDTO) {
-      return NextResponse.json({ error: 'User not found' }, { status: HTTP_STATUS.NOT_FOUND });
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: HTTP_STATUS.NOT_FOUND },
+      );
     }
 
     // 2. Create room (also adds creator as participant)
@@ -31,7 +51,9 @@ export async function POST(request: Request) {
       creator,
       password,
       salt,
-      encryptedKey
+      encrypted_key,
+      participantEncryptedKey,
+      encryptedPassword,
     );
 
     return NextResponse.json(
@@ -44,13 +66,13 @@ export async function POST(request: Request) {
           createdAt: roomDTO.created_at,
         },
       },
-      { status: HTTP_STATUS.CREATED }
+      { status: HTTP_STATUS.CREATED },
     );
   } catch (error) {
     console.error('Error creating room:', error);
     return NextResponse.json(
       { error: 'Failed to create room' },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }

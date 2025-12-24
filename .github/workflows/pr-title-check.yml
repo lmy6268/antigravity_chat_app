@@ -1,0 +1,84 @@
+name: PR 제목 검증
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-pr-title:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: PR 제목 형식 확인
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+            const pattern = /^\[(Feature|Fix|Refactor|Style|Docs|Test|Chore|Perf|Security)\]\s+.+/;
+            
+            const validTypes = [
+              'Feature', 'Fix', 'Refactor', 'Style',
+              'Docs', 'Test', 'Chore', 'Perf', 'Security'
+            ];
+            
+            if (!pattern.test(prTitle)) {
+              const typeList = validTypes.map(type => '- `' + type + '`').join('\n');
+              const comment = '## ⚠️ PR 제목 형식 오류\n\n' +
+                '현재 PR 제목: `' + prTitle + '`\n\n' +
+                'PR 제목이 올바른 형식을 따르지 않습니다.\n\n' +
+                '**올바른 형식**: [타입] 제목\n\n' +
+                '### 허용된 타입\n\n' + typeList + '\n\n' +
+                '### 예시\n\n' +
+                '- `[Feature] 사용자 인증 기능 추가`\n' +
+                '- `[Fix] 로그인 오류 수정`\n' +
+                '- `[Refactor] 대시보드 컴포넌트 구조 개선`\n\n' +
+                '자세한 내용은 [PR 컨벤션 문서](../docs/PR_CONVENTION.md)를 참고해주세요.';
+
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+              });
+
+              const botComment = comments.find(c => 
+                c.user.type === 'Bot' && c.body.includes('PR 제목 형식 오류')
+              );
+
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: comment
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.pull_request.number,
+                  body: comment
+                });
+              }
+
+              core.warning('PR 제목이 형식에 맞지 않습니다.');
+            } else {
+              core.info('✅ PR 제목 형식이 올바릅니다.');
+              
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+              });
+
+              const botComment = comments.find(c => 
+                c.user.type === 'Bot' && c.body.includes('PR 제목 형식 오류')
+              );
+
+              if (botComment) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id
+                });
+              }
+            }

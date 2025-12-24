@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+.yarn
+
+# Build outputs
+.next
+out
+dist
+build
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# IDE
+.vscode
+.idea
+
+# GitHub Actions workflows with inline scripts
+.github/workflows/pr-title-check.yml
+
+# Shell scripts
+*.sh

@@ -6,13 +6,21 @@ import { useTranslation } from '@/i18n/LanguageContext';
 import { routes } from '@/lib/routes';
 import styles from '@/styles/auth-form.module.css';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { LanguageToggle } from '@/components/common/LanguageToggle';
 
 /**
  * RegisterForm Component (Pure View)
  */
 export default function RegisterForm() {
-  const { username, password, error, isLoading, setUsername, setPassword, register } =
-    useRegister();
+  const {
+    username,
+    password,
+    error,
+    isLoading,
+    setUsername,
+    setPassword,
+    register,
+  } = useRegister();
   const { t } = useTranslation();
 
   return (
@@ -30,8 +38,14 @@ export default function RegisterForm() {
             onChange={(e) => setUsername(e.target.value)}
             disabled={isLoading}
             className={styles.input}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            autoComplete="username"
           />
-          <span className={styles.helpText}>{t.auth.validation.usernameHelp}</span>
+          <span className={styles.helpText}>
+            {t.auth.validation.usernameHelp}
+          </span>
         </div>
 
         <div className={styles.inputGroup}>
@@ -42,15 +56,25 @@ export default function RegisterForm() {
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
             className={styles.input}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            autoComplete="new-password"
           />
-          <span className={styles.helpText}>{t.auth.validation.passwordHelp}</span>
+          <span className={styles.helpText}>
+            {t.auth.validation.passwordHelp}
+          </span>
         </div>
         <button
           type="submit"
           disabled={isLoading}
           className={`${styles.submitButton} ${styles.register}`}
         >
-          {isLoading ? <LoadingSpinner size={20} color="#ffffff" /> : t.auth.register}
+          {isLoading ? (
+            <LoadingSpinner size={20} color="#ffffff" />
+          ) : (
+            t.auth.register
+          )}
         </button>
       </form>
 
@@ -60,6 +84,7 @@ export default function RegisterForm() {
           {t.auth.login}
         </Link>
       </div>
+      <LanguageToggle />
     </div>
   );
 }

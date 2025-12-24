@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 interface ChatHeaderProps {
   roomName: string;
   onBack: () => void;
@@ -5,7 +7,12 @@ interface ChatHeaderProps {
   onShare: () => void;
 }
 
-export function ChatHeader({ roomName, onBack, onSettings, onShare }: ChatHeaderProps) {
+export function ChatHeader({
+  roomName,
+  onBack,
+  onSettings,
+  onShare,
+}: ChatHeaderProps) {
   return (
     <div
       style={{
@@ -31,12 +38,12 @@ export function ChatHeader({ roomName, onBack, onSettings, onShare }: ChatHeader
           justifyContent: 'center',
         }}
       >
-        <img
-          src="https://cdn-icons-png.flaticon.com/128/6423/6423874.png"
+        <Image
+          src="/icons/back.png"
           alt="back"
+          width={24}
+          height={24}
           style={{
-            width: 24,
-            height: 24,
             filter: 'brightness(0) invert(1)', // 테마에 맞춰 흰색
           }}
         />
@@ -70,12 +77,12 @@ export function ChatHeader({ roomName, onBack, onSettings, onShare }: ChatHeader
           }}
           aria-label="Share room link"
         >
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/8828/8828334.png"
+          <Image
+            src="/icons/share.png"
             alt="share icon"
+            width={24}
+            height={24}
             style={{
-              width: 24,
-              height: 24,
               filter: 'brightness(0) invert(1)', // 테마에 맞춰 흰색
             }}
           />
@@ -94,12 +101,12 @@ export function ChatHeader({ roomName, onBack, onSettings, onShare }: ChatHeader
             height: 32,
           }}
         >
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/1828/1828859.png"
+          <Image
+            src="/icons/menu.png"
             alt="menu"
+            width={24}
+            height={24}
             style={{
-              width: 24,
-              height: 24,
               filter: 'brightness(0) invert(1)', // 테마에 맞춰 흰색
             }}
           />

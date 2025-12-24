@@ -15,7 +15,9 @@ export function UserSettings() {
     >
       <h3 style={{ margin: '0 0 12px 0' }}>{t.settings.title}</h3>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ color: '#aaa', fontSize: '14px' }}>{t.settings.language}</span>
+        <span style={{ color: '#aaa', fontSize: '14px' }}>
+          {t.settings.language}
+        </span>
         <div style={{ display: 'flex', gap: '6px' }}>
           <button
             onClick={() => setLocale('ko')}

@@ -1,49 +1,39 @@
-// .env.local 파일에서 환경 변수 로드
-import dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
+// Load environment variables first (now handled by config.ts)
 
-import { createServer } from 'http';
+import { config, getHttpsOptions } from './config';
+
+import { createServer, IncomingMessage } from 'http';
 import { createServer as createHttpsServer } from 'https';
-import fs from 'fs';
 import { parse } from 'url';
 import next from 'next';
 import { Server } from 'socket.io';
 import { registerRoomHandlers } from './handlers/roomHandler';
 import { registerMessageHandlers } from './handlers/messageHandler';
 import { SOCKET_LIFECYCLE } from '../types/events';
-import { serverLogger } from '../lib/server-logger';
-import { applyRuntimeEnvHeader } from './middleware/runtimeEnv';
+import { serverLogger } from '../lib/logger/server';
+import { applyRuntimeEnvHeader } from '../middleware/server/runtimeEnv';
+import { applySecurityHeaders } from '../middleware/server/security';
+import { CustomSocket } from '../types/socket';
 
-const dev = process.env.NODE_ENV !== 'production';
-const hostname = '0.0.0.0';
-const port = parseInt(process.env.PORT || '3000', 10);
-const app = next({ dev, hostname, port });
+const { dev, hostname, port } = config;
+
+const app = next({
+  dev,
+  hostname,
+  port,
+  // Force Webpack to avoid Turbopack PnP issues
+  webpack: true,
+});
 const handle = app.getRequestHandler();
 
-// SSL 인증서 확인
-let useHttps = false;
-let httpsOptions = {};
+// SSL 인증서 설정 가져오기
+const httpsOptions = dev ? getHttpsOptions() : null;
+const useHttps = !!httpsOptions;
 
-if (dev) {
-  const certPath = process.env.SSL_CERT_PATH;
-  const keyPath = process.env.SSL_KEY_PATH;
-
-  if (certPath && keyPath && (!fs.existsSync(certPath) || !fs.existsSync(keyPath))) {
-    serverLogger.error('🔴 SSL 인증서 파일을 찾을 수 없습니다!');
-    serverLogger.error(`인증서 경로: ${certPath}`);
-    serverLogger.error(`키 경로: ${keyPath}`);
-    serverLogger.error('\n파일이 존재하는지 확인하거나 mkcert로 새로 생성하세요.');
-    process.exit(1);
-  }
-
-  if (certPath && keyPath) {
-    useHttps = true;
-    httpsOptions = {
-      key: fs.readFileSync(keyPath),
-      cert: fs.readFileSync(certPath),
-    };
-    serverLogger.info('✅ SSL 인증서 발견, HTTPS 서버 시작');
-  }
+if (dev && !useHttps) {
+  serverLogger.warn('� SSL 인증서를 찾을 수 없어 HTTP 모드로 시작합니다.');
+} else if (useHttps) {
+  serverLogger.info('✅ SSL 인증서 발견, HTTPS 서버 시작');
 }
 
 app.prepare().then(() => {
@@ -58,21 +48,32 @@ app.prepare().then(() => {
     },
   });
 
+  // Custom request type for Engine.IO compatibility
+  interface EngineRequest extends IncomingMessage {
+    _query?: Record<string, string | string[] | undefined>;
+  }
+
   // Socket.io 핸드쉐이크/업그레이드를 직접 처리하여 Next로 안 넘김
   server.on('request', (req, res) => {
     if (req.url?.startsWith('/api/socket')) {
-      const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+      const urlObj = new URL(
+        req.url,
+        `http://${req.headers.host || 'localhost'}`,
+      );
       const query = Object.fromEntries(urlObj.searchParams.entries());
 
-      // Fix for type error: IncomingMessage is not EngineRequest
       // Attach parsed query so engine can read EIO/transport params
-      (io.engine as any).handleRequest(Object.assign(req, { _query: query }), res);
+      io.engine.handleRequest(
+        Object.assign(req as EngineRequest, { _query: query }),
+        res,
+      );
       return;
     }
 
     if (req.url) {
       const parsedUrl = parse(req.url, true);
       applyRuntimeEnvHeader(res);
+      applySecurityHeaders(res);
       handle(req, res, parsedUrl);
     } else {
       res.statusCode = 400;
@@ -82,12 +83,17 @@ app.prepare().then(() => {
 
   server.on('upgrade', (req, socket, head) => {
     if (req.url?.startsWith('/api/socket')) {
-      const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+      const urlObj = new URL(
+        req.url,
+        `http://${req.headers.host || 'localhost'}`,
+      );
       const query = Object.fromEntries(urlObj.searchParams.entries());
 
-      // Fix for type error: IncomingMessage is not EngineRequest
-      // Attach parsed query so engine can read EIO/transport params
-      (io.engine as any).handleUpgrade(Object.assign(req, { _query: query }), socket, head);
+      (io.engine as any).handleUpgrade(
+        Object.assign(req as EngineRequest, { _query: query }),
+        socket,
+        head,
+      );
       return;
     }
     // 나머지 업그레이드는 Next(HMR 등)에서 처리되도록 그대로 둔다.
@@ -95,7 +101,8 @@ app.prepare().then(() => {
 
   // --- Socket.io middleware 파이프라인 ---
   const registerHandlersMiddleware =
-    (ioInstance: Server) => (socket: any, next: (err?: Error) => void) => {
+    (ioInstance: Server) =>
+    (socket: CustomSocket, next: (err?: Error) => void) => {
       registerRoomHandlers(ioInstance, socket);
       registerMessageHandlers(ioInstance, socket);
       next();
@@ -103,7 +110,7 @@ app.prepare().then(() => {
 
   io.use(registerHandlersMiddleware(io));
 
-  io.on(SOCKET_LIFECYCLE.CONNECTION, (socket) => {
+  io.on(SOCKET_LIFECYCLE.CONNECTION, (socket: CustomSocket) => {
     serverLogger.info('New Socket.io connection:', socket.id);
 
     socket.on(SOCKET_LIFECYCLE.DISCONNECT, async () => {
@@ -114,7 +121,7 @@ app.prepare().then(() => {
   server.listen(port, hostname, async () => {
     const protocol = useHttps ? 'https' : 'http';
     serverLogger.info(`> Ready on ${protocol}://${hostname}:${port}`);
-    serverLogger.info(`> Access from your Mac: ${protocol}://localhost:${port}`);
+    serverLogger.info(`> local: ${protocol}://localhost:${port}`);
     if (dev && useHttps) {
       // Get the local IP address
       const { networkInterfaces } = await import('os');
@@ -124,7 +131,7 @@ app.prepare().then(() => {
         if (!netArray) continue;
         for (const net of netArray) {
           if (net && net.family === 'IPv4' && !net.internal) {
-            serverLogger.info(`> Access from iPhone: ${protocol}://${net.address}:${port}`);
+            serverLogger.info(`> client: ${protocol}://${net.address}:${port}`);
             break;
           }
         }

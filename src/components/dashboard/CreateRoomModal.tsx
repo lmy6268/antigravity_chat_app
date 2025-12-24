@@ -7,7 +7,11 @@ interface CreateRoomModalProps {
   isCreating: boolean;
 }
 
-export function CreateRoomModal({ onClose, onSubmit, isCreating }: CreateRoomModalProps) {
+export function CreateRoomModal({
+  onClose,
+  onSubmit,
+  isCreating,
+}: CreateRoomModalProps) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');

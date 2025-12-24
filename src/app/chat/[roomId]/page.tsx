@@ -3,6 +3,7 @@
 import { useEffect, useState, use, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRoomJoin } from '@/hooks/chat/useRoomJoin';
+import { useRoomInvite } from '@/hooks/chat/useRoomInvite';
 import { useWebSocket } from '@/hooks/chat/useWebSocket';
 import { dialogService } from '@/lib/dialog';
 import { useChat } from '@/hooks/chat/useChat';
@@ -16,6 +17,32 @@ import { ChatSettings } from '@/components/chat/ChatSettings';
 import { ChatMessageList } from '@/components/chat/ChatMessageList';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatShareModal } from '@/components/chat/ChatShareModal';
+import { buildFullUrl } from '@/lib/utils/url';
+import { routes } from '@/lib/routes';
+
+/**
+ * Global animations for chat page transitions
+ */
+const ChatTransitions = () => (
+  <style jsx global>{`
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+  `}</style>
+);
 
 /**
  * ChatRoom Component (Orchestrator)
@@ -25,7 +52,11 @@ import { ChatShareModal } from '@/components/chat/ChatShareModal';
  * - Handle component composition
  * - Minimal business logic (event handlers only)
  */
-export default function ChatRoom({ params }: { params: Promise<{ roomId: string }> }) {
+export default function ChatRoom({
+  params,
+}: {
+  params: Promise<{ roomId: string }>;
+}) {
   // use()는 다른 hooks 전에 호출해야 함 (Rules of Hooks)
   const { roomId } = use(params);
 
@@ -48,21 +79,38 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     quitRoom,
     goBack,
     error,
+    debugInfo,
   } = useRoomJoin(roomId, roomName);
 
-  const { socketRef, isConnected, connectSocket, disconnectSocket } = useWebSocket(
-    roomId,
-    nickname
-  );
+  const { inviteUser } = useRoomInvite(roomId, cryptoKey);
 
-  const { messages, inputMessage, setInputMessage, chatContainerRef, sendMessage, initializeChat } =
-    useChat(roomId, roomInfo?.name || roomName, nickname, cryptoKey, socketRef, isConnected, t);
+  const { socketRef, isConnected, connectSocket, disconnectSocket } =
+    useWebSocket(roomId, nickname);
+
+  const {
+    messages,
+    inputMessage,
+    setInputMessage,
+    chatContainerRef,
+    sendMessage,
+    initializeChat,
+  } = useChat(
+    roomId,
+    roomInfo?.name || roomName,
+    nickname,
+    cryptoKey,
+    socketRef,
+    isConnected,
+    t,
+  );
 
   // Local state
   const [showSettings, setShowSettings] = useState(false);
   const [settingsClosing, setSettingsClosing] = useState(false);
   const [showShare, setShowShare] = useState(false);
-  const [slideState, setSlideState] = useState<'entering' | 'entered' | 'exiting'>('entering');
+  const [slideState, setSlideState] = useState<
+    'entering' | 'entered' | 'exiting'
+  >('entering');
   const hasInitializedRef = useRef(false);
 
   // Connect socket when joined AND cryptoKey is ready (한 번만 실행)
@@ -77,22 +125,23 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
 
   // Handle room deletion (socketRef 변경 시에만 재설정)
   useEffect(() => {
-    if (!isConnected || !socketRef.current) return;
+    const socket = socketRef.current;
+    if (!isConnected || !socket) return;
 
     const handleRoomDeleted = () => {
       dialogService.alert(t.dashboard.alerts.roomDeleted);
       disconnectSocket();
-      quitRoom(); // 방이 삭제되었으므로 나가기 처리 (API 호출은 불필요할 수 있으나 클린업 차원)
+      quitRoom(); // 방이 삭제되었으므로 나가기 처리
     };
 
-    socketRef.current.on(SERVER_EVENTS.ROOM_DELETED, handleRoomDeleted);
+    socket.on(SERVER_EVENTS.ROOM_DELETED, handleRoomDeleted);
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.off(SERVER_EVENTS.ROOM_DELETED, handleRoomDeleted);
+      if (socket) {
+        socket.off(SERVER_EVENTS.ROOM_DELETED, handleRoomDeleted);
       }
     };
-  }, [isConnected, disconnectSocket, quitRoom, t]);
+  }, [isConnected, disconnectSocket, quitRoom, t, socketRef]);
 
   // Event handlers
   const handleBack = () => {
@@ -106,52 +155,25 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   // ...
 
   const handleLeave = async () => {
-    console.log('[ChatRoom] handleLeave called');
     // Check if creator
     const isCreator = roomInfo?.creator === nickname;
 
     if (isCreator) {
       if (!dialogService.confirm(t.dashboard.alerts.confirmDeleteRoom)) {
-        console.log('[ChatRoom] Delete cancelled');
         return;
       }
-      console.log('[ChatRoom] Delete confirmed, emitting event');
       // Emit delete-room event to notify others
       if (socketRef.current) {
         socketRef.current.emit(CLIENT_EVENTS.DELETE_ROOM, roomId);
       }
     }
 
-    console.log('[ChatRoom] Disconnecting and quitting');
     disconnectSocket();
     await quitRoom();
   };
 
   const buildInviteLink = async () => {
-    const href = window.location.href;
-    const url = new URL(href);
-
-    const isDev = process.env.NODE_ENV === 'development';
-    const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
-
-    if (isDev && isLocalhost) {
-      try {
-        const res = await fetch('/api/dev/host');
-        if (res.ok) {
-          const data = await res.json();
-          const host = data.host as string;
-          if (host) {
-            const port = url.port || '3000';
-            url.hostname = host;
-            url.port = port;
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to resolve dev host, fallback to localhost', e);
-      }
-    }
-
-    return url.toString();
+    return buildFullUrl(routes.chat.room(roomId));
   };
 
   const copyInviteLink = async () => {
@@ -209,6 +231,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
         onJoin={joinRoom}
         onBack={goBack}
         error={error}
+        debugInfo={debugInfo}
       />
     );
   }
@@ -261,6 +284,7 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
             currentUser={nickname}
             isConnected={isConnected}
             isClosing={settingsClosing}
+            onInvite={inviteUser}
           />
         )}
 
@@ -268,28 +292,11 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
           <ChatShareModal
             onClose={() => setShowShare(false)}
             buildLink={buildInviteLink}
-            password={roomInfo?.password}
+            password={password}
           />
         )}
 
-        <style jsx global>{`
-          @keyframes fadeIn {
-            from {
-              opacity: 0;
-            }
-            to {
-              opacity: 1;
-            }
-          }
-          @keyframes fadeOut {
-            from {
-              opacity: 1;
-            }
-            to {
-              opacity: 0;
-            }
-          }
-        `}</style>
+        <ChatTransitions />
 
         <ChatMessageList
           messages={messages}

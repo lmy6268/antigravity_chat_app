@@ -1,7 +1,8 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Explicit project root is helpful for some tools
+  distDir: '.next',
 };
 
 export default nextConfig;

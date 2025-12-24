@@ -7,8 +7,9 @@
 export interface UserEntity {
   id: string;
   username: string;
-  password: string;
+  password?: string;
   public_key?: string;
+  encrypted_private_key?: string; // Backup
   created_at: string; // Supabase returns ISO string
   updated_at: string;
 }
@@ -21,6 +22,7 @@ export interface RoomEntity {
   password: string;
   salt?: string;
   encrypted_key?: string;
+  encrypted_password?: string; // Password encrypted with Room Master Key
   created_at: string; // Supabase returns ISO string
   updated_at: string;
 }
@@ -28,8 +30,8 @@ export interface RoomEntity {
 export interface MessageEntity {
   id: number;
   room_id: string;
-  iv: number[];
-  data: number[];
+  iv: string; // Base64
+  data: string; // Base64
   created_at: string; // Supabase returns ISO string
 }
 
@@ -49,3 +51,6 @@ export interface FriendEntity {
   created_at: string; // Supabase returns ISO string
   updated_at: string;
 }
+
+// Re-export admin entities
+export type { AdminEntity, ApiLogEntity } from './admin';

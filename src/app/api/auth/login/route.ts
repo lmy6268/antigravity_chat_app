@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { userModel } from '@/models/UserModel';
-import { HTTP_STATUS } from '@/lib/api-constants';
+import { HTTP_STATUS } from '@/lib/constants/api';
 import type { LoginRequestDTO } from '@/types/dto';
 
 export async function POST(request: Request) {
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     if (!username || !password) {
       return NextResponse.json(
         { error: 'Username and password are required' },
-        { status: HTTP_STATUS.BAD_REQUEST }
+        { status: HTTP_STATUS.BAD_REQUEST },
       );
     }
 
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     if (!authResponse) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
-        { status: HTTP_STATUS.UNAUTHORIZED }
+        { status: HTTP_STATUS.UNAUTHORIZED },
       );
     }
 
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     console.error('Login error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }
+      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
     );
   }
 }

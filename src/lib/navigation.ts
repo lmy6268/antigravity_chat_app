@@ -29,14 +29,14 @@ export function useTypedRouter() {
   };
 }
 
+import { loadUserProfile } from './key-storage';
+
 /**
- * Check if user is authenticated (simple localStorage check)
- * In production, this should use a more robust auth system
+ * Get authenticated user from storage (asynchronous for interface compatibility)
  */
-export function isAuthenticated(): boolean {
-  if (typeof window === 'undefined') return false;
-  const user = localStorage.getItem('chat_user');
-  return !!user;
+export async function getAuthenticatedUser() {
+  if (typeof window === 'undefined') return null;
+  return await loadUserProfile();
 }
 
 /**
@@ -61,8 +61,6 @@ export function getCurrentRouteMetadata(pathname: string) {
  * Redirects to login if not authenticated and route requires auth
  * Redirects to dashboard if authenticated and route is guest-only
  *
- * @example
- * // In a page component
  * useRouteGuard();
  */
 export function useRouteGuard() {
@@ -70,20 +68,28 @@ export function useRouteGuard() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const metadata = getCurrentRouteMetadata(pathname);
-    if (!metadata) return;
+    const checkRoute = async () => {
+      const metadata = getCurrentRouteMetadata(pathname);
+      if (!metadata) return;
 
-    const authenticated = isAuthenticated();
+      const user = await getAuthenticatedUser();
+      const authenticated = !!user;
 
-    // Redirect if auth required but not authenticated
-    if (metadata.requiresAuth && !authenticated) {
-      router.push(metadata.redirectIfUnauthenticated || routes.auth.login());
-    }
+      // Redirect if auth required but not authenticated
+      if (metadata.requiresAuth && !authenticated) {
+        router.push(metadata.redirectIfUnauthenticated || routes.auth.login());
+      }
 
-    // Redirect if guest-only but authenticated
-    if (!metadata.requiresAuth && metadata.redirectIfAuthenticated && authenticated) {
-      router.push(metadata.redirectIfAuthenticated);
-    }
+      // Redirect if guest-only but authenticated
+      if (
+        !metadata.requiresAuth &&
+        metadata.redirectIfAuthenticated &&
+        authenticated
+      ) {
+        router.push(metadata.redirectIfAuthenticated);
+      }
+    };
+    checkRoute();
   }, [pathname, router]);
 }
 
@@ -93,7 +99,9 @@ export function useRouteGuard() {
  * @param pattern - Route pattern with :param syntax
  */
 export function matchRoute(pathname: string, pattern: string): boolean {
-  const patternRegex = new RegExp('^' + pattern.replace(/:[^/]+/g, '[^/]+') + '$');
+  const patternRegex = new RegExp(
+    '^' + pattern.replace(/:[^/]+/g, '[^/]+') + '$',
+  );
   return patternRegex.test(pathname);
 }
 
@@ -106,7 +114,10 @@ export function matchRoute(pathname: string, pattern: string): boolean {
  * @example
  * extractParams('/chat/room123', '/chat/:roomId')
  */
-export function extractParams(pathname: string, pattern: string): Record<string, string> {
+export function extractParams(
+  pathname: string,
+  pattern: string,
+): Record<string, string> {
   const patternParts = pattern.split('/');
   const pathnameParts = pathname.split('/');
   const params: Record<string, string> = {};

@@ -1,4 +1,8 @@
 export const en = {
+  meta: {
+    title: 'fr2eeChat',
+    description: 'fr2eeChat Application',
+  },
   common: {
     loading: 'Loading...',
     error: 'An error occurred',
@@ -34,6 +38,7 @@ export const en = {
     },
     alreadyHaveAccount: 'Already have an account?',
     dontHaveAccount: "Don't have an account?",
+    userAlreadyExists: 'User already exists',
   },
   dashboard: {
     title: 'Chat Dashboard',
@@ -49,12 +54,16 @@ export const en = {
       noRooms: "You haven't joined any rooms yet. Create one to get started!",
       join: 'Join',
       id: 'ID',
-      deleteConfirm: 'Are you sure you want to delete this room? This action cannot be undone.',
+      deleteConfirm:
+        'Are you sure you want to delete this room? This action cannot be undone.',
     },
     friends: {
       addTitle: 'Add Friend',
       enterUsername: 'Enter username',
       sendRequest: 'Send Request',
+      search: 'Search',
+      searchPlaceholder: 'Search users...',
+      noResults: 'No users found',
       listTitle: 'Friends',
       requestsTitle: 'Requests',
       noFriends: 'No friends yet',
@@ -80,14 +89,19 @@ export const en = {
       invalidPassword: 'Invalid room password',
       roomDeleted: 'The room has been deleted by the creator.',
       linkCopied: 'Invite link copied to clipboard!',
-      confirmDeleteRoom: 'If you leave, the room will be deleted. Are you sure?',
+      confirmDeleteRoom:
+        'If you leave, the room will be deleted. Are you sure?',
       roomNotFound: 'Room not found',
+      noPublicKey: 'Target user has no public key for E2EE',
+      inviteSuccess: 'User invited successfully!',
+      inviteFailed: 'Failed to invite user',
     },
   },
   chat: {
     send: 'Send',
     placeholder: 'Type a message...',
     settings: 'Room Settings',
+    invite: 'Invite User',
     shareLinkTitle: 'Share Invite Link',
     creator: 'Creator',
     participants: 'Active Participants',

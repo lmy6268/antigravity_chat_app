@@ -15,9 +15,12 @@ export class UserModel {
   /**
    * 사용자 인증
    */
-  async authenticate(username: string, password: string): Promise<AuthResponseDTO | null> {
+  async authenticate(
+    username: string,
+    password: string,
+  ): Promise<AuthResponseDTO | null> {
     const userEntity = await this.userDAO.findByUsername(username);
-    if (!userEntity) return null;
+    if (!userEntity || !userEntity.password) return null;
 
     const isValid = await bcrypt.compare(password, userEntity.password);
     if (!isValid) return null;
@@ -30,7 +33,12 @@ export class UserModel {
   /**
    * 사용자 등록
    */
-  async register(username: string, password: string, publicKey?: string): Promise<AuthResponseDTO> {
+  async register(
+    username: string,
+    password: string,
+    publicKey?: string,
+    encryptedPrivateKey?: string,
+  ): Promise<AuthResponseDTO> {
     // 중복 확인
     const existing = await this.userDAO.findByUsername(username);
     if (existing) {
@@ -44,6 +52,7 @@ export class UserModel {
       username,
       password: hashedPassword,
       public_key: publicKey,
+      encrypted_private_key: encryptedPrivateKey,
     });
 
     return {
@@ -67,6 +76,14 @@ export class UserModel {
     const userEntity = await this.userDAO.findById(id);
     if (!userEntity) return null;
     return userEntityToDTO(userEntity);
+  }
+
+  /**
+   * 사용자 검색 (부분 일치)
+   */
+  async searchUsers(query: string): Promise<UserDTO[]> {
+    const userEntities = await this.userDAO.searchByUsername(query);
+    return userEntities.map(userEntityToDTO);
   }
 }
 

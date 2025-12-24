@@ -7,14 +7,17 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ roomId: string }> }
+  { params }: { params: Promise<{ roomId: string }> },
 ) {
   try {
     const { roomId } = await params;
     const { username } = await request.json();
 
     if (!username) {
-      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Username is required' },
+        { status: 400 },
+      );
     }
 
     const userDTO = await userModel.findByUsername(username);
@@ -31,10 +34,16 @@ export async function POST(
     } else {
       // User is participant, remove from list
       await dao.participant.remove(roomId, userDTO.id);
-      return NextResponse.json({ success: true, action: 'participant_removed' });
+      return NextResponse.json({
+        success: true,
+        action: 'participant_removed',
+      });
     }
   } catch (error) {
     console.error('Error leaving room:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 },
+    );
   }
 }

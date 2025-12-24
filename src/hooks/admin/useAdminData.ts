@@ -1,5 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ServerMetrics, AdminStats, ApiLogEntity } from '@/types/admin';
+import { loadAdminProfile } from '@/lib/key-storage';
+
+/**
+ * 관리자 인증 헤더를 생성하는 헬퍼 함수
+ */
+async function getAdminAuthHeaders(): Promise<HeadersInit> {
+  const admin = await loadAdminProfile();
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  if (admin?.id) {
+    headers['Authorization'] = admin.id;
+  }
+
+  return headers;
+}
 
 export function useServerMetrics(refreshInterval = 5000) {
   const [metrics, setMetrics] = useState<ServerMetrics | null>(null);
@@ -8,7 +25,8 @@ export function useServerMetrics(refreshInterval = 5000) {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const res = await fetch('/api/admin/metrics');
+        const headers = await getAdminAuthHeaders();
+        const res = await fetch('/api/admin/metrics', { headers });
         const data = await res.json();
         setMetrics(data.metrics);
       } catch (error) {
@@ -33,7 +51,8 @@ export function useAdminStats() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch('/api/admin/stats');
+        const headers = await getAdminAuthHeaders();
+        const res = await fetch('/api/admin/stats', { headers });
         const data = await res.json();
         setStats(data.stats);
       } catch (error) {
@@ -61,7 +80,8 @@ export function useApiLogs(limit = 100) {
         if (path) params.append('path', path);
         if (ip) params.append('ip', ip);
 
-        const res = await fetch(`/api/admin/logs?${params}`);
+        const headers = await getAdminAuthHeaders();
+        const res = await fetch(`/api/admin/logs?${params}`, { headers });
         const data = await res.json();
         setLogs(data.logs);
       } catch (error) {

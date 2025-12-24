@@ -336,6 +336,17 @@ export class AdminDAO implements IAdminDAO {
     return data;
   }
 
+  async findById(id: string): Promise<AdminEntity | null> {
+    const { data, error } = await supabase
+      .from('admins')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) return null;
+    return data;
+  }
+
   async create(
     admin: Omit<AdminEntity, 'id' | 'created_at'>,
   ): Promise<AdminEntity> {

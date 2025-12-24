@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server';
 import { HTTP_STATUS } from '@/lib/constants/api';
 import { dao } from '@/dao/supabase';
+import { withAdminAuth } from '@/middleware/server/adminAuth';
 
 /**
  * GET /api/admin/logs
  * API 호출 로그 조회
+ * 인증: 관리자 인증 필요
  * Query params:
  * - limit: 조회할 로그 개수 (기본: 100)
  * - path: 특정 경로 필터링 (선택)
  * - ip: 특정 IP 필터링 (선택)
  */
 export async function GET(request: Request) {
-  try {
+  return withAdminAuth(request, async () => {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '100', 10);
     const path = searchParams.get('path');
@@ -27,12 +29,6 @@ export async function GET(request: Request) {
       logs = await dao.apiLog.findRecent(limit);
     }
 
-    return NextResponse.json({ logs });
-  } catch (error) {
-    console.error('Error fetching API logs:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
-    );
-  }
+    return { logs };
+  });
 }

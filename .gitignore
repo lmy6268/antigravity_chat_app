@@ -59,6 +59,9 @@ gha-creds-*.json
 src/server/certs/*
 .ssh/*
 
+# DuckDNS logs
+duckdns/duck.log
+
 # .vscode (Unignored to share workspace settings)
 !.vscode/
 sync_config.jsonc

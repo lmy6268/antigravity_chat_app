@@ -109,4 +109,7 @@ fi
 # PR에 코멘트 추가
 echo "$COMMENT" | gh pr comment $PR_NUMBER --body-file -
 
-echo "✅ PR #$PR_NUMBER에 커밋 요약 코멘트 추가 완료"
+# Gemini bot에게 추가 코드 리뷰를 요청하는 코멘트 추가
+echo "/gemini review" | gh pr comment $PR_NUMBER --body-file -
+
+echo "✅ PR #$PR_NUMBER에 커밋 요약 코멘트 및 Gemini 리뷰 요청 추가 완료"

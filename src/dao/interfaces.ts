@@ -90,6 +90,7 @@ export interface IFriendDAO {
 
 export interface IAdminDAO {
   findByUsername(username: string): Promise<AdminEntity | null>;
+  findById(id: string): Promise<AdminEntity | null>;
   create(admin: Omit<AdminEntity, 'id' | 'created_at'>): Promise<AdminEntity>;
 }
 

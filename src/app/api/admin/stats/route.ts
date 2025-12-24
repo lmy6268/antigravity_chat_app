@@ -3,13 +3,15 @@ import { HTTP_STATUS } from '@/lib/constants/api';
 import { dao } from '@/dao/supabase';
 import { supabase } from '@/lib/supabase/client';
 import type { AdminStats } from '@/types/admin';
+import { withAdminAuth } from '@/middleware/server/adminAuth';
 
 /**
  * GET /api/admin/stats
  * 통계 정보 조회 (메타데이터만, 내용 X)
+ * 인증: 관리자 인증 필요
  */
-export async function GET() {
-  try {
+export async function GET(request: Request) {
+  return withAdminAuth(request, async () => {
     // 각 테이블의 총 개수만 조회 (내용은 조회하지 않음)
     const [usersCount, roomsCount, messagesCount, apiCallsCount] =
       await Promise.all([
@@ -26,12 +28,6 @@ export async function GET() {
       totalApiCalls: apiCallsCount,
     };
 
-    return NextResponse.json({ stats });
-  } catch (error) {
-    console.error('Error fetching stats:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: HTTP_STATUS.INTERNAL_SERVER_ERROR },
-    );
-  }
+    return { stats };
+  });
 }

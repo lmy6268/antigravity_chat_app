@@ -7,7 +7,7 @@ on:
 jobs:
   check-pr-title:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: PR 제목 형식 확인
         uses: actions/github-script@v7
@@ -35,11 +35,9 @@ jobs:
 
 현재 PR 제목: \`${prTitle}\`
 
-PR 제목이 올바른 형식을 따르지 않습니다. 다음 형식으로 수정해주세요:
+PR 제목이 올바른 형식을 따르지 않습니다.
 
-\`\`\`
-[타입] 제목
-\`\`\`
+**올바른 형식**: [타입] 제목
 
 ### 허용된 타입
 

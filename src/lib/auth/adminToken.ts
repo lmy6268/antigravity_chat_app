@@ -60,18 +60,17 @@ export function signAdminToken(
   const data = `${headerEncoded}.${payloadEncoded}`;
 
   const secret = getSecret();
-  const signature = crypto
-    .createHmac('sha256', secret)
-    .update(data)
-    .digest();
+  const signature = crypto.createHmac('sha256', secret).update(data).digest();
 
   const signatureEncoded = base64UrlEncode(signature);
   return `${data}.${signatureEncoded}`;
 }
 
-export function verifyAdminToken(
-  token: string,
-): { valid: boolean; adminId?: string; error?: string } {
+export function verifyAdminToken(token: string): {
+  valid: boolean;
+  adminId?: string;
+  error?: string;
+} {
   try {
     const secret = getSecret();
     const parts = token.split('.');
@@ -112,5 +111,3 @@ export function verifyAdminToken(
     return { valid: false, error: 'Token verification failed' };
   }
 }
-
-

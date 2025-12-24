@@ -78,11 +78,13 @@ export default function ChatRoom({
     joinRoom,
     quitRoom,
     goBack,
+    refreshRoomInfo,
+    userId,
     error,
     debugInfo,
   } = useRoomJoin(roomId, roomName);
 
-  const { inviteUser } = useRoomInvite(roomId, cryptoKey);
+  const { inviteUser } = useRoomInvite(roomId, cryptoKey, refreshRoomInfo);
 
   const { socketRef, isConnected, connectSocket, disconnectSocket } =
     useWebSocket(roomId, nickname);
@@ -180,6 +182,32 @@ export default function ChatRoom({
     const link = await buildInviteLink();
     navigator.clipboard.writeText(link);
     dialogService.alert(t.dashboard.alerts.linkCopied);
+  };
+
+  const handleKick = async (targetUsername: string) => {
+    try {
+      const res = await fetch(`/api/rooms/${roomId}/kick`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': userId,
+        },
+        body: JSON.stringify({ targetUsername }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to kick user');
+      }
+
+      // Refresh room info to update participant list
+      if (refreshRoomInfo) {
+        await refreshRoomInfo();
+      }
+    } catch (error) {
+      console.error('Error kicking user:', error);
+      throw error;
+    }
   };
 
   const openSettings = () => {
@@ -285,6 +313,8 @@ export default function ChatRoom({
             isConnected={isConnected}
             isClosing={settingsClosing}
             onInvite={inviteUser}
+            onKick={handleKick}
+            refreshRoomInfo={refreshRoomInfo}
           />
         )}
 

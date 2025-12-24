@@ -44,6 +44,7 @@ export function useChat(
   const cryptoKeyRef = useRef<CryptoKey | null>(null);
   const historyRequestedRef = useRef(false);
   const pendingHistoryRef = useRef(false);
+  const isSendingRef = useRef(false);
 
   // cryptoKey ref 동기화
   useEffect(() => {
@@ -199,6 +200,10 @@ export function useChat(
   // 메시지 전송
   const sendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    
+    // 중복 전송 방지
+    if (isSendingRef.current) return;
+    
     if (
       !inputMessage.trim() ||
       !cryptoKey ||
@@ -207,12 +212,14 @@ export function useChat(
     )
       return;
 
+    const messageText = inputMessage.trim();
     const messagePayload = JSON.stringify({
-      text: inputMessage,
+      text: messageText,
       senderNickname: nickname,
     });
 
     try {
+      isSendingRef.current = true;
       const encrypted = await encryptMessage(messagePayload, cryptoKey);
 
       // 로컬 UI에 즉시 추가
@@ -221,7 +228,7 @@ export function useChat(
         {
           id: `local-${Date.now()}`,
           sender: nickname,
-          text: inputMessage,
+          text: messageText,
           timestamp: new Date().toLocaleTimeString(),
           isMine: true,
           isSystem: false,
@@ -239,6 +246,8 @@ export function useChat(
     } catch (e) {
       console.error('Encryption failed:', e);
       addSystemMessage(t.common.failedToSendMessage);
+    } finally {
+      isSendingRef.current = false;
     }
   };
 

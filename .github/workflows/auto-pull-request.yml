@@ -2,9 +2,9 @@ name: 자동 PR 생성
 
 on:
   push:
-    branches:
-      - 'feature/**'
-      - 'hotfix/**'
+    branches-ignore:
+      - 'develop'
+      - 'main'
 
 env:
   TARGET_BRANCH: develop
@@ -118,16 +118,23 @@ jobs:
           GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
           TZ: Asia/Seoul
         run: |
+          # PR 본문을 임시 파일에 작성
+          PR_BODY_FILE=$(mktemp)
+          echo "${{ steps.prepare-body.outputs.final_body }}" > "$PR_BODY_FILE"
+          echo "" >> "$PR_BODY_FILE"
+          echo "---" >> "$PR_BODY_FILE"
+          echo "_🤖 AI로 자동 생성된 PR_" >> "$PR_BODY_FILE"
+          echo "_생성 시간: $(date +'%Y-%m-%d %H:%M:%S KST')_" >> "$PR_BODY_FILE"
+          
           gh pr create \
             --base ${{ env.TARGET_BRANCH }} \
             --head ${{ steps.branch.outputs.name }} \
             --title "${{ steps.generate-pr.outputs.title }}" \
             --assignee @me \
-            --body "${{ steps.prepare-body.outputs.final_body }}
-
-          ---
-          _🤖 AI로 자동 생성된 PR_
-          _생성 시간: $(date +'%Y-%m-%d %H:%M:%S KST')_"
+            --body-file "$PR_BODY_FILE"
+          
+          # 임시 파일 삭제
+          rm -f "$PR_BODY_FILE"
 
       - name: 기존 PR에 새 커밋 요약 추가
         if: steps.check-pr.outputs.exists == 'true' && steps.check-pr.outputs.state == 'OPEN'

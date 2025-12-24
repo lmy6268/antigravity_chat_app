@@ -1,4 +1,4 @@
-name: PR Blog Post
+name: PR 블로그 포스트 생성
 
 on:
   pull_request:
@@ -9,22 +9,22 @@ on:
 permissions:
   contents: read
   issues: write
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   create-pr-blog:
-    name: Generate PR Summary Blog
+    name: PR 요약 블로그 생성
     # PR이 머지되었을 때만 실행
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: 코드 체크아웃
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # PR의 모든 커밋 히스토리 필요
 
-      - name: Get PR Information
+      - name: PR 정보 가져오기
         id: pr-info
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -34,7 +34,8 @@ jobs:
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
           PR_BRANCH="${{ github.event.pull_request.head.ref }}"
           PR_BASE="${{ github.event.pull_request.base.sha }}"
-          PR_HEAD="${{ github.event.pull_request.merge_commit_sha }}"
+          # 머지된 PR의 경우 원래 head SHA를 사용하여 커밋 범위를 정확히 가져옴
+          PR_HEAD="${{ github.event.pull_request.head.sha }}"
 
           echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "title=$PR_TITLE" >> $GITHUB_OUTPUT
@@ -46,8 +47,9 @@ jobs:
           echo "📋 PR #$PR_NUMBER: $PR_TITLE"
           echo "👤 작성자: $PR_AUTHOR"
           echo "🌿 브랜치: $PR_BRANCH"
+          echo "🔍 커밋 범위: $PR_BASE..$PR_HEAD"
 
-      - name: Analyze PR Commits
+      - name: PR 커밋 분석
         id: analyze
         env:
           PR_NUMBER: ${{ steps.pr-info.outputs.number }}
@@ -59,7 +61,7 @@ jobs:
         run: |
           bash .github/scripts/analyze-pr-commits.sh
 
-      - name: Check if commits exist
+      - name: 커밋 존재 여부 확인
         id: check-commits
         run: |
           COMMIT_COUNT=$(jq -r '.summary.total_commits' pr_data.json)
@@ -71,13 +73,13 @@ jobs:
             echo "✅ $COMMIT_COUNT 개의 커밋 발견"
           fi
 
-      - name: Setup Gemini CLI
+      - name: Gemini CLI 설정
         if: steps.check-commits.outputs.has_commits == 'true'
         uses: google-github-actions/run-gemini-cli@v0.1.16
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
 
-      - name: Generate Blog Post
+      - name: 블로그 포스트 생성
         if: steps.check-commits.outputs.has_commits == 'true'
         id: generate
         env:
@@ -85,7 +87,7 @@ jobs:
         run: |
           bash .github/scripts/generate-pr-blog.sh
 
-      - name: Post to GitHub Issues
+      - name: GitHub Issue에 게시
         if: steps.check-commits.outputs.has_commits == 'true'
         id: post-issue
         env:
@@ -100,7 +102,7 @@ jobs:
           echo "issue_url=$ISSUE_URL" >> $GITHUB_OUTPUT
           echo "✅ Issue 생성 완료: $ISSUE_URL"
 
-      - name: Comment on PR
+      - name: PR에 댓글 추가
         if: steps.check-commits.outputs.has_commits == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -112,7 +114,7 @@ jobs:
           ---
           _🤖 AI로 자동 생성된 PR 요약 블로그_"
 
-      - name: Upload Blog Post Artifact
+      - name: 블로그 포스트 아티팩트 업로드
         if: always() && steps.check-commits.outputs.has_commits == 'true'
         uses: actions/upload-artifact@v4
         with:
@@ -122,7 +124,7 @@ jobs:
             pr_data.json
           retention-days: 90
 
-      - name: Summary
+      - name: 요약
         if: always()
         run: |
           if [ "${{ steps.check-commits.outputs.has_commits }}" == "true" ]; then

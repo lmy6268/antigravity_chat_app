@@ -209,23 +209,27 @@ yarn start
 ```
 next-websocket-demo/
 ├── src/
-│   ├── server/             # 커스텀 Next.js + Socket.io 서버
 │   ├── app/                # Next.js App Router (페이지 및 API)
 │   ├── components/         # React 컴포넌트
 │   ├── dao/                # Data Access Objects (Supabase)
 │   ├── hooks/              # 커스텀 훅 (ViewModel)
-│   ├── i18n/               # 다국어 지원 (i18next)
+│   ├── i18n/               # 다국어 지원 (Context 기반)
 │   ├── lib/                # 유틸리티 및 설정
-│   │   ├── constants/      # API 및 스토리지 상수
+│   │   ├── constants/      # API/대시보드/스토리지 상수
 │   │   ├── logger/         # 클라이언트/서버 로거
 │   │   ├── supabase/       # Supabase 클라이언트
-│   │   └── ...             # 기타 유틸리티
-│   ├── middleware/      # 미들웨어 (edge/ 및 server/ 로 구분)
+│   │   └── utils/          # URL 등 공통 유틸리티
+│   ├── middleware/         # 미들웨어 (edge/ 및 server/ 로 구분)
 │   ├── models/             # 도메인 모델 (비즈니스 로직)
+│   ├── server/             # 커스텀 WebSocket 서버 (Socket.io)
+│   ├── styles/             # 전역 스타일 및 CSS 모듈
 │   └── types/              # TypeScript 타입 정의
-├── daily/                   # 작업 일지
-├── study/                   # 학습 자료
-└── .env.local               # 환경 변수 (gitignore)
+├── docs/                   # 문서/가이드
+│   ├── STRUCTURE.md        # 디렉토리 구조 및 설계 설명
+│   └── reference/          # 레퍼런스 문서 (daily, study 등)
+├── duckdns/                # DuckDNS 업데이트 스크립트
+├── test/                   # Jest 테스트 코드
+└── .env.local              # 환경 변수 (gitignore)
 ```
 
 ## 🔍 향후 개선 사항
@@ -246,14 +250,3 @@ MIT License
 ## 👤 개발자
 
 개인 학습 프로젝트
-
----
-
-**참고 문서:**
-
-- [Socket.io 학습 자료](./study/socketio-guide.md)
-- [종단간 암호화 상세 설명](./study/e2e-encryption-guide.md)
-- [Supabase 설정 가이드](./SUPABASE_SETUP.md)
-- [작업 일지](./daily/)
-
-# CI Workflow Test

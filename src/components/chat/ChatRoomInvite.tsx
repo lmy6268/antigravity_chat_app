@@ -39,6 +39,8 @@ export function ChatRoomInvite({
             (f: Friend) => f.status === 'accepted',
           );
           setFriends(acceptedFriends);
+        } else {
+          console.error('Failed to load friends:', res.status, await res.text());
         }
       } catch (error) {
         console.error('Error loading friends:', error);

@@ -32,9 +32,14 @@ export function useLogin() {
   useEffect(() => {
     const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
     if (storedUser) {
-      router.push(routes.dashboard());
+      const redirectUrl = searchParams.get('redirect');
+      if (redirectUrl) {
+        router.push(decodeURIComponent(redirectUrl));
+      } else {
+        router.push(routes.dashboard());
+      }
     }
-  }, [router]);
+  }, [router, searchParams]);
 
   // 액션
   const handleLogin = async (e: React.FormEvent) => {

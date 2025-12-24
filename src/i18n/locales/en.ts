@@ -41,6 +41,7 @@ export const en = {
     tabs: {
       rooms: 'Rooms',
       friends: 'Friends',
+      settings: 'Settings',
     },
     rooms: {
       title: 'My Rooms',
@@ -87,6 +88,7 @@ export const en = {
     send: 'Send',
     placeholder: 'Type a message...',
     settings: 'Room Settings',
+    shareLinkTitle: 'Share Invite Link',
     creator: 'Creator',
     participants: 'Active Participants',
     noParticipants: 'No active participants',
@@ -96,6 +98,12 @@ export const en = {
     passwordPrompt: 'Enter password to decrypt messages.',
     joinButton: 'Join Room',
     backButton: 'Back to Dashboard',
-    welcomeMessage: 'Welcome to {roomName}, {nickname}!',
+    welcomeMessage: '{nickname} joined.',
+    userJoined: '{nickname} joined.',
+    userLeft: '{nickname} left.',
+  },
+  settings: {
+    title: 'User Settings',
+    language: 'Language',
   },
 };

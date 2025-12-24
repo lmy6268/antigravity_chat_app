@@ -17,4 +17,6 @@ export const SERVER_EVENTS = {
   HISTORY_RECEIVED: 'history',
   ROOM_DELETED: 'room-deleted',
   ERROR: 'error',
+  USER_JOINED: 'user-joined',
+  USER_LEFT: 'user-left',
 } as const;

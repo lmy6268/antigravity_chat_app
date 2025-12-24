@@ -6,14 +6,16 @@ import { useRoomJoin } from '@/hooks/chat/useRoomJoin';
 import { useWebSocket } from '@/hooks/chat/useWebSocket';
 import { dialogService } from '@/lib/dialog';
 import { useChat } from '@/hooks/chat/useChat';
+import { useTranslation } from '@/i18n/LanguageContext';
+import { SERVER_EVENTS, CLIENT_EVENTS } from '@/types/events';
 import { RoomJoinForm } from '@/components/chat/RoomJoinForm';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { ChatContainer } from '@/components/chat/ChatContainer';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatSettings } from '@/components/chat/ChatSettings';
 import { ChatMessageList } from '@/components/chat/ChatMessageList';
 import { ChatInput } from '@/components/chat/ChatInput';
-import { ChatContainer } from '@/components/chat/ChatContainer';
-import { useTranslation } from '@/i18n/LanguageContext';
-import { SERVER_EVENTS, CLIENT_EVENTS } from '@/types/events';
+import { ChatShareModal } from '@/components/chat/ChatShareModal';
 
 /**
  * ChatRoom Component (Orchestrator)
@@ -54,10 +56,13 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   );
 
   const { messages, inputMessage, setInputMessage, chatContainerRef, sendMessage, initializeChat } =
-    useChat(roomId, roomName, nickname, cryptoKey, socketRef, isConnected, t);
+    useChat(roomId, roomInfo?.name || roomName, nickname, cryptoKey, socketRef, isConnected, t);
 
   // Local state
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsClosing, setSettingsClosing] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [slideState, setSlideState] = useState<'entering' | 'entered' | 'exiting'>('entering');
   const hasInitializedRef = useRef(false);
 
   // Connect socket when joined AND cryptoKey is ready (한 번만 실행)
@@ -91,8 +96,11 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
 
   // Event handlers
   const handleBack = () => {
-    disconnectSocket();
-    goBack();
+    setSlideState('exiting');
+    setTimeout(() => {
+      disconnectSocket();
+      goBack();
+    }, 220);
   };
 
   // ...
@@ -119,11 +127,56 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
     await quitRoom();
   };
 
-  const copyInviteLink = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url);
+  const buildInviteLink = async () => {
+    const href = window.location.href;
+    const url = new URL(href);
+
+    const isDev = process.env.NODE_ENV === 'development';
+    const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+
+    if (isDev && isLocalhost) {
+      try {
+        const res = await fetch('/api/dev/host');
+        if (res.ok) {
+          const data = await res.json();
+          const host = data.host as string;
+          if (host) {
+            const port = url.port || '3000';
+            url.hostname = host;
+            url.port = port;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to resolve dev host, fallback to localhost', e);
+      }
+    }
+
+    return url.toString();
+  };
+
+  const copyInviteLink = async () => {
+    const link = await buildInviteLink();
+    navigator.clipboard.writeText(link);
     dialogService.alert(t.dashboard.alerts.linkCopied);
   };
+
+  const openSettings = () => {
+    setSettingsClosing(false);
+    setShowSettings(true);
+  };
+
+  const closeSettings = () => {
+    setSettingsClosing(true);
+    setTimeout(() => {
+      setShowSettings(false);
+      setSettingsClosing(false);
+    }, 220);
+  };
+
+  useEffect(() => {
+    // Trigger enter slide-in
+    requestAnimationFrame(() => setSlideState('entered'));
+  }, []);
 
   // 로딩 중일 때 (권한 체크 중)
   if (isLoading) {
@@ -136,9 +189,10 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
           height: '100vh',
           backgroundColor: '#1e1e1e',
           color: '#f0f0f0',
+          width: '100%',
         }}
       >
-        {t.common.loading}
+        <LoadingSpinner size={40} color="#0070f3" />
       </div>
     );
   }
@@ -160,33 +214,97 @@ export default function ChatRoom({ params }: { params: Promise<{ roomId: string 
   }
 
   // Render chat room
+  const slideTransform =
+    slideState === 'entering'
+      ? 'translateX(-100%)'
+      : slideState === 'entered'
+        ? 'translateX(0)'
+        : 'translateX(100%)';
+
   return (
-    <ChatContainer>
-      <ChatHeader
-        roomName={roomInfo?.name || roomName}
-        nickname={nickname}
-        isConnected={isConnected}
-        onBack={handleBack}
-        onSettings={() => setShowSettings(!showSettings)}
-      />
+    <div
+      style={{
+        transform: slideTransform,
+        transition: 'transform 220ms ease',
+        willChange: 'transform',
+      }}
+    >
+      <ChatContainer>
+        <ChatHeader
+          roomName={roomInfo?.name || roomName}
+          onBack={handleBack}
+          onSettings={openSettings}
+          onShare={() => setShowShare(true)}
+        />
 
-      {showSettings && (
-        <ChatSettings roomInfo={roomInfo} onCopyLink={copyInviteLink} onLeave={handleLeave} />
-      )}
+        {showSettings && (
+          <div
+            onClick={closeSettings}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.35)',
+              zIndex: 110,
+              opacity: settingsClosing ? 0 : 1,
+              transition: 'opacity 200ms ease',
+              pointerEvents: settingsClosing ? 'none' : 'auto',
+            }}
+          />
+        )}
 
-      <ChatMessageList
-        messages={messages}
-        nickname={nickname}
-        roomCreator={roomInfo?.creator}
-        containerRef={chatContainerRef}
-      />
+        {showSettings && (
+          <ChatSettings
+            roomInfo={roomInfo}
+            onCopyLink={copyInviteLink}
+            onLeave={handleLeave}
+            onClose={closeSettings}
+            currentUser={nickname}
+            isConnected={isConnected}
+            isClosing={settingsClosing}
+          />
+        )}
 
-      <ChatInput
-        inputMessage={inputMessage}
-        setInputMessage={setInputMessage}
-        sendMessage={sendMessage}
-        isConnected={isConnected}
-      />
-    </ChatContainer>
+        {showShare && (
+          <ChatShareModal
+            onClose={() => setShowShare(false)}
+            buildLink={buildInviteLink}
+            password={roomInfo?.password}
+          />
+        )}
+
+        <style jsx global>{`
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+            }
+            to {
+              opacity: 1;
+            }
+          }
+          @keyframes fadeOut {
+            from {
+              opacity: 1;
+            }
+            to {
+              opacity: 0;
+            }
+          }
+        `}</style>
+
+        <ChatMessageList
+          messages={messages}
+          nickname={nickname}
+          roomCreator={roomInfo?.creator}
+          containerRef={chatContainerRef}
+        />
+
+        <ChatInput
+          inputMessage={inputMessage}
+          setInputMessage={setInputMessage}
+          sendMessage={sendMessage}
+          isConnected={isConnected}
+        />
+      </ChatContainer>
+    </div>
   );
 }

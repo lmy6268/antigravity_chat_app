@@ -34,11 +34,21 @@ export function useChat(
   const [inputMessage, setInputMessage] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const cryptoKeyRef = useRef<CryptoKey | null>(null);
+  const historyRequestedRef = useRef(false);
+  const pendingHistoryRef = useRef(false);
 
   // cryptoKey ref 동기화
   useEffect(() => {
     cryptoKeyRef.current = cryptoKey;
     console.log('[useChat] cryptoKey updated:', !!cryptoKey);
+
+    // cryptoKey가 늦게 준비되었고 히스토리가 보류된 경우 다시 요청
+    if (cryptoKey && pendingHistoryRef.current && socketRef.current && isConnected) {
+      pendingHistoryRef.current = false;
+      historyRequestedRef.current = true;
+      console.log('[useChat] 🔁 Re-requesting history after key ready');
+      socketRef.current.emit(CLIENT_EVENTS.REQUEST_HISTORY, roomId);
+    }
   }, [cryptoKey]);
 
   // cryptoKey 준비되면 히스토리 요청
@@ -49,10 +59,11 @@ export function useChat(
       isConnected,
     });
 
-    if (cryptoKey && socketRef.current && isConnected) {
+    if (cryptoKey && socketRef.current && isConnected && !historyRequestedRef.current) {
       console.log('[useChat] ✅ Requesting history...');
       // roomId를 함께 보내서 서버에서 socket.roomId가 아직 설정되지 않았더라도 처리 가능하게 함
       socketRef.current.emit(CLIENT_EVENTS.REQUEST_HISTORY, roomId);
+      historyRequestedRef.current = true;
     } else {
       console.log('[useChat] ❌ Cannot request history yet');
     }
@@ -82,7 +93,7 @@ export function useChat(
 
   // 메시지 리스너 설정
   useEffect(() => {
-    if (!socketRef.current) return;
+    if (!socketRef.current || !isConnected) return;
 
     const handleMessage = async (payload: any) => {
       console.log('[useChat] Message received:', payload);
@@ -129,6 +140,7 @@ export function useChat(
 
       if (!cryptoKeyRef.current) {
         console.warn('[useChat] No cryptoKey - skipping history');
+        pendingHistoryRef.current = true;
         return;
       }
 
@@ -169,7 +181,7 @@ export function useChat(
         socketRef.current.off(SERVER_EVENTS.HISTORY_RECEIVED, handleHistory);
       }
     };
-  }, [socketRef, nickname]);
+  }, [socketRef, nickname, isConnected]);
 
   // 메시지 전송
   const sendMessage = async (e?: React.FormEvent) => {
@@ -215,6 +227,25 @@ export function useChat(
   const initializeChat = () => {
     addSystemMessage(withParams(t.chat.welcomeMessage, { roomName, nickname }));
   };
+
+  // roomName이 변경되면(로딩 완료 등) 시스템 메시지의 방 이름을 업데이트하거나 새로운 안내 메시지 추가
+  // 여기서는 간단히 useEffect로 roomName이 유효해질 때 환영 메시지를 한 번 더 띄우거나,
+  // 기존 로직을 보완. 다만 initializeChat은 연결 시점에 한 번 불리므로,
+  // roomName이 나중에 로드되는 경우를 대비해 별도 처리가 필요할 수 있음.
+  // 현재 구조상 initializeChat을 useEffect로 roomName 변경 시 호출하면 중복 환영 인사가 될 수 있으므로,
+  // 가장 간단한 방법은 initializeChat 호출 시점의 roomName을 신뢰하는 것임.
+  // 하지만 page.tsx에서 roomInfo가 로드되면 roomName이 업데이트되므로,
+  // 이를 반영하려면 initializeChat을 useEffect 의존성에 넣거나 해야 함.
+
+  // 더 나은 UX: roomName이 '...' 이었다가 실제 이름으로 바뀌면 시스템 메시지 업데이트?
+  // 복잡도를 낮추기 위해, page.tsx에서 cryptoKey와 nickname이 준비된 시점에(이미 roomInfo 로드됨)
+  // initializeChat을 부르므로 큰 문제는 없을 것으로 예상됨.
+  // 다만 혹시 모르니 roomName 변경 로그만 남김.
+  useEffect(() => {
+    if (roomName && roomName !== '...') {
+      console.log('[useChat] Room name updated:', roomName);
+    }
+  }, [roomName]);
 
   return {
     messages,

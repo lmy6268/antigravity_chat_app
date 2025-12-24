@@ -18,8 +18,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ roo
 
     // Fetch participants
     const participants = await dao.participant.findByRoomId(roomId);
-    const participantUsernames = participants.map((p) => p.user_id); // Note: This returns user IDs, not usernames
-    // TODO: Consider joining with users table to get actual usernames if needed
+    const participantUsernames = participants.map((p) => p.username || p.user_id);
 
     return NextResponse.json(
       {

@@ -5,6 +5,7 @@ import { useRegister } from '@/hooks/auth/useRegister';
 import { useTranslation } from '@/i18n/LanguageContext';
 import { routes } from '@/lib/routes';
 import styles from '@/styles/auth-form.module.css';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 /**
  * RegisterForm Component (Pure View)
@@ -49,7 +50,7 @@ export default function RegisterForm() {
           disabled={isLoading}
           className={`${styles.submitButton} ${styles.register}`}
         >
-          {isLoading ? t.common.loading : t.auth.register}
+          {isLoading ? <LoadingSpinner size={20} color="#ffffff" /> : t.auth.register}
         </button>
       </form>
 

@@ -6,7 +6,9 @@ export default function LoginPage() {
     <div
       style={{
         display: 'flex',
-        height: '100vh',
+        minHeight: '100vh',
+        width: '100vw',
+        overflow: 'hidden',
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#1e1e1e',

@@ -11,6 +11,7 @@ import { useRoomCreate } from '@/hooks/dashboard/useRoomCreate';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { RoomList } from '@/components/dashboard/RoomList';
 import { CreateRoomModal } from '@/components/dashboard/CreateRoomModal';
+import { UserSettings } from '@/components/dashboard/UserSettings';
 
 interface Friend {
   id: string;
@@ -142,6 +143,8 @@ export default function Dashboard() {
     >
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <DashboardHeader nickname={nickname} onLogout={handleLogout} />
+
+        <UserSettings />
 
         <div
           style={{

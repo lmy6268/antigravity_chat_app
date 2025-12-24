@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { generateKeyPair, exportKey } from '@/lib/crypto';
 import { savePrivateKey } from '@/lib/key-storage';
 import { routes } from '@/lib/routes';
@@ -20,6 +20,7 @@ import { STORAGE_KEYS } from '@/lib/storage-constants';
  */
 export function useRegister() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useTranslation();
 
   // 상태
@@ -33,9 +34,14 @@ export function useRegister() {
   useEffect(() => {
     const storedUser = localStorage.getItem('chat_user');
     if (storedUser) {
-      router.push(routes.dashboard());
+      const redirectUrl = searchParams.get('redirect');
+      if (redirectUrl) {
+        router.push(decodeURIComponent(redirectUrl));
+      } else {
+        router.push(routes.dashboard());
+      }
     }
-  }, [router]);
+  }, [router, searchParams]);
 
   // 액션
   const register = async (e?: React.FormEvent) => {
@@ -82,7 +88,12 @@ export function useRegister() {
       if (res.ok) {
         const data = await res.json();
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(data.user));
-        router.push(routes.dashboard());
+        const redirectUrl = searchParams.get('redirect');
+        if (redirectUrl) {
+          router.push(decodeURIComponent(redirectUrl));
+        } else {
+          router.push(routes.dashboard());
+        }
       } else {
         const data = await res.json();
         setError(data.error || t.common.registrationFailed);

@@ -31,9 +31,13 @@ export async function GET(
         const participantCount = participants.length;
 
         const messages = await messageModel.findByRoomId(room.id);
+<<<<<<< HEAD
         const lastMessage = messages.length
           ? messages[messages.length - 1]
           : null;
+=======
+        const lastMessage = messages.length ? messages[messages.length - 1] : null;
+>>>>>>> origin/develop
         const lastMessageAt = lastMessage ? lastMessage.created_at : null;
         const lastMessagePreview = lastMessage ? '[encrypted]' : null; // 콘텐츠는 서버에 암호화되어 있음
 
@@ -47,7 +51,11 @@ export async function GET(
           lastMessageAt,
           lastMessagePreview,
         };
+<<<<<<< HEAD
       }),
+=======
+      })
+>>>>>>> origin/develop
     );
 
     return NextResponse.json({ rooms }, { status: HTTP_STATUS.OK });

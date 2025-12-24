@@ -14,11 +14,21 @@ import { DashboardTabs } from '@/components/dashboard/DashboardTabs';
 import { RoomList } from '@/components/dashboard/RoomList';
 import { CreateRoomModal } from '@/components/dashboard/CreateRoomModal';
 import { UserSettings } from '@/components/dashboard/UserSettings';
+<<<<<<< HEAD
 import { FriendsTab } from '@/components/dashboard/friends/FriendsTab';
 import { QRCodeModal } from '@/components/dashboard/QRCodeModal';
 import { buildFullUrl } from '@/lib/utils/url';
 import type { UserUIModel, RoomUIModel } from '@/types/uimodel';
 import type { UserEntity } from '@/types/entities';
+=======
+
+interface Friend {
+  id: string;
+  username: string;
+  status: 'pending' | 'accepted';
+  isSender: boolean;
+}
+>>>>>>> origin/develop
 
 export default function Dashboard() {
   const router = useRouter();
@@ -89,7 +99,51 @@ export default function Dashboard() {
         <DashboardHeader nickname={nickname} onLogout={handleLogout} />
         <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
+<<<<<<< HEAD
         {activeTab === DASHBOARD_TABS.ROOMS && (
+=======
+        <UserSettings />
+
+        <div
+          style={{
+            display: 'flex',
+            gap: '20px',
+            marginBottom: '20px',
+            borderBottom: '1px solid #3e3e3e',
+          }}
+        >
+          <button
+            onClick={() => setActiveTab('rooms')}
+            style={{
+              padding: '10px 20px',
+              background: 'none',
+              border: 'none',
+              color: activeTab === 'rooms' ? '#007acc' : '#aaa',
+              borderBottom: activeTab === 'rooms' ? '2px solid #007acc' : 'none',
+              cursor: 'pointer',
+              fontSize: '16px',
+            }}
+          >
+            {t.dashboard.tabs.rooms}
+          </button>
+          <button
+            onClick={() => setActiveTab('friends')}
+            style={{
+              padding: '10px 20px',
+              background: 'none',
+              border: 'none',
+              color: activeTab === 'friends' ? '#007acc' : '#aaa',
+              borderBottom: activeTab === 'friends' ? '2px solid #007acc' : 'none',
+              cursor: 'pointer',
+              fontSize: '16px',
+            }}
+          >
+            {t.dashboard.tabs.friends}
+          </button>
+        </div>
+
+        {activeTab === 'rooms' ? (
+>>>>>>> origin/develop
           <RoomList
             rooms={myRooms}
             onJoinRoom={joinRoom}

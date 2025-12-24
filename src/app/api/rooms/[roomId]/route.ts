@@ -26,6 +26,7 @@ export async function GET(
 
     // Fetch participants
     const participants = await dao.participant.findByRoomId(roomId);
+<<<<<<< HEAD
 
     const participantUsernames = participants.map(
       (p) => p.username || p.user_id,
@@ -70,6 +71,9 @@ export async function GET(
         (p.username || '').trim().toLowerCase(),
       ),
     };
+=======
+    const participantUsernames = participants.map((p) => p.username || p.user_id);
+>>>>>>> origin/develop
 
     return NextResponse.json(
       {

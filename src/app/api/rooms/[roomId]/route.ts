@@ -52,24 +52,27 @@ export async function GET(
       roomDTO.creator_id?.toLowerCase().trim() === userId ||
       roomDTO.creator_username?.toLowerCase().trim() === userId;
 
-    const debugInfo = {
-      requestedUserId: userId,
-      participantCount: participants.length,
-      isParticipantMatch: !!MatchedParticipant,
-      isCreatorMatch: isCreator,
-      hasEncryptedKey: !!participantEncryptedKey,
-      matchedAs: MatchedParticipant
-        ? MatchedParticipant.user_id?.toLowerCase() === userId
-          ? 'user_id'
-          : 'username'
-        : 'none',
-      availableIds: participants.map((p) =>
-        (p.user_id || '').trim().toLowerCase(),
-      ),
-      availableUsernames: participants.map((p) =>
-        (p.username || '').trim().toLowerCase(),
-      ),
-    };
+    const debugInfo =
+      process.env.NODE_ENV === 'development'
+        ? {
+            requestedUserId: userId,
+            participantCount: participants.length,
+            isParticipantMatch: !!MatchedParticipant,
+            isCreatorMatch: isCreator,
+            hasEncryptedKey: !!participantEncryptedKey,
+            matchedAs: MatchedParticipant
+              ? MatchedParticipant.user_id?.toLowerCase() === userId
+                ? 'user_id'
+                : 'username'
+              : 'none',
+            availableIds: participants.map((p) =>
+              (p.user_id || '').trim().toLowerCase(),
+            ),
+            availableUsernames: participants.map((p) =>
+              (p.username || '').trim().toLowerCase(),
+            ),
+          }
+        : undefined;
 
     return NextResponse.json(
       {
@@ -85,7 +88,7 @@ export async function GET(
           encrypted_password: roomDTO.encrypted_password,
           participantEncryptedKey: participantEncryptedKey,
           isCreator: isCreator,
-          debugInfo: debugInfo,
+          debugInfo,
         },
       },
       { status: HTTP_STATUS.OK },

@@ -40,19 +40,9 @@ DROP POLICY IF EXISTS "Service role bypass" ON api_logs;
 CREATE POLICY "Service role bypass" ON admins FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY "Service role bypass" ON api_logs FOR ALL TO service_role USING (true) WITH CHECK (true);
 
--- 4. Function to delete old API logs (30일 이상)
 CREATE OR REPLACE FUNCTION delete_old_api_logs()
 RETURNS void AS $$
 BEGIN
   DELETE FROM api_logs WHERE created_at < NOW() - INTERVAL '30 days';
 END;
 $$ LANGUAGE plpgsql;
-
--- 5. Insert default admin account (username: admin, password: admin123)
--- Note: 비밀번호는 bcrypt로 해시된 값입니다
-INSERT INTO admins (username, password)
-VALUES ('admin', '$2a$10$rN8qNKZ5yGKGJvXqZ5yGKOqZ5yGKGJvXqZ5yGKGJvXqZ5yGKGJvXq')
-ON CONFLICT (username) DO NOTHING;
-
--- 6. 주기적으로 오래된 로그 삭제 (선택사항 - cron job 필요)
--- SELECT delete_old_api_logs();

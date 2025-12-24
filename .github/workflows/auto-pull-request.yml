@@ -2,9 +2,9 @@ name: 자동 PR 생성
 
 on:
   push:
-    branches:
-      - 'feature/**'
-      - 'hotfix/**'
+    branches-ignore:
+      - 'develop'
+      - 'main'
 
 env:
   TARGET_BRANCH: develop

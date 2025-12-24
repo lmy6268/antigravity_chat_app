@@ -250,14 +250,3 @@ MIT License
 ## 👤 개발자
 
 개인 학습 프로젝트
-
----
-
-**참고 문서:**
-
-- [Socket.io 학습 자료](./study/socketio-guide.md)
-- [종단간 암호화 상세 설명](./study/e2e-encryption-guide.md)
-- [Supabase 설정 가이드](./SUPABASE_SETUP.md)
-- [작업 일지](./daily/)
-
-# CI Workflow Test

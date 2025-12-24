@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { useTranslation } from '@/i18n/LanguageContext';
 
 interface DashboardHeaderProps {
@@ -21,9 +22,23 @@ export function DashboardHeader({ nickname, onLogout }: DashboardHeaderProps) {
         gap: '10px',
       }}
     >
-      <h1 style={{ margin: 0, fontSize: 'clamp(1.5rem, 5vw, 2rem)' }}>
-        {t.dashboard.title}
-      </h1>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+        }}
+      >
+        <Image
+          src="/icons/chat_icon.png"
+          alt="fr2eeChat"
+          width={32}
+          height={32}
+        />
+        <h1 style={{ margin: 0, fontSize: 'clamp(1.5rem, 5vw, 2rem)' }}>
+          {t.meta.title}
+        </h1>
+      </div>
       <div
         style={{
           display: 'flex',

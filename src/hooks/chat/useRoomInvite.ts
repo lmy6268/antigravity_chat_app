@@ -16,6 +16,7 @@ import { useTranslation } from '@/i18n/LanguageContext';
 export function useRoomInvite(
   roomId: string,
   currentMasterKey: CryptoKey | null,
+  refreshRoomInfo?: () => Promise<void>,
 ) {
   const [isInviting, setIsInviting] = useState(false);
   const { t } = useTranslation();
@@ -63,9 +64,13 @@ export function useRoomInvite(
         throw new Error('Failed to register participant on server');
       }
 
+      // roomInfo 새로고침 (참여자 수 업데이트)
+      if (refreshRoomInfo) {
+        await refreshRoomInfo();
+      }
+
       dialogService.alert(
-        t.dashboard.alerts.inviteSuccess ||
-          `Successfully invited ${targetUser.username}`,
+        `${targetUser.username}${t.dashboard.alerts.inviteSuccess || '님을 초대했습니다'}`,
       );
       return true;
     } catch (error) {

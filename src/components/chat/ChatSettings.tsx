@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from '@/i18n/LanguageContext';
 import Image from 'next/image';
 import { ChatRoomInvite } from './ChatRoomInvite';
@@ -17,6 +18,8 @@ interface ChatSettingsProps {
   currentUser: string;
   isConnected: boolean;
   isClosing?: boolean;
+  onKick?: (username: string) => Promise<void>;
+  refreshRoomInfo?: () => Promise<void>;
 }
 
 export function ChatSettings({
@@ -28,8 +31,31 @@ export function ChatSettings({
   isConnected,
   isClosing = false,
   onInvite,
+  onKick,
+  refreshRoomInfo,
 }: ChatSettingsProps & { onInvite: (user: UserDTO) => Promise<boolean> }) {
   const { t } = useTranslation();
+  const [kickingUser, setKickingUser] = useState<string | null>(null);
+
+  const isCreator = roomInfo?.creator === currentUser;
+
+  const handleKick = async (username: string) => {
+    if (!onKick) return;
+    if (!confirm(`${username}님을 내보내시겠습니까?`)) return;
+
+    try {
+      setKickingUser(username);
+      await onKick(username);
+      if (refreshRoomInfo) {
+        await refreshRoomInfo();
+      }
+    } catch (error) {
+      console.error('Error kicking user:', error);
+      alert('사용자를 내보내는 중 오류가 발생했습니다.');
+    } finally {
+      setKickingUser(null);
+    }
+  };
 
   return (
     <div
@@ -119,7 +145,7 @@ export function ChatSettings({
               {roomInfo.participants && roomInfo.participants.length > 0 ? (
                 roomInfo.participants.map(
                   (participant: string, idx: number) => {
-                    const isCreator = participant === roomInfo.creator;
+                    const isParticipantCreator = participant === roomInfo.creator;
                     const isMe = participant === currentUser;
                     const dotColor = isMe && isConnected ? '#5cb85c' : '#888';
                     return (
@@ -133,32 +159,68 @@ export function ChatSettings({
                           color: '#f0f0f0',
                           display: 'flex',
                           alignItems: 'center',
+                          justifyContent: 'space-between',
                           gap: '6px',
                         }}
                       >
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            backgroundColor: dotColor,
-                          }}
-                        />
-                        <span
+                        <div
                           style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: '6px',
+                            flex: 1,
                           }}
                         >
-                          {participant}
-                          {isCreator && (
-                            <span role="img" aria-label="creator">
-                              👑
-                            </span>
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              width: '8px',
+                              height: '8px',
+                              borderRadius: '50%',
+                              backgroundColor: dotColor,
+                            }}
+                          />
+                          <span
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                            }}
+                          >
+                            {participant}
+                            {isParticipantCreator && (
+                              <span role="img" aria-label="creator">
+                                👑
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        {isCreator &&
+                          onKick &&
+                          !isMe &&
+                          !isParticipantCreator && (
+                            <button
+                              onClick={() => handleKick(participant)}
+                              disabled={kickingUser === participant}
+                              style={{
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                border: 'none',
+                                backgroundColor:
+                                  kickingUser === participant
+                                    ? '#555'
+                                    : '#d9534f',
+                                color: 'white',
+                                cursor:
+                                  kickingUser === participant
+                                    ? 'not-allowed'
+                                    : 'pointer',
+                                fontSize: '11px',
+                              }}
+                            >
+                              {kickingUser === participant ? '내보내는 중...' : '내보내기'}
+                            </button>
                           )}
-                        </span>
                       </div>
                     );
                   },

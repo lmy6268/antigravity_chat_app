@@ -268,6 +268,25 @@ export function useRoomJoin(roomId: string, roomName: string) {
     router.push(routes.dashboard());
   };
 
+  // roomInfo 새로고침 함수
+  const refreshRoomInfo = async () => {
+    if (!userId) return;
+
+    try {
+      const res = await fetch(`/api/rooms/${roomId}`, {
+        headers: {
+          'x-user-id': userId,
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRoomInfo(data.room);
+      }
+    } catch (error) {
+      console.error('Error refreshing room info:', error);
+    }
+  };
+
   return {
     nickname,
     password,
@@ -281,6 +300,8 @@ export function useRoomJoin(roomId: string, roomName: string) {
     joinRoom,
     quitRoom,
     goBack,
+    refreshRoomInfo,
+    userId,
     error,
     debugInfo: roomInfo
       ? {

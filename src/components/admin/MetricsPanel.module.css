@@ -15,7 +15,8 @@
   font-size: 0.875rem;
 }
 
-.loading, .error {
+.loading,
+.error {
   padding: 2rem;
   text-align: center;
   color: #718096;

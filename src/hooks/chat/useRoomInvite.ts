@@ -65,7 +65,7 @@ export function useRoomInvite(
 
       dialogService.alert(
         t.dashboard.alerts.inviteSuccess ||
-        `Successfully invited ${targetUser.username}`,
+          `Successfully invited ${targetUser.username}`,
       );
       return true;
     } catch (error) {

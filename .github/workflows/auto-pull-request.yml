@@ -23,7 +23,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Enable Corepack
         run: corepack enable
 
@@ -35,22 +35,28 @@ jobs:
         # 린트 에러가 나도 PR 생성을 위해 작업을 계속함
         run: |
           yarn lint > lint-results.txt 2>&1 || echo "LINT_FAILED=true" >> $GITHUB_ENV
-        
+
       - name: Get current branch name
         id: branch
         run: |
           echo "name=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
-      
+
       - name: Check for existing PR
         id: check-pr
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         run: |
-          existing_pr=$(gh pr list --head ${{ steps.branch.outputs.name }} --base ${{ env.TARGET_BRANCH }} --json number --jq '.[0].number')
-          if [ -n "$existing_pr" ]; then
+          existing_pr=$(gh pr list --head ${{ steps.branch.outputs.name }} --base ${{ env.TARGET_BRANCH }} --json number,state --jq '.[0]')
+          if [ -n "$existing_pr" ] && [ "$existing_pr" != "null" ]; then
+            pr_number=$(echo "$existing_pr" | jq -r '.number')
+            pr_state=$(echo "$existing_pr" | jq -r '.state')
             echo "exists=true" >> $GITHUB_OUTPUT
+            echo "number=$pr_number" >> $GITHUB_OUTPUT
+            echo "state=$pr_state" >> $GITHUB_OUTPUT
+            echo "✅ 기존 PR 발견: #$pr_number (상태: $pr_state)"
           else
             echo "exists=false" >> $GITHUB_OUTPUT
+            echo "📝 새로운 PR 생성 필요"
           fi
 
       - name: Setup Gemini CLI
@@ -58,7 +64,7 @@ jobs:
         uses: google-github-actions/run-gemini-cli@v0.1.16
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-      
+
       - name: Generate PR Title and Description
         if: steps.check-pr.outputs.exists == 'false'
         id: generate-pr
@@ -68,7 +74,7 @@ jobs:
           bash .github/scripts/generate-pr-description.sh \
             ${{ env.TARGET_BRANCH }} \
             ${{ steps.branch.outputs.name }}
-              
+
       - name: Prepare PR Body with Lint Results
         if: steps.check-pr.outputs.exists == 'false'
         id: prepare-body
@@ -80,7 +86,7 @@ jobs:
           else
             BODY="$BODY\n\n---\n\n### ✅ Lint 검사 통과"
           fi
-          
+
           # 다중 라인 본문 처리를 위한 출력 설정
           echo "final_body<<EOF" >> $GITHUB_OUTPUT
           echo -e "$BODY" >> $GITHUB_OUTPUT
@@ -101,3 +107,13 @@ jobs:
           ---
           _🤖 AI로 자동 생성된 PR_
           _생성 시간: $(date +'%Y-%m-%d %H:%M:%S KST')_"
+
+      - name: Update existing PR with new commits
+        if: steps.check-pr.outputs.exists == 'true' && steps.check-pr.outputs.state == 'OPEN'
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          bash .github/scripts/update-pr-comment.sh \
+            ${{ steps.check-pr.outputs.number }} \
+            ${{ steps.branch.outputs.name }}

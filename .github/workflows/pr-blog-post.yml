@@ -1,0 +1,141 @@
+name: PR Blog Post
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - develop
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  create-pr-blog:
+    name: Generate PR Summary Blog
+    # PR이 머지되었을 때만 실행
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # PR의 모든 커밋 히스토리 필요
+
+      - name: Get PR Information
+        id: pr-info
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          PR_BRANCH="${{ github.event.pull_request.head.ref }}"
+          PR_BASE="${{ github.event.pull_request.base.sha }}"
+          PR_HEAD="${{ github.event.pull_request.merge_commit_sha }}"
+
+          echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "title=$PR_TITLE" >> $GITHUB_OUTPUT
+          echo "author=$PR_AUTHOR" >> $GITHUB_OUTPUT
+          echo "branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+          echo "base=$PR_BASE" >> $GITHUB_OUTPUT
+          echo "head=$PR_HEAD" >> $GITHUB_OUTPUT
+
+          echo "📋 PR #$PR_NUMBER: $PR_TITLE"
+          echo "👤 작성자: $PR_AUTHOR"
+          echo "🌿 브랜치: $PR_BRANCH"
+
+      - name: Analyze PR Commits
+        id: analyze
+        env:
+          PR_NUMBER: ${{ steps.pr-info.outputs.number }}
+          PR_TITLE: ${{ steps.pr-info.outputs.title }}
+          PR_AUTHOR: ${{ steps.pr-info.outputs.author }}
+          PR_BRANCH: ${{ steps.pr-info.outputs.branch }}
+          PR_BASE: ${{ steps.pr-info.outputs.base }}
+          PR_HEAD: ${{ steps.pr-info.outputs.head }}
+        run: |
+          bash .github/scripts/analyze-pr-commits.sh
+
+      - name: Check if commits exist
+        id: check-commits
+        run: |
+          COMMIT_COUNT=$(jq -r '.summary.total_commits' pr_data.json)
+          if [ "$COMMIT_COUNT" -eq 0 ]; then
+            echo "has_commits=false" >> $GITHUB_OUTPUT
+            echo "📭 커밋이 없어서 블로그를 생성하지 않습니다."
+          else
+            echo "has_commits=true" >> $GITHUB_OUTPUT
+            echo "✅ $COMMIT_COUNT 개의 커밋 발견"
+          fi
+
+      - name: Setup Gemini CLI
+        if: steps.check-commits.outputs.has_commits == 'true'
+        uses: google-github-actions/run-gemini-cli@v0.1.16
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Generate Blog Post
+        if: steps.check-commits.outputs.has_commits == 'true'
+        id: generate
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          bash .github/scripts/generate-pr-blog.sh
+
+      - name: Post to GitHub Issues
+        if: steps.check-commits.outputs.has_commits == 'true'
+        id: post-issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Issue 생성
+          ISSUE_URL=$(gh issue create \
+            --title "${{ steps.generate.outputs.title }}" \
+            --body-file blog_post.md \
+            --label "dev-log,auto-generated,pr-summary")
+
+          echo "issue_url=$ISSUE_URL" >> $GITHUB_OUTPUT
+          echo "✅ Issue 생성 완료: $ISSUE_URL"
+
+      - name: Comment on PR
+        if: steps.check-commits.outputs.has_commits == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ steps.pr-info.outputs.number }} --body "📝 **개발 블로그가 자동 생성되었습니다!**
+
+          🔗 [블로그 보기](${{ steps.post-issue.outputs.issue_url }})
+
+          ---
+          _🤖 AI로 자동 생성된 PR 요약 블로그_"
+
+      - name: Upload Blog Post Artifact
+        if: always() && steps.check-commits.outputs.has_commits == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-blog-${{ steps.pr-info.outputs.number }}
+          path: |
+            blog_post.md
+            pr_data.json
+          retention-days: 90
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ "${{ steps.check-commits.outputs.has_commits }}" == "true" ]; then
+            echo "## ✅ PR 블로그 포스팅 완료" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **PR**: #${{ steps.pr-info.outputs.number }} - ${{ steps.pr-info.outputs.title }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **작성자**: @${{ steps.pr-info.outputs.author }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **브랜치**: \`${{ steps.pr-info.outputs.branch }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **커밋 수**: ${{ steps.analyze.outputs.commit_count }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **변경 파일**: ${{ steps.analyze.outputs.files_changed }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **블로그 제목**: ${{ steps.generate.outputs.title }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## 📭 블로그 미생성" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "PR에 커밋이 없어서 블로그 글을 생성하지 않았습니다." >> $GITHUB_STEP_SUMMARY
+          fi

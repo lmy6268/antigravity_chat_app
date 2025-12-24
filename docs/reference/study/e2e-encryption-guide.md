@@ -7,6 +7,7 @@
 ## 🆚 일반 암호화 vs 종단간 암호화
 
 ### 일반적인 HTTPS 통신
+
 ```
 [사용자A] --암호화--> [서버] --복호화/재암호화--> [사용자B]
                         ⬆️
@@ -14,6 +15,7 @@
 ```
 
 ### 종단간 암호화 (E2EE)
+
 ```
 [사용자A] --암호화----------------------복호화--> [사용자B]
                   ⬇️
@@ -61,34 +63,41 @@
 
 ```typescript
 // 1. 비밀번호와 솔트로 KEK(Key Encryption Key) 유도
-async function deriveKeyFromPassword(password: string, saltBase64: string): Promise<CryptoKey> {
+async function deriveKeyFromPassword(
+  password: string,
+  saltBase64: string,
+): Promise<CryptoKey> {
   const enc = new TextEncoder();
   const passwordKey = await window.crypto.subtle.importKey(
-    "raw",
+    'raw',
     enc.encode(password),
-    "PBKDF2",
+    'PBKDF2',
     false,
-    ["deriveKey"]
+    ['deriveKey'],
   );
 
   const salt = base64ToArrayBuffer(saltBase64); // 서버에서 받은 솔트
 
   return window.crypto.subtle.deriveKey(
     {
-      name: "PBKDF2",
+      name: 'PBKDF2',
       salt: salt,
       iterations: 100000,
-      hash: "SHA-256"
+      hash: 'SHA-256',
     },
     passwordKey,
-    { name: "AES-GCM", length: 256 }, // KEK 생성
+    { name: 'AES-GCM', length: 256 }, // KEK 생성
     true,
-    ["encrypt", "decrypt"]
+    ['encrypt', 'decrypt'],
   );
 }
 
 // 2. KEK로 방 키 복호화
-async function decryptRoomKey(encryptedKey: string, password: string, salt: string) {
+async function decryptRoomKey(
+  encryptedKey: string,
+  password: string,
+  salt: string,
+) {
   const kek = await deriveKeyFromPassword(password, salt);
   // ... AES-GCM 복호화 로직 ...
   return roomKey;
@@ -101,26 +110,27 @@ async function decryptRoomKey(encryptedKey: string, password: string, salt: stri
 
 ```typescript
 async function encryptMessage(
-  text: string, 
-  roomKey: CryptoKey // 복호화된 방 키
-): Promise<{ iv: number[], data: number[] }> {
+  text: string,
+  roomKey: CryptoKey, // 복호화된 방 키
+): Promise<{ iv: number[]; data: number[] }> {
   const enc = new TextEncoder();
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
-  
+
   const encrypted = await window.crypto.subtle.encrypt(
-    { name: "AES-GCM", iv: iv },
+    { name: 'AES-GCM', iv: iv },
     roomKey,
-    enc.encode(text)
+    enc.encode(text),
   );
-  
+
   return {
     iv: Array.from(iv),
-    data: Array.from(new Uint8Array(encrypted))
+    data: Array.from(new Uint8Array(encrypted)),
   };
 }
 ```
 
 **IV (Initialization Vector)가 중요한 이유:**
+
 - 같은 평문, 같은 키라도 매번 다른 암호문 생성
 - 패턴 분석 공격 방어
 - IV는 공개되어도 안전함 (암호문과 함께 전송)
@@ -129,24 +139,24 @@ async function encryptMessage(
 
 ```typescript
 async function decryptMessage(
-  ivArr: number[], 
-  dataArr: number[], 
-  key: CryptoKey
+  ivArr: number[],
+  dataArr: number[],
+  key: CryptoKey,
 ): Promise<string> {
   // 1. 배열을 Uint8Array로 변환
   const iv = new Uint8Array(ivArr);
   const data = new Uint8Array(dataArr);
-  
+
   // 2. AES-GCM으로 복호화
   const decrypted = await window.crypto.subtle.decrypt(
     {
-      name: "AES-GCM",
-      iv: iv
+      name: 'AES-GCM',
+      iv: iv,
     },
     key,
-    data
+    data,
   );
-  
+
   // 3. 바이트 배열을 문자열로 변환
   const dec = new TextDecoder();
   return dec.decode(decrypted);
@@ -179,7 +189,6 @@ async function decryptMessage(
 2. **메타데이터 노출**
    - 누가 언제 메시지를 보냈는지는 서버가 알 수 있습니다.
 
-
 3. **메타데이터 노출**
    - 누가 언제 메시지를 보냈는지는 서버가 알 수 있음
    - **개선**: 완전한 익명성 원하면 Tor 등 사용
@@ -202,7 +211,7 @@ Web Crypto API는 HTTPS 환경에서만 사용 가능 (보안상 이유)
 
 ```typescript
 // ❌ 나쁜 예
-localStorage.setItem('cryptoKey', key);  // 절대 하지 마세요!
+localStorage.setItem('cryptoKey', key); // 절대 하지 마세요!
 
 // ✅ 좋은 예
 const [cryptoKey, setCryptoKey] = useState<CryptoKey | null>(null);
@@ -214,7 +223,8 @@ const [cryptoKey, setCryptoKey] = useState<CryptoKey | null>(null);
 ```typescript
 function validatePassword(password: string): boolean {
   // 최소 8자, 대/소문자, 숫자, 특수문자 포함
-  const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  const regex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   return regex.test(password);
 }
 ```
@@ -240,8 +250,8 @@ try {
 
 ```typescript
 // ❌ 잘못된 사용
-const encrypted = encryptMessage(text, key);  // Promise 반환
-socket.emit('message', encrypted);  // Promise 전송됨!
+const encrypted = encryptMessage(text, key); // Promise 반환
+socket.emit('message', encrypted); // Promise 전송됨!
 
 // ✅ 올바른 사용
 const encrypted = await encryptMessage(text, key);
@@ -254,15 +264,15 @@ socket.emit('message', encrypted);
 
 ```typescript
 async function encryptFile(file: File, key: CryptoKey) {
-  const chunkSize = 64 * 1024;  // 64KB 청크
+  const chunkSize = 64 * 1024; // 64KB 청크
   const chunks = [];
-  
+
   for (let offset = 0; offset < file.size; offset += chunkSize) {
     const chunk = file.slice(offset, offset + chunkSize);
     const encrypted = await encryptMessage(await chunk.text(), key);
     chunks.push(encrypted);
   }
-  
+
   return chunks;
 }
 ```
@@ -273,28 +283,24 @@ async function encryptFile(file: File, key: CryptoKey) {
 
 ```typescript
 async function testEncryption() {
-  const password = "testPassword123";
-  const message = "Hello, World!";
-  
+  const password = 'testPassword123';
+  const message = 'Hello, World!';
+
   // 1. 키 생성
   const key = await deriveKey(password);
-  
+
   // 2. 암호화
   const encrypted = await encryptMessage(message, key);
-  console.log("암호화됨:", encrypted);
+  console.log('암호화됨:', encrypted);
   // { iv: [123, 45, ...], data: [67, 89, ...] }
-  
+
   // 3. 복호화
-  const decrypted = await decryptMessage(
-    encrypted.iv, 
-    encrypted.data, 
-    key
-  );
-  console.log("복호화됨:", decrypted);
+  const decrypted = await decryptMessage(encrypted.iv, encrypted.data, key);
+  console.log('복호화됨:', decrypted);
   // "Hello, World!"
-  
+
   // 4. 검증
-  console.assert(message === decrypted, "실패!");
+  console.assert(message === decrypted, '실패!');
 }
 ```
 
@@ -302,24 +308,24 @@ async function testEncryption() {
 
 ```typescript
 async function testWrongPassword() {
-  const rightPassword = "correct123";
-  const wrongPassword = "wrong456";
-  const message = "Secret Message";
-  
+  const rightPassword = 'correct123';
+  const wrongPassword = 'wrong456';
+  const message = 'Secret Message';
+
   const rightKey = await deriveKey(rightPassword);
   const wrongKey = await deriveKey(wrongPassword);
-  
+
   const encrypted = await encryptMessage(message, rightKey);
-  
+
   try {
     const decrypted = await decryptMessage(
-      encrypted.iv, 
-      encrypted.data, 
-      wrongKey
+      encrypted.iv,
+      encrypted.data,
+      wrongKey,
     );
-    console.log("복호화 성공?!", decrypted);  // 실행되지 않음
+    console.log('복호화 성공?!', decrypted); // 실행되지 않음
   } catch (error) {
-    console.log("복호화 실패 (정상):", error);
+    console.log('복호화 실패 (정상):', error);
     // The operation failed for an operation-specific reason
   }
 }
@@ -330,11 +336,13 @@ async function testWrongPassword() {
 ### 대칭키 vs 비대칭키
 
 **대칭키 암호화 (이 프로젝트에서 사용)**
+
 - 암호화 키 = 복호화 키
 - 빠름
 - 키 공유 문제 (어떻게 안전하게 전달?)
 
 **비대칭키 암호화 (RSA 등)**
+
 - 공개키로 암호화, 개인키로 복호화
 - 느림
 - 키 공유 불필요

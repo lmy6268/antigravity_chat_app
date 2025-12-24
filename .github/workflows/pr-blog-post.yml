@@ -34,7 +34,8 @@ jobs:
           PR_AUTHOR="${{ github.event.pull_request.user.login }}"
           PR_BRANCH="${{ github.event.pull_request.head.ref }}"
           PR_BASE="${{ github.event.pull_request.base.sha }}"
-          PR_HEAD="${{ github.event.pull_request.merge_commit_sha }}"
+          # 머지된 PR의 경우 원래 head SHA를 사용하여 커밋 범위를 정확히 가져옴
+          PR_HEAD="${{ github.event.pull_request.head.sha }}"
 
           echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "title=$PR_TITLE" >> $GITHUB_OUTPUT
@@ -46,6 +47,7 @@ jobs:
           echo "📋 PR #$PR_NUMBER: $PR_TITLE"
           echo "👤 작성자: $PR_AUTHOR"
           echo "🌿 브랜치: $PR_BRANCH"
+          echo "🔍 커밋 범위: $PR_BASE..$PR_HEAD"
 
       - name: PR 커밋 분석
         id: analyze

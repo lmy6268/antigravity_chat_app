@@ -20,6 +20,21 @@ echo "🌿 브랜치: $PR_BRANCH"
 # PR의 커밋 범위 확인
 echo "🔍 커밋 범위: $PR_BASE..$PR_HEAD"
 
+# 커밋 범위 유효성 확인
+if ! git rev-parse --verify "$PR_BASE" > /dev/null 2>&1; then
+  echo "❌ PR_BASE ($PR_BASE)가 유효하지 않습니다."
+  exit 1
+fi
+
+if ! git rev-parse --verify "$PR_HEAD" > /dev/null 2>&1; then
+  echo "❌ PR_HEAD ($PR_HEAD)가 유효하지 않습니다."
+  exit 1
+fi
+
+# 커밋 목록 확인 (디버깅용)
+echo "📝 커밋 목록:"
+git log $PR_BASE..$PR_HEAD --oneline | head -10 || echo "커밋을 가져올 수 없습니다."
+
 # 커밋 수집
 COMMITS_JSON=$(git log $PR_BASE..$PR_HEAD \
   --pretty=format:'{"hash":"%H","message":"%s","author":"%an","date":"%ai"}' \
@@ -29,7 +44,10 @@ COMMITS_JSON=$(git log $PR_BASE..$PR_HEAD \
 TOTAL_COMMITS=$(echo "$COMMITS_JSON" | jq 'length')
 
 if [ "$TOTAL_COMMITS" -eq 0 ]; then
-  echo "❌ PR에 커밋이 없습니다."
+  echo "⚠️ PR에 커밋이 없거나 범위가 잘못되었습니다."
+  echo "PR_BASE: $PR_BASE"
+  echo "PR_HEAD: $PR_HEAD"
+  echo "범위 확인: git log $PR_BASE..$PR_HEAD --oneline"
   echo '{"pr_number":"'$PR_NUMBER'","pr_title":"'$PR_TITLE'","commits":[],"summary":{"total_commits":0},"files":[]}' > pr_data.json
   exit 0
 fi

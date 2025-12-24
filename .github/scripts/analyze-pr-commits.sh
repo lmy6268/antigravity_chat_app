@@ -48,7 +48,17 @@ FILES_CHANGED=$(awk '{print $3}' /tmp/git_stats.txt | sort -u | jq -R . | jq -s 
 FILES_COUNT=$(echo "$FILES_CHANGED" | jq 'length')
 
 # 파일별 변경 통계
-FILE_STATS=$(awk '{print "{\"file\":\""$3"\",\"added\":"$1",\"deleted\":"$2"}"}' /tmp/git_stats.txt | jq -s .)
+# - git diff --numstat 출력에서 바이너리 파일은 추가/삭제 줄 수가 "-"로 표시됨
+# - 이 경우 jq가 숫자가 아닌 리터럴("-")을 만나서 "Invalid numeric literal" 에러를 발생시킬 수 있으므로 0으로 처리
+FILE_STATS=$(
+  awk '{
+    added=$1;
+    deleted=$2;
+    if (added !~ /^[0-9]+$/) added=0;
+    if (deleted !~ /^[0-9]+$/) deleted=0;
+    print "{\"file\":\""$3"\",\"added\":"added",\"deleted\":"deleted"}"
+  }' /tmp/git_stats.txt | jq -s .
+)
 
 # diff 샘플 추출 (최대 1000줄)
 DIFF_SAMPLE=$(git diff $PR_BASE..$PR_HEAD --unified=3 | head -1000)

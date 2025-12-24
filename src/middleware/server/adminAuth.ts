@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import { HTTP_STATUS } from '@/lib/constants/api';
 import { dao } from '@/dao/supabase';
 import type { AdminEntity } from '@/types/admin';
+import { verifyAdminToken } from '@/lib/auth/adminToken';
 
 /**
  * 관리자 인증 결과 타입
@@ -19,17 +20,15 @@ export interface AdminAuthResult {
 
 /**
  * 요청에서 관리자 인증 정보를 추출하고 검증
- * Authorization 헤더에서 관리자 ID를 받아 검증합니다.
- * 
- * 보안 강화를 위해 향후 JWT 토큰 기반 인증으로 업그레이드 권장
+ * Authorization 헤더에서 Bearer JWT 토큰을 받아 검증합니다.
  */
 export async function verifyAdminAuth(
   request: Request,
 ): Promise<AdminAuthResult> {
   try {
-    // Authorization 헤더에서 관리자 ID 추출
+    // Authorization 헤더에서 Bearer 토큰 추출
     const authHeader = request.headers.get('authorization');
-    
+
     if (!authHeader) {
       return {
         success: false,
@@ -37,25 +36,34 @@ export async function verifyAdminAuth(
       };
     }
 
-    // Bearer 토큰 형식 또는 직접 ID 형식 지원
-    let adminId: string;
-    if (authHeader.startsWith('Bearer ')) {
-      adminId = authHeader.substring(7);
-    } else {
-      adminId = authHeader;
-    }
-
-    if (!adminId || adminId.trim() === '') {
+    if (!authHeader.startsWith('Bearer ')) {
       return {
         success: false,
-        error: 'Admin ID is required',
+        error: 'Bearer token is required',
+      };
+    }
+
+    const token = authHeader.substring(7).trim();
+
+    if (!token) {
+      return {
+        success: false,
+        error: 'Admin token is required',
+      };
+    }
+
+    // JWT 토큰 검증
+    const verification = verifyAdminToken(token);
+    if (!verification.valid || !verification.adminId) {
+      return {
+        success: false,
+        error: verification.error || 'Invalid admin token',
       };
     }
 
     // 관리자 존재 여부 확인
-    // Note: 현재는 ID만 확인하지만, 향후 JWT 토큰 검증으로 업그레이드 필요
-    const admin = await dao.admin.findById(adminId);
-    
+    const admin = await dao.admin.findById(verification.adminId);
+
     if (!admin) {
       return {
         success: false,

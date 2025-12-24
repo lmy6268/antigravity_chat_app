@@ -11,8 +11,12 @@ async function getAdminAuthHeaders(): Promise<HeadersInit> {
     'Content-Type': 'application/json',
   };
 
-  if (admin?.id) {
-    headers['Authorization'] = admin.id;
+  // JWT 토큰이 있으면 Bearer 토큰으로 전송
+  if (admin?.token) {
+    headers['Authorization'] = `Bearer ${admin.token}`;
+  } else if (admin?.id) {
+    // 과거 데이터 호환용 (토큰이 없는 세션)
+    headers['Authorization'] = `Bearer ${admin.id}`;
   }
 
   return headers;

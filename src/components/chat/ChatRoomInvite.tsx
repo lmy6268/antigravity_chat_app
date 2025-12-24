@@ -29,6 +29,12 @@ export function ChatRoomInvite({
 
   // 친구 목록 로드
   useEffect(() => {
+    // currentUser가 없으면 불필요한 API 호출 방지
+    if (!currentUser) {
+      setFriends([]);
+      return;
+    }
+
     const loadFriends = async () => {
       try {
         const res = await fetch(`/api/friends?username=${currentUser}`);
@@ -56,8 +62,10 @@ export function ChatRoomInvite({
       return;
     }
 
+    // 디바운싱 시작 시 로딩 상태 활성화
+    setIsSearching(true);
+
     const timer = setTimeout(() => {
-      setIsSearching(true);
       try {
         // 친구 목록에서 검색어로 필터링
         const filtered = friends
@@ -86,7 +94,10 @@ export function ChatRoomInvite({
       }
     }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      setIsSearching(false);
+    };
   }, [searchQuery, currentParticipants, friends, currentUser]);
 
   const handleInvite = useCallback(
